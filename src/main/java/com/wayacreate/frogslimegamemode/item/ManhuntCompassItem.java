@@ -16,34 +16,37 @@ public class ManhuntCompassItem extends Item {
     
     public void inventoryTick(ItemStack stack, World world, PlayerEntity player, int slot, boolean selected) {
         if (!world.isClient && world instanceof ServerWorld serverWorld) {
-            // Find nearest player (excluding the holder)
-            ServerPlayerEntity nearestPlayer = null;
-            double nearestDistance = Double.MAX_VALUE;
-            
-            for (ServerPlayerEntity otherPlayer : serverWorld.getPlayers()) {
-                if (otherPlayer != player && otherPlayer.isAlive()) {
-                    double distance = player.squaredDistanceTo(otherPlayer);
-                    if (distance < nearestDistance) {
-                        nearestDistance = distance;
-                        nearestPlayer = otherPlayer;
+            // Only update every 20 ticks (1 second) to reduce server load
+            if (world.getTime() % 20 == 0) {
+                // Find nearest player (excluding the holder)
+                ServerPlayerEntity nearestPlayer = null;
+                double nearestDistance = Double.MAX_VALUE;
+                
+                for (ServerPlayerEntity otherPlayer : serverWorld.getPlayers()) {
+                    if (otherPlayer != player && otherPlayer.isAlive()) {
+                        double distance = player.squaredDistanceTo(otherPlayer);
+                        if (distance < nearestDistance) {
+                            nearestDistance = distance;
+                            nearestPlayer = otherPlayer;
+                        }
                     }
                 }
-            }
-            
-            if (nearestPlayer != null) {
-                // Update tooltip with target info
-                stack.setCustomName(Text.literal("Tracking: " + nearestPlayer.getName().getString())
-                    .formatted(Formatting.RED, Formatting.BOLD));
                 
-                // Send direction message periodically
-                if (selected && world.getTime() % 20 == 0) {
-                    int distanceBlocks = (int) Math.sqrt(nearestDistance);
-                    player.sendMessage(Text.literal("Target is " + distanceBlocks + " blocks away")
-                        .formatted(Formatting.YELLOW), true);
+                if (nearestPlayer != null) {
+                    // Update tooltip with target info
+                    stack.setCustomName(Text.literal("Tracking: " + nearestPlayer.getName().getString())
+                        .formatted(Formatting.RED, Formatting.BOLD));
+                    
+                    // Send direction message only when selected
+                    if (selected) {
+                        int distanceBlocks = (int) Math.sqrt(nearestDistance);
+                        player.sendMessage(Text.literal("Target is " + distanceBlocks + " blocks away")
+                            .formatted(Formatting.YELLOW), true);
+                    }
+                } else {
+                    stack.setCustomName(Text.literal("No target found")
+                        .formatted(Formatting.GRAY));
                 }
-            } else {
-                stack.setCustomName(Text.literal("No target found")
-                    .formatted(Formatting.GRAY));
             }
         }
         
