@@ -21,6 +21,14 @@ public class GamemodeManager {
         UUID uuid = player.getUuid();
         if (!players.containsKey(uuid)) {
             players.put(uuid, new GamemodeData(uuid));
+            
+            // Give starter items
+            giveStarterItems(player);
+            
+            // Add frog ability as starting ability
+            GamemodeData data = players.get(uuid);
+            data.addAbility("frog");
+            
             player.sendMessage(Text.literal("Frog & Slime Gamemode ACTIVATED!")
                 .formatted(Formatting.GREEN, Formatting.BOLD), false);
             player.sendMessage(Text.literal("Your frog and slime helpers will now beat the game for you!")
@@ -28,12 +36,40 @@ public class GamemodeManager {
             player.sendMessage(Text.literal("But beware... something unexpected awaits at the end...")
                 .formatted(Formatting.RED, Formatting.ITALIC), false);
             
+            // Show totem animation for starting ability
+            ModNetworking.sendTotemAnimation(player, 
+                "Starting Ability Unlocked!", 
+                "Tongue Grab - Quick strikes with your frog tongue", 
+                Formatting.LIGHT_PURPLE);
+            
             ModNetworking.syncGamemodeStatus(player, true);
             grantAdvancement(player, "frogslimegamemode:root");
         } else {
             player.sendMessage(Text.literal("You're already in Frog & Slime Gamemode!")
                 .formatted(Formatting.RED), false);
         }
+    }
+    
+    private static void giveStarterItems(ServerPlayerEntity player) {
+        // Give Task Book
+        if (com.wayacreate.frogslimegamemode.item.ModItems.TASK_BOOK != null) {
+            player.getInventory().insertStack(new net.minecraft.item.ItemStack(com.wayacreate.frogslimegamemode.item.ModItems.TASK_BOOK));
+        }
+        
+        // Give Orphan Shield
+        if (com.wayacreate.frogslimegamemode.item.ModItems.ORPHAN_SHIELD != null) {
+            player.getInventory().insertStack(new net.minecraft.item.ItemStack(com.wayacreate.frogslimegamemode.item.ModItems.ORPHAN_SHIELD));
+        }
+        
+        // Give some basic food
+        player.getInventory().insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.COOKED_BEEF, 16));
+        
+        // Give some basic tools
+        player.getInventory().insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.IRON_SWORD));
+        player.getInventory().insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.IRON_PICKAXE));
+        
+        // Give torches
+        player.getInventory().insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.TORCH, 32));
     }
     
     public static void grantAdvancement(ServerPlayerEntity player, String advancementId) {

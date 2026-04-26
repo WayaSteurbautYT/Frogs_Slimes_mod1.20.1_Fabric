@@ -10,11 +10,10 @@ import net.minecraft.util.Formatting;
 import net.minecraft.world.World;
 
 import java.util.List;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class YouTuberSwordItem extends SwordItem {
     private final String youtuberName;
-    private final Random random = new Random();
     
     public YouTuberSwordItem(String youtuberName, ToolMaterial toolMaterial, int attackDamage, float attackSpeed, Settings settings) {
         super(toolMaterial, attackDamage, attackSpeed, settings);
@@ -107,6 +106,6 @@ public class YouTuberSwordItem extends SwordItem {
             );
             default -> List.of("Subscribe!", "Like!", "Comment!", "Notification squad!");
         };
-        return quotes.get(random.nextInt(quotes.size()));
+        return quotes.get(ThreadLocalRandom.current().nextInt(quotes.size()));
     }
 }

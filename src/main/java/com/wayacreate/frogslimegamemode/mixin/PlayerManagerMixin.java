@@ -1,9 +1,9 @@
 package com.wayacreate.frogslimegamemode.mixin;
 
-import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
+/*import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
 import com.wayacreate.frogslimegamemode.util.CreateWorldState;
 import net.minecraft.server.network.ServerPlayerEntity;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;*/
 
 /**
  * Mixin to automatically enable Frog & Slime gamemode when player joins
@@ -16,11 +16,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class PlayerManagerMixin {
 
     // @Inject(method = "onPlayerConnect", at = @At("TAIL"))
-    private void onPlayerConnect(ServerPlayerEntity player, CallbackInfo ci) {
+    /*private void onPlayerConnect(ServerPlayerEntity player, CallbackInfo ci) {
         // Check if world was created with frogslime mode
         if (CreateWorldState.isFrogSlimeMode()) {
             GamemodeManager.enableGamemode(player);
             CreateWorldState.resetFrogSlimeMode();
         }
-    }
+    }*/
 }

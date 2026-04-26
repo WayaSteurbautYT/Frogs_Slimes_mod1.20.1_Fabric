@@ -45,7 +45,9 @@ public class HelperAbilityManager {
             case WITHER_CURE -> executeWitherCure(helper, world);
             case BLINDNESS_CURE -> executeBlindnessCure(helper, world);
             case POISON_CURE -> executePoisonCure(helper, world);
-            case NONE -> {}
+            case NONE -> {
+                // No ability to execute
+            }
         }
     }
     
@@ -466,7 +468,7 @@ public class HelperAbilityManager {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.RAID_OMEN,
+            world.spawnParticles(ParticleTypes.ENCHANT,
                 helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }

@@ -8,6 +8,7 @@ import net.minecraft.util.Formatting;
  * Baritone integration for helper schematic building.
  * Used by HelperCommand to manage schematic building tasks.
  */
+@SuppressWarnings("unused")
 public class BaritoneIntegration {
     
     /**

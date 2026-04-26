@@ -3,6 +3,8 @@ package com.wayacreate.frogslimegamemode.evolution;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
+import java.util.Objects;
+
 public enum MobTransformation {
     FROG("frog", "Frog", Formatting.GREEN),
     SLIME("slime", "Slime", Formatting.GREEN),
@@ -43,7 +45,7 @@ public enum MobTransformation {
     
     public static MobTransformation fromId(String id) {
         for (MobTransformation transformation : values()) {
-            if (transformation.id.equals(id)) {
+            if (Objects.equals(transformation.id, id)) {
                 return transformation;
             }
         }

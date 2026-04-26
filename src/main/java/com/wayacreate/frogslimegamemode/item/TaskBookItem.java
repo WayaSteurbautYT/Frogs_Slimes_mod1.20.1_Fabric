@@ -1,6 +1,5 @@
 package com.wayacreate.frogslimegamemode.item;
 
-import com.wayacreate.frogslimegamemode.FrogSlimeGamemode;
 import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
@@ -19,7 +18,7 @@ public class TaskBookItem extends Item {
     
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
-        if (!world.isClient && user instanceof ServerPlayerEntity serverPlayer) {
+        if (!world.isClient && user instanceof ServerPlayerEntity) {
             if (GamemodeManager.isInGamemode(user)) {
                 var data = GamemodeManager.getData(user);
                 

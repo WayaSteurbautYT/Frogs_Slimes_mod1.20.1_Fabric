@@ -52,6 +52,6 @@ public class ModEntities {
         FabricDefaultAttributeRegistry.register(SLIME_HELPER, SlimeHelperEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(GIANT_SLIME_BOSS, GiantSlimeBossEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(FROG_KING, FrogKingEntity.createAttributes());
-        FrogSlimeGamemode.LOGGER.info("Registered " + 4 + " entity types");
+        FrogSlimeGamemode.LOGGER.info("Registered 4 entity types");
     }
 }

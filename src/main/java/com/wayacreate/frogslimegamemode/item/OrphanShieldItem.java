@@ -3,7 +3,6 @@ package com.wayacreate.frogslimegamemode.item;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ShieldItem;
 import net.minecraft.nbt.NbtCompound;
@@ -11,6 +10,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Rarity;
 
+import java.util.Objects;
 import java.util.UUID;
 
 public class OrphanShieldItem extends ShieldItem {
@@ -59,7 +59,7 @@ public class OrphanShieldItem extends ShieldItem {
         if (!(entity instanceof net.minecraft.entity.LivingEntity living)) return;
         
         // Add armor modifier when held or equipped
-        if (selected || living.getEquippedStack(EquipmentSlot.OFFHAND).equals(stack)) {
+        if (selected || Objects.equals(living.getEquippedStack(EquipmentSlot.OFFHAND), stack)) {
             EntityAttributeModifier armorModifier = new EntityAttributeModifier(
                 ARMOR_MODIFIER_UUID,
                 "Orphan Shield Armor",
@@ -72,7 +72,7 @@ public class OrphanShieldItem extends ShieldItem {
         } else {
             // Remove modifier when not held
             for (EntityAttributeModifier modifier : living.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).getModifiers(EntityAttributeModifier.Operation.ADDITION)) {
-                if (modifier.getId().equals(ARMOR_MODIFIER_UUID)) {
+                if (Objects.equals(modifier.getId(), ARMOR_MODIFIER_UUID)) {
                     living.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).removeModifier(modifier);
                     break;
                 }

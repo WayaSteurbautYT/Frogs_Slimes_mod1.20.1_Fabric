@@ -132,7 +132,9 @@ public class PlayerAbilityManager {
             case WITHER_CURE -> executeWitherCure(player, world);
             case BLINDNESS_CURE -> executeBlindnessCure(player, world);
             case POISON_CURE -> executePoisonCure(player, world);
-            case NONE -> {}
+            case NONE -> {
+                // No ability to execute
+            }
         }
     }
     
@@ -546,7 +548,7 @@ public class PlayerAbilityManager {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.RAID_OMEN,
+            world.spawnParticles(ParticleTypes.ENCHANT,
                 player.getX() + px, player.getY() + py, player.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }

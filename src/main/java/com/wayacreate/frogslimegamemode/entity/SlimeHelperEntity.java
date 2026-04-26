@@ -4,8 +4,6 @@ import com.wayacreate.frogslimegamemode.eating.MobAbility;
 import com.wayacreate.frogslimegamemode.evolution.EvolutionStage;
 import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
 import com.wayacreate.frogslimegamemode.gamemode.PlayerLevel;
-import com.wayacreate.frogslimegamemode.entity.ai.MiningGoal;
-import com.wayacreate.frogslimegamemode.entity.ai.LumberjackGoal;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ai.goal.*;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
@@ -28,6 +26,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
+
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.world.World;
@@ -41,9 +40,8 @@ public class SlimeHelperEntity extends TameableEntity {
     private static final TrackedData<Integer> MOBS_KILLED = DataTracker.registerData(SlimeHelperEntity.class, TrackedDataHandlerRegistry.INTEGER);
     private static final TrackedData<Boolean> FINAL_FORM = DataTracker.registerData(SlimeHelperEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
     private static final TrackedData<String> ROLE = DataTracker.registerData(SlimeHelperEntity.class, TrackedDataHandlerRegistry.STRING);
-    private int particleCooldown = 0;
     private final List<String> abilities = new ArrayList<>();
-    private String lastRole = "";
+    private int abilityCooldown = 0;
     
     public SlimeHelperEntity(EntityType<? extends TameableEntity> entityType, World world) {
         super(entityType, world);
@@ -316,33 +314,33 @@ public class SlimeHelperEntity extends TameableEntity {
         updateCustomName();
     }
     
-    @Override
-    public void tick() {
-        super.tick();
+    private void tryUseCombatAbility(ServerWorld world) {
+        if (abilities.isEmpty()) return;
         
-        // Add role-based goals dynamically (only when role changes to prevent memory leak)
-        String role = getRole();
-        if (!role.equals(lastRole)) {
-            lastRole = role;
-            if (!role.isEmpty()) {
-                if (role.equals("Miner")) {
-                    this.goalSelector.add(8, new MiningGoal(this));
-                } else if (role.equals("Lumberjack")) {
-                    this.goalSelector.add(8, new LumberjackGoal(this));
-                } else if (role.equals("Combat Specialist")) {
-                    // Combat role gets enhanced attack damage
-                    this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(10.0);
-                }
+        // Pick a random ability with active combat effect
+        List<String> activeAbilities = new ArrayList<>();
+        for (String abilityId : abilities) {
+            MobAbility ability = MobAbility.getAbility(abilityId);
+            if (ability != null && ability.getActiveAbility() != MobAbility.AbilityType.NONE) {
+                activeAbilities.add(abilityId);
             }
         }
         
-        if (!this.getWorld().isClient && particleCooldown > 0) {
-            particleCooldown--;
-        }
+        if (activeAbilities.isEmpty()) return;
         
-        if (!this.getWorld().isClient && this.age % 40 == 0) {
-            spawnIdleParticles();
+        // 20% chance to use ability each tick when in combat
+        if (world.random.nextFloat() < 0.2) {
+            String selectedAbilityId = activeAbilities.get(world.random.nextInt(activeAbilities.size()));
+            MobAbility ability = MobAbility.getAbility(selectedAbilityId);
+            if (ability != null) {
+                executeAbility(world, ability);
+                abilityCooldown = ability.getAbilityCooldown();
+            }
         }
+    }
+    
+    private void executeAbility(ServerWorld world, MobAbility ability) {
+        com.wayacreate.frogslimegamemode.abilities.HelperAbilityManager.executeAbility(this, ability, world);
     }
     
     private void spawnInteractParticles() {
@@ -435,5 +433,25 @@ public class SlimeHelperEntity extends TameableEntity {
                 .formatted(stage.getColor()));
         }
         this.setCustomNameVisible(true);
+    }
+    
+    @Override
+    public void tick() {
+        super.tick();
+        
+        // Decrease ability cooldown
+        if (abilityCooldown > 0) {
+            abilityCooldown--;
+        }
+        
+        // Try to use combat ability when in combat and cooldown is ready
+        if (!this.getWorld().isClient && this.getWorld() instanceof ServerWorld world) {
+            if (this.getTarget() != null && abilityCooldown == 0) {
+                tryUseCombatAbility(world);
+            }
+        }
+        
+        // Spawn idle particles
+        spawnIdleParticles();
     }
 }

@@ -33,6 +33,8 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.EntityView;
 import net.minecraft.world.World;
 
+import java.util.Objects;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -351,14 +353,14 @@ public class FrogHelperEntity extends TameableEntity {
         
         // Add role-based goals dynamically (only when role changes to prevent memory leak)
         String role = getRole();
-        if (!role.equals(lastRole)) {
+        if (!Objects.equals(role, lastRole)) {
             lastRole = role;
             if (!role.isEmpty()) {
-                if (role.equals("Miner")) {
+                if (Objects.equals(role, "Miner")) {
                     this.goalSelector.add(8, new MiningGoal(this));
-                } else if (role.equals("Lumberjack")) {
+                } else if (Objects.equals(role, "Lumberjack")) {
                     this.goalSelector.add(8, new LumberjackGoal(this));
-                } else if (role.equals("Combat Specialist")) {
+                } else if (Objects.equals(role, "Combat Specialist")) {
                     // Combat role gets enhanced attack damage
                     this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(8.0);
                 }

@@ -124,18 +124,19 @@ public class AbilityDropItem extends Item {
             case SHIELD_BASH -> Formatting.BLUE;
             case LEVITATION -> Formatting.LIGHT_PURPLE;
             case UNDEAD_HEALING -> Formatting.DARK_GRAY;
-            case REGENERATION -> Formatting.PINK;
+            case REGENERATION -> Formatting.RED;
             case STRENGTH_BOOST -> Formatting.RED;
             case RESISTANCE_BOOST -> Formatting.BLUE;
             case FORTUNE -> Formatting.GOLD;
             case LOOTING -> Formatting.AQUA;
             case SATURATION -> Formatting.GREEN;
             case HASTE -> Formatting.YELLOW;
-            case MINING_FATIGUE_CURE -> Formatting.LIME;
+            case MINING_FATIGUE_CURE -> Formatting.GREEN;
             case WITHER_CURE -> Formatting.DARK_PURPLE;
             case BLINDNESS_CURE -> Formatting.WHITE;
             case POISON_CURE -> Formatting.GREEN;
-            case NONE, default -> Formatting.LIGHT_PURPLE;
+            case NONE -> Formatting.LIGHT_PURPLE;
+            default -> Formatting.LIGHT_PURPLE;
         };
     }
     
