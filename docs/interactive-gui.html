@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frog & Slime Gamemode - Interactive GUI</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'VT323', 'Minecraft', monospace;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #FFAA00;
+            text-shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            color: #55FF55;
+            text-shadow: 2px 2px 0 #000;
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #AAAAAA;
+            font-size: 20px;
+            margin-bottom: 30px;
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            background: linear-gradient(180deg, #8B8B8B 0%, #6B6B6B 50%, #5B5B5B 51%, #4B4B4B 100%);
+            border: 3px solid #373737;
+            border-bottom: none;
+            color: #FFF;
+            padding: 10px 25px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 18px;
+            text-shadow: 1px 1px 0 #000;
+            transition: all 0.2s;
+            min-width: 120px;
+        }
+
+        .nav-tab:hover {
+            background: linear-gradient(180deg, #9B9B9B 0%, #7B7B7B 50%, #6B6B6B 51%, #5B5B5B 100%);
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(180deg, #6B6B6B 0%, #5B5B5B 50%, #4B4B4B 51%, #3B3B3B 100%);
+            border-bottom: 3px solid #1a1a2e;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Minecraft GUI Container */
+        .minecraft-gui {
+            background: #C6C6C6;
+            border: 4px solid #373737;
+            border-radius: 4px;
+            padding: 10px;
+            display: inline-block;
+            position: relative;
+            box-shadow: inset 0 0 0 2px #FFF, inset 0 0 0 4px #373737;
+        }
+
+        .minecraft-gui::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: -6px;
+            right: -6px;
+            bottom: -6px;
+            border: 2px solid #FFF;
+            border-radius: 6px;
+            pointer-events: none;
+        }
+
+        /* Inventory Slot */
+        .slot {
+            width: 50px;
+            height: 50px;
+            background: #8B8B8B;
+            border: 2px solid #373737;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.1s;
+        }
+
+        .slot:hover {
+            background: #9B9B9B;
+            transform: scale(1.05);
+            z-index: 10;
+        }
+
+        .slot.has-item {
+            background: #8B8B8B;
+        }
+
+        .slot img {
+            width: 40px;
+            height: 40px;
+            image-rendering: pixelated;
+        }
+
+        .slot .item-count {
+            position: absolute;
+            bottom: 2px;
+            right: 3px;
+            color: #FFF;
+            font-size: 14px;
+            text-shadow: 1px 1px 0 #000;
+            font-weight: bold;
+        }
+
+        /* Crafting Grid */
+        .crafting-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 50px);
+            grid-template-rows: repeat(3, 50px);
+            gap: 2px;
+            margin-bottom: 15px;
+        }
+
+        .crafting-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px 0;
+            color: #373737;
+            font-size: 24px;
+        }
+
+        .result-slot {
+            width: 60px;
+            height: 60px;
+            background: #8B8B8B;
+            border: 3px solid #373737;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .result-slot img {
+            width: 48px;
+            height: 48px;
+            image-rendering: pixelated;
+        }
+
+        /* Minecraft Tooltip */
+        .tooltip {
+            position: fixed;
+            background: #100010;
+            border: 2px solid #500050;
+            padding: 8px 12px;
+            min-width: 200px;
+            max-width: 300px;
+            z-index: 1000;
+            display: none;
+            pointer-events: none;
+            font-size: 14px;
+            line-height: 1.4;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+        }
+
+        .tooltip.visible {
+            display: block;
+        }
+
+        .tooltip-title {
+            color: #FFFF55;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+
+        .tooltip-rarity {
+            color: #4ade80;
+            margin-bottom: 5px;
+            font-style: italic;
+        }
+
+        .tooltip-description {
+            color: #AAAAAA;
+            margin-bottom: 8px;
+        }
+
+        .tooltip-stats {
+            color: #FF5555;
+            margin-bottom: 5px;
+        }
+
+        .tooltip-abilities {
+            color: #55FFFF;
+            margin-bottom: 5px;
+        }
+
+        .tooltip-nbt {
+            color: #FFAA00;
+            font-size: 12px;
+            font-family: monospace;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #500050;
+        }
+
+        /* Collection Grid */
+        .collection-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 4px;
+            padding: 15px;
+            background: #C6C6C6;
+            border: 4px solid #373737;
+            border-radius: 4px;
+        }
+
+        .collection-slot {
+            width: 50px;
+            height: 50px;
+            background: #8B8B8B;
+            border: 2px solid #373737;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .collection-slot.collected {
+            background: #8B8B8B;
+        }
+
+        .collection-slot.locked {
+            background: #5B5B5B;
+            opacity: 0.5;
+        }
+
+        .collection-slot img {
+            width: 40px;
+            height: 40px;
+            image-rendering: pixelated;
+        }
+
+        /* Potion Brewing Stand */
+        .brewing-stand {
+            background: #C6C6C6;
+            border: 4px solid #373737;
+            border-radius: 4px;
+            padding: 15px;
+            display: inline-block;
+        }
+
+        .brewing-slots {
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+        }
+
+        .brewing-column {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .brewing-slot {
+            width: 50px;
+            height: 50px;
+            background: #8B8B8B;
+            border: 2px solid #373737;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .potion-slot {
+            width: 50px;
+            height: 70px;
+            background: #8B8B8B;
+            border: 2px solid #373737;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .potion-slot img {
+            width: 40px;
+            height: 60px;
+            image-rendering: pixelated;
+        }
+
+        /* Category Selector */
+        .category-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .category-btn {
+            background: linear-gradient(180deg, #8B8B8B 0%, #6B6B6B 50%, #5B5B5B 51%, #4B4B4B 100%);
+            border: 3px solid #373737;
+            color: #FFF;
+            padding: 8px 20px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 16px;
+            text-shadow: 1px 1px 0 #000;
+            transition: all 0.2s;
+        }
+
+        .category-btn:hover {
+            background: linear-gradient(180deg, #9B9B9B 0%, #7B7B7B 50%, #6B6B6B 51%, #5B5B5B 100%);
+        }
+
+        .category-btn.active {
+            background: linear-gradient(180deg, #6B6B6B 0%, #5B5B5B 50%, #4B4B4B 51%, #3B3B3B 100%);
+            border-color: #FFAA00;
+        }
+
+        /* Achievement Panel */
+        .achievement-panel {
+            background: #C6C6C6;
+            border: 4px solid #373737;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .achievement-item {
+            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+            border: 2px solid #555;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .achievement-item:hover {
+            border-color: #4ade80;
+            transform: translateX(5px);
+        }
+
+        .achievement-item.unlocked {
+            border-color: #4ade80;
+            background: linear-gradient(135deg, #1a3a1a 0%, #0d2d0d 100%);
+        }
+
+        .achievement-icon {
+            width: 50px;
+            height: 50px;
+            background: #333;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .achievement-info {
+            flex: 1;
+        }
+
+        .achievement-name {
+            color: #4ade80;
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 3px;
+        }
+
+        .achievement-desc {
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        .achievement-status {
+            color: #ff5555;
+            font-size: 12px;
+        }
+
+        .achievement-item.unlocked .achievement-status {
+            color: #4ade80;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .crafting-grid {
+                grid-template-columns: repeat(3, 40px);
+                grid-template-rows: repeat(3, 40px);
+            }
+
+            .slot {
+                width: 40px;
+                height: 40px;
+            }
+
+            .slot img {
+                width: 32px;
+                height: 32px;
+            }
+
+            .result-slot {
+                width: 50px;
+                height: 50px;
+            }
+
+            .result-slot img {
+                width: 40px;
+                height: 40px;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+
+            .nav-tab {
+                padding: 8px 15px;
+                font-size: 14px;
+                min-width: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>FROGS & SLIMES</h1>
+        <p class="subtitle">GAMEMODE - Interactive GUI</p>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" data-tab="collections">📦 Collections</button>
+            <button class="nav-tab" data-tab="crafting">⚒️ Crafting</button>
+            <button class="nav-tab" data-tab="potions">🧪 Potions</button>
+            <button class="nav-tab" data-tab="achievements">🏆 Achievements</button>
+            <button class="nav-tab" data-tab="skills">⭐ Skills</button>
+        </div>
+
+        <!-- Collections Tab -->
+        <div class="tab-content active" id="collections">
+            <h2>Item Collections</h2>
+            <div class="category-selector">
+                <button class="category-btn active" data-category="all">All Items</button>
+                <button class="category-btn" data-category="evolution">Evolution</button>
+                <button class="category-btn" data-category="weapons">Weapons</button>
+                <button class="category-btn" data-category="armor">Armor</button>
+                <button class="category-btn" data-category="food">Food</button>
+                <button class="category-btn" data-category="utility">Utility</button>
+            </div>
+            <div class="collection-grid" id="collection-grid">
+                <!-- Items will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Crafting Tab -->
+        <div class="tab-content" id="crafting">
+            <h2>Crafting Table</h2>
+            <div class="category-selector">
+                <button class="category-btn active" data-recipe="evolution-stone">Evolution Stone</button>
+                <button class="category-btn" data-recipe="dream-sword">Dream's Blade</button>
+                <button class="category-btn" data-recipe="techno-sword">Technoblade's Blade</button>
+                <button class="category-btn" data-recipe="slime-food">Slime Food</button>
+                <button class="category-btn" data-recipe="frog-food">Frog Food</button>
+                <button class="category-btn" data-recipe="task-book">Task Book</button>
+            </div>
+            <div class="minecraft-gui">
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <div>
+                        <div class="crafting-grid" id="crafting-grid">
+                            <!-- Slots will be populated by JavaScript -->
+                        </div>
+                        <div class="crafting-arrow">➡️</div>
+                    </div>
+                    <div class="result-slot" id="result-slot">
+                        <!-- Result will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Potions Tab -->
+        <div class="tab-content" id="potions">
+            <h2>Potion Brewing</h2>
+            <div class="minecraft-gui">
+                <div class="brewing-stand">
+                    <div class="brewing-slots">
+                        <div class="brewing-column">
+                            <div class="brewing-slot" data-item="blaze-powder">
+                                <img src="../src/main/resources/assets/frogslimegamemode/textures/item/evolution_stone.png" alt="Blaze Powder" style="filter: hue-rotate(30deg);">
+                            </div>
+                            <div class="brewing-slot" data-item="nether-wart">
+                                <img src="../src/main/resources/assets/frogslimegamemode/textures/item/slime_food.png" alt="Nether Wart" style="filter: hue-rotate(180deg);">
+                            </div>
+                        </div>
+                        <div class="brewing-column">
+                            <div class="potion-slot" data-potion="awkward">
+                                <img src="../src/main/resources/assets/frogslimegamemode/textures/item/slime_food.png" alt="Awkward Potion" style="filter: hue-rotate(200deg) brightness(0.7);">
+                            </div>
+                            <div class="potion-slot" data-potion="strength">
+                                <img src="../src/main/resources/assets/frogslimegamemode/textures/item/slime_food.png" alt="Strength Potion" style="filter: hue-rotate(0deg) saturate(2);">
+                            </div>
+                            <div class="potion-slot" data-potion="speed">
+                                <img src="../src/main/resources/assets/frogslimegamemode/textures/item/frog_food.png" alt="Speed Potion" style="filter: hue-rotate(120deg) saturate(2);">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Achievements Tab -->
+        <div class="tab-content" id="achievements">
+            <h2>Achievements</h2>
+            <div class="achievement-panel" id="achievement-panel">
+                <!-- Achievements will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Skills Tab -->
+        <div class="tab-content" id="skills">
+            <h2>Evolution Skill Tree</h2>
+            <div class="achievement-panel" id="skill-panel">
+                <!-- Skills will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Tooltip Element -->
+    <div class="tooltip" id="tooltip">
+        <div class="tooltip-title"></div>
+        <div class="tooltip-rarity"></div>
+        <div class="tooltip-description"></div>
+        <div class="tooltip-stats"></div>
+        <div class="tooltip-abilities"></div>
+        <div class="tooltip-nbt"></div>
+    </div>
+
+    <script>
+        // Item Data with NBT tags and abilities (from actual Java code)
+        const itemData = {
+            'evolution-stone': {
+                name: "Evolution Stone",
+                rarity: "✨ Epic",
+                description: "Instantly evolves your helper to the next stage",
+                stats: "Max Stack: 16",
+                abilities: "Instant Evolution",
+                nbt: "{EvolutionPower: 1, CanEvolve: true, EvolutionStage: +1}",
+                texture: "src/main/resources/assets/frogslimegamemode/textures/item/evolution_stone.png",
+                category: "evolution"
+            },
+            'final-evolution-crystal': {
+                name: "Final Evolution Crystal",
+                rarity: "🌟 Legendary",
+                description: "Unlocks the ultimate slime form after defeating the boss",
+                stats: "Max Stack: 1",
+                abilities: "Final Form Unlock",
+                nbt: "{FinalForm: true, BossDefeated: true, Ultimate: true}",
+                texture: "src/main/resources/assets/frogslimegamemode/textures/item/final_evolution_crystal.png",
+                category: "evolution"
+            },
+            'dream-sword': {
+                name: "Dream's Blade",
+                rarity: "🌟 Legendary",
+                description: "A sword worthy of a speedrunner",
+                stats: "Attack: +3 | Speed: -2.4 | Material: Netherite",
+                abilities: "Speed III (10s) on use",
+                nbt: "{AttackDamage: 3, AttackSpeed: -2.4, Material: netherite, Youtuber: Dream}",
+                texture: "src/main/resources/assets/frogslimegamemode/textures/item/dream_sword.png",
+                category: "weapons"
+            },
+            'technoblade-sword': {
+                name: "Technoblade's Blade",
+                rarity: "🌟 Legendary",
+                description: "Technoblade never dies!",
+                stats: "Attack: +5 | Speed: -2.2 | Material: Netherite",
+                abilities: "Strength II (10s), Resistance II (10s)",
+                nbt: "{AttackDamage: 5, AttackSpeed: -2.2, Material: netherite, Youtuber: Technoblade}",
+                texture: "src/main/resources/assets/frogslimegamemode/textures/item/technoblade_sword.png",
+                category: "weapons"
+            },
+            'grian-sword': {
+                name: "Grian's Blade",
+                rarity: "🌟 Legendary",
+                description: "Perfect for pranking",
+                stats: "Attack: +3 | Speed: -2.4 | Material: Diamond",
+                abilities: "Invisibility (5s) on use",
+                nbt: "{AttackDamage: 3, AttackSpeed: -2.4, Material: diamond, Youtuber: Grian}",
+                texture: "src/main/resources/assets/frogslimegamemode/textures/item/grian_sword.png",
+                category: "weapons"
+            },
+            'mumbo-jumbo-sword': {
+                name: "Mumbo Jumbo's Blade",
+                rarity: "🌟 Legendary",
+                description: "Engineering mode activated!",
+                stats: "Attack: +3 | Speed: -2.4 | Material: Diamond",
+                abilities: "Haste III (10s) on use",
+                nbt: "{AttackDamage: 3, AttackSpeed: -2.4, Material: diamond, Youtuber: Mumbo Jumbo}",
+                texture: "src/main/resources/assets/frogslimegamemode/textures/item/mumbo_jumbo_sword.png",
+                category: "weapons"
+            },
+            'mustard-helmet': {
+                name: "Mustard Helmet",
+                rarity: "🟡 Uncommon",
+                description: "A helmet made of mustard",
+                stats: "Protection: 2 | Material: Gold",
+                abilities: "Has enchantment glint",
+                nbt: "{Protection: 2, Material: gold, CustomName: Mustard Helmet}",
+                texture: "src/main/resources/assets/frogslimegamemode/textures/item/mustard_helmet.png",
+                category: "armor"
+            },
+            'orphan-shield': {
+                name: "Orphan Shield",
+                rarity: "🔵 Rare",
+                description: "A shield with a dark past",
+                stats: "Material: Iron",
+                abilities: "Custom NBT tag",
+                nbt: "{OrphanShield: true, Material: iron}",
+                texture: "src/main/resources/assets/frogslimegamemode/textures/item/orphan_shield.png",
+                category: "armor"
+            },
+            'prankster-chestplate': {
+                name: "Prankster Chestplate",
+                rarity: "🟢 Common",
+                description: "Purple leather chestplate",
+                stats: "Protection: 3 | Material: Leather",
+                abilities: "Purple variant",
+                nbt: "{Protection: 3, Material: leather, Color: purple}",
+                texture: "src/main/resources/assets/frogslimegamemode/textures/item/prankster_chestplate.png",
+                category: "armor"
+            },
+            'slime-food': {
+                name: "Slime Food",
+                rarity: "🟢 Common",
+                description: "Feed this to your slime helper",
+                stats: "Hunger: 4 | Saturation: 0.6",
+                abilities: "Jump Boost II (30s), Resistance I (30s)",
+                nbt: "{Hunger: 4, Saturation: 0.6, Effects: [jump_boost, resistance]}",
+                texture: "src/main/resources/assets/frogslimegamemode/textures/item/slime_food.png",
+                category: "food"
+            },
+            'frog-food': {
+                name: "Frog Food",
+                rarity: "🟢 Common",
+                description: "Feed this to your frog helper",
+                stats: "Hunger: 3 | Saturation: 0.5",
+                abilities: "Speed I (30s), Water Breathing (30s)",
+                nbt: "{Hunger: 3, Saturation: 0.5, Effects: [speed, water_breathing]}",
+                texture: "src/main/resources/assets/frogslimegamemode/textures/item/frog_food.png",
+                category: "food"
+            },
+            'task-book': {
+                name: "Task Book",
+                rarity: "🔵 Rare",
+                description: "View and track your challenges",
+                stats: "Max Stack: 1",
+                abilities: "Shows gamemode progress",
+                nbt: "{TaskTracker: true, ChallengeCount: 10}",
+                texture: "src/main/resources/assets/frogslimegamemode/textures/item/task_book.png",
+                category: "utility"
+            },
+            'manhunt-compass': {
+                name: "Manhunt Compass",
+                rarity: "🔵 Rare",
+                description: "Tracks the nearest player",
+                stats: "Max Stack: 1",
+                abilities: "Player tracking",
+                nbt: "{Tracker: true, Target: nearest_player}",
+                texture: "src/main/resources/assets/frogslimegamemode/textures/item/manhunt_compass.png",
+                category: "utility"
+            },
+            'frog-helper-spawn-egg': {
+                name: "Frog Helper Spawn Egg",
+                rarity: "🟢 Common",
+                description: "Spawns a frog helper",
+                stats: "Max Stack: 64",
+                abilities: "Spawn Entity",
+                nbt: "{Entity: frog_helper, Color: 0x6B8E23}",
+                texture: "src/main/resources/assets/frogslimegamemode/textures/item/frog_helper_spawn_egg.png",
+                category: "utility"
+            },
+            'slime-helper-spawn-egg': {
+                name: "Slime Helper Spawn Egg",
+                rarity: "🟢 Common",
+                description: "Spawns a slime helper",
+                stats: "Max Stack: 64",
+                abilities: "Spawn Entity",
+                nbt: "{Entity: slime_helper, Color: 0x51A03E}",
+                texture: "src/main/resources/assets/frogslimegamemode/textures/item/slime_helper_spawn_egg.png",
+                category: "utility"
+            }
+        };
+
+        // Recipe Data
+        const recipes = {
+            'evolution-stone': {
+                grid: [
+                    ['', 'diamond', ''],
+                    ['diamond', 'slime-ball', 'diamond'],
+                    ['', 'diamond', '']
+                ],
+                result: 'evolution-stone'
+            },
+            'dream-sword': {
+                grid: [
+                    ['', 'gold-block', ''],
+                    ['gold-block', 'netherite-sword', 'gold-block'],
+                    ['', 'gold-block', '']
+                ],
+                result: 'dream-sword'
+            },
+            'techno-sword': {
+                grid: [
+                    ['', 'bone-block', ''],
+                    ['bone-block', 'netherite-sword', 'bone-block'],
+                    ['', 'bone-block', '']
+                ],
+                result: 'technoblade-sword'
+            },
+            'slime-food': {
+                grid: [
+                    ['slime-ball', 'slime-ball', 'slime-ball'],
+                    ['slime-ball', 'rabbit', 'slime-ball'],
+                    ['slime-ball', 'slime-ball', 'slime-ball']
+                ],
+                result: 'slime-food'
+            },
+            'frog-food': {
+                grid: [
+                    ['spider-eye', 'spider-eye', 'spider-eye'],
+                    ['spider-eye', 'cooked-chicken', 'spider-eye'],
+                    ['spider-eye', 'spider-eye', 'spider-eye']
+                ],
+                result: 'frog-food'
+            },
+            'task-book': {
+                grid: [
+                    ['', 'book', ''],
+                    ['book', 'paper', 'book'],
+                    ['', 'book', '']
+                ],
+                result: 'task-book'
+            }
+        };
+
+        // Achievement Data
+        const achievements = [
+            { id: 'first-helper', name: 'First Helper', desc: 'Tame your first frog or slime', icon: '🐸', unlocked: true },
+            { id: 'evolve-1', name: 'Evolution Beginner', desc: 'Evolve a helper to stage 1', icon: '⭐', unlocked: true },
+            { id: 'evolve-2', name: 'Evolution Expert', desc: 'Evolve a helper to stage 2', icon: '⭐⭐', unlocked: true },
+            { id: 'evolve-3', name: 'Evolution Master', desc: 'Evolve a helper to stage 3', icon: '⭐⭐⭐', unlocked: false },
+            { id: 'final-form', name: 'Final Form', desc: 'Unlock the final slime evolution', icon: '👑', unlocked: false },
+            { id: 'boss-slayer', name: 'Boss Slayer', desc: 'Defeat the Giant Slime Boss', icon: '👹', unlocked: false },
+            { id: 'task-master', name: 'Task Master', desc: 'Complete all 10 challenges', icon: '📋', unlocked: false }
+        ];
+
+        // Skill Data
+        const skills = [
+            { id: 'basic-attack', name: 'Basic Attack', desc: 'Helper attacks nearby mobs', icon: '⚔️', unlocked: true, requirements: 'None', effect: '+0 Attack' },
+            { id: 'mob-collection', name: 'Mob Collection', desc: 'Helper auto-collects drops', icon: '📦', unlocked: true, requirements: 'Basic Attack', effect: 'Auto-loot' },
+            { id: 'evolution-1', name: 'Evolution Stage 1', desc: 'Unlock first evolution stage', icon: '⭐', unlocked: true, requirements: 'Kill 10 mobs', effect: '+10 Health, +2 Damage' },
+            { id: 'evolution-2', name: 'Evolution Stage 2', desc: 'Unlock second evolution stage', icon: '⭐⭐', unlocked: false, requirements: 'Kill 25 mobs', effect: '+20 Health, +4 Damage' },
+            { id: 'evolution-3', name: 'Evolution Stage 3', desc: 'Unlock third evolution stage', icon: '⭐⭐⭐', unlocked: false, requirements: 'Kill 50 mobs', effect: '+30 Health, +6 Damage' },
+            { id: 'final-evolution', name: 'Final Evolution', desc: 'Unlock ultimate slime form', icon: '👑', unlocked: false, requirements: 'Defeat Giant Slime Boss', effect: '200 Health, 30 Damage, 100% KB Resistance' }
+        ];
+
+        // Initialize Collection Grid
+        function initCollectionGrid(category = 'all') {
+            const grid = document.getElementById('collection-grid');
+            grid.innerHTML = '';
+            
+            Object.keys(itemData).forEach(itemId => {
+                const item = itemData[itemId];
+                if (category !== 'all' && item.category !== category) return;
+                
+                const slot = document.createElement('div');
+                slot.className = 'collection-slot collected';
+                slot.innerHTML = `<img src="${item.texture}" alt="${item.name}">`;
+                slot.dataset.item = itemId;
+                slot.addEventListener('mouseenter', (e) => showTooltip(e, itemId));
+                slot.addEventListener('mouseleave', hideTooltip);
+                grid.appendChild(slot);
+            });
+        }
+
+        // Initialize Crafting Grid
+        function initCraftingGrid(recipeId) {
+            const grid = document.getElementById('crafting-grid');
+            const resultSlot = document.getElementById('result-slot');
+            const recipe = recipes[recipeId];
+            
+            grid.innerHTML = '';
+            
+            recipe.grid.forEach((item, index) => {
+                const slot = document.createElement('div');
+                slot.className = 'slot' + (item ? ' has-item' : '');
+                
+                if (item && itemData[item]) {
+                    slot.innerHTML = `<img src="${itemData[item].texture}" alt="${item}">`;
+                    slot.dataset.item = item;
+                }
+                
+                slot.addEventListener('mouseenter', (e) => showTooltip(e, item));
+                slot.addEventListener('mouseleave', hideTooltip);
+                grid.appendChild(slot);
+            });
+            
+            // Set result
+            const resultItem = itemData[recipe.result];
+            if (resultItem) {
+                resultSlot.innerHTML = `<img src="${resultItem.texture}" alt="${resultItem.name}">`;
+                resultSlot.dataset.item = recipe.result;
+                resultSlot.addEventListener('mouseenter', (e) => showTooltip(e, recipe.result));
+                resultSlot.addEventListener('mouseleave', hideTooltip);
+            }
+        }
+
+        // Initialize Achievements
+        function initAchievements() {
+            const panel = document.getElementById('achievement-panel');
+            panel.innerHTML = '';
+            
+            achievements.forEach(ach => {
+                const div = document.createElement('div');
+                div.className = 'achievement-item' + (ach.unlocked ? ' unlocked' : '');
+                div.innerHTML = `
+                    <div class="achievement-icon">${ach.icon}</div>
+                    <div class="achievement-info">
+                        <div class="achievement-name">${ach.name}</div>
+                        <div class="achievement-desc">${ach.desc}</div>
+                        <div class="achievement-status">${ach.unlocked ? '✓ Unlocked' : '🔒 Locked'}</div>
+                    </div>
+                `;
+                panel.appendChild(div);
+            });
+        }
+
+        // Initialize Skills
+        function initSkills() {
+            const panel = document.getElementById('skill-panel');
+            panel.innerHTML = '';
+            
+            skills.forEach(skill => {
+                const div = document.createElement('div');
+                div.className = 'achievement-item' + (skill.unlocked ? ' unlocked' : '');
+                div.innerHTML = `
+                    <div class="achievement-icon">${skill.icon}</div>
+                    <div class="achievement-info">
+                        <div class="achievement-name">${skill.name}</div>
+                        <div class="achievement-desc">${skill.desc}</div>
+                        <div class="achievement-status">${skill.unlocked ? '✓ Unlocked' : `🔒 Requires: ${skill.requirements}`}</div>
+                        <div class="achievement-status" style="color: #55ffff;">Effect: ${skill.effect}</div>
+                    </div>
+                `;
+                panel.appendChild(div);
+            });
+        }
+
+        // Tooltip Functions
+        function showTooltip(e, itemId) {
+            if (!itemId || !itemData[itemId]) return;
+            
+            const item = itemData[itemId];
+            const tooltip = document.getElementById('tooltip');
+            
+            tooltip.querySelector('.tooltip-title').textContent = item.name;
+            tooltip.querySelector('.tooltip-rarity').textContent = item.rarity;
+            tooltip.querySelector('.tooltip-description').textContent = item.description;
+            tooltip.querySelector('.tooltip-stats').textContent = item.stats;
+            tooltip.querySelector('.tooltip-abilities').textContent = item.abilities;
+            tooltip.querySelector('.tooltip-nbt').textContent = 'NBT: ' + item.nbt;
+            
+            const x = e.pageX + 15;
+            const y = e.pageY + 15;
+            
+            // Keep tooltip within viewport
+            const tooltipRect = tooltip.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            if (x + tooltipRect.width > viewportWidth) {
+                tooltip.style.left = (e.pageX - tooltipRect.width - 10) + 'px';
+            } else {
+                tooltip.style.left = x + 'px';
+            }
+            
+            if (y + tooltipRect.height > viewportHeight) {
+                tooltip.style.top = (e.pageY - tooltipRect.height - 10) + 'px';
+            } else {
+                tooltip.style.top = y + 'px';
+            }
+            
+            tooltip.classList.add('visible');
+        }
+
+        function hideTooltip() {
+            document.getElementById('tooltip').classList.remove('visible');
+        }
+
+        // Tab Switching
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
+        });
+
+        // Category Switching
+        document.querySelectorAll('.category-btn[data-category]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.category-btn[data-category]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                initCollectionGrid(btn.dataset.category);
+            });
+        });
+
+        // Recipe Switching
+        document.querySelectorAll('.category-btn[data-recipe]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.category-btn[data-recipe]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                initCraftingGrid(btn.dataset.recipe);
+            });
+        });
+
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', () => {
+            initCollectionGrid('all');
+            initCraftingGrid('evolution-stone');
+            initAchievements();
+            initSkills();
+        });
+    </script>
+</body>
+</html>

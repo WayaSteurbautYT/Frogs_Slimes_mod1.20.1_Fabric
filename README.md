@@ -52,6 +52,21 @@ A custom gamemode where you tame frog and slime helpers that fight mobs and evol
 - **Task Book**: View and track your challenges
 - **Final Evolution Crystal**: Unlock the ultimate slime form
 
+## 🎮 Interactive GUI
+
+**[📖 Open Interactive Minecraft GUI](docs/interactive-gui.html)**
+
+Experience the mod's items, crafting, and collections with an authentic Minecraft-style interface!
+
+**Features:**
+- **📦 Collections**: Browse all items with category filters
+- **⚒️ Crafting**: Interactive crafting table with recipe selector
+- **🧪 Potions**: Brewing stand interface
+- **🏆 Achievements**: Track your progress
+- **⭐ Skills**: Evolution skill tree
+
+**Hover over items** to see their NBT tags, stats, and abilities - just like in-game!
+
 ## 📚 Item Collections
 
 ### Evolution Items
