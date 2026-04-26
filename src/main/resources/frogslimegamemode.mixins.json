@@ -6,9 +6,13 @@
   "mixins": [
     "EnderDragonEntityMixin",
     "PlayerEntityMixin",
-    "LivingEntityMixin"
+    "LivingEntityMixin",
+    "ServerWorldMixin",
+    "PlayerManagerMixin"
   ],
   "client": [
+    "CreateWorldScreenMixin",
+    "TitleScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

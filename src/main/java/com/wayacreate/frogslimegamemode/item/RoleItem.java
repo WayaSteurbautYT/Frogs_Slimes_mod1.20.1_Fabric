@@ -5,6 +5,8 @@ import com.wayacreate.frogslimegamemode.entity.SlimeHelperEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.text.Text;
@@ -12,16 +14,44 @@ import net.minecraft.util.Formatting;
 import net.minecraft.world.World;
 
 public class RoleItem extends Item {
-    private final String role;
+    public static final String ROLE_ITEM_NBT = "RoleItem";
+    public static final String ROLE_TYPE_NBT = "RoleType";
     
-    public RoleItem(String role, Settings settings) {
+    public RoleItem(Settings settings) {
         super(settings);
-        this.role = role;
+    }
+    
+    public static ItemStack createRoleItem(String role) {
+        ItemStack stick = new ItemStack(Items.STICK);
+        NbtCompound nbt = stick.getOrCreateNbt();
+        nbt.putBoolean(ROLE_ITEM_NBT, true);
+        nbt.putString(ROLE_TYPE_NBT, role);
+        stick.setCustomName(Text.literal(role + " Assignment Stick").formatted(Formatting.GOLD, Formatting.BOLD));
+        return stick;
+    }
+    
+    public static boolean isRoleItem(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) return false;
+        if (!stack.isOf(Items.STICK)) return false;
+        NbtCompound nbt = stack.getNbt();
+        return nbt != null && nbt.getBoolean(ROLE_ITEM_NBT);
+    }
+    
+    public static String getRoleType(ItemStack stack) {
+        if (!isRoleItem(stack)) return null;
+        NbtCompound nbt = stack.getNbt();
+        return nbt != null ? nbt.getString(ROLE_TYPE_NBT) : null;
     }
     
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
         ItemStack stack = user.getStackInHand(hand);
+        
+        // Determine role based on item ID
+        String role = getRoleFromItemId(stack);
+        if (role == null) {
+            return TypedActionResult.pass(stack);
+        }
         
         if (!world.isClient) {
             // Find nearby helper to assign role
@@ -40,11 +70,11 @@ public class RoleItem extends Item {
             );
             
             if (!frogs.isEmpty()) {
-                assignRole(frogs.get(0), user);
+                assignRole(frogs.get(0), role, user);
                 stack.decrement(1);
                 return TypedActionResult.success(stack);
             } else if (!slimes.isEmpty()) {
-                assignRole(slimes.get(0), user);
+                assignRole(slimes.get(0), role, user);
                 stack.decrement(1);
                 return TypedActionResult.success(stack);
             } else {
@@ -56,7 +86,18 @@ public class RoleItem extends Item {
         return TypedActionResult.pass(stack);
     }
     
-    private void assignRole(Object helper, PlayerEntity player) {
+    private String getRoleFromItemId(ItemStack stack) {
+        if (stack.getItem() == com.wayacreate.frogslimegamemode.item.ModItems.MINER_ROLE) {
+            return "Miner";
+        } else if (stack.getItem() == com.wayacreate.frogslimegamemode.item.ModItems.LUMBERJACK_ROLE) {
+            return "Lumberjack";
+        } else if (stack.getItem() == com.wayacreate.frogslimegamemode.item.ModItems.COMBAT_ROLE) {
+            return "Combat Specialist";
+        }
+        return null;
+    }
+    
+    private void assignRole(Object helper, String role, PlayerEntity player) {
         String message = "";
         
         if (helper instanceof FrogHelperEntity frog) {

@@ -67,4 +67,25 @@ public abstract class PlayerEntityMixin {
             GamemodeManager.getData(player).incrementDeathCount();
         }
     }
+    
+    @Inject(method = "tick", at = @At("TAIL"))
+    private void onTick(CallbackInfo ci) {
+        PlayerEntity player = (PlayerEntity) (Object) this;
+        if (!player.getWorld().isClient && GamemodeManager.isInGamemode(player)) {
+            // Apply active abilities to player
+            applyPlayerAbilities(player);
+        }
+    }
+    
+    private void applyPlayerAbilities(PlayerEntity player) {
+        var data = GamemodeManager.getData(player);
+        var abilities = data.getPlayerAbilities();
+        
+        for (String abilityId : abilities) {
+            MobAbility ability = MobAbility.getAbilityById(abilityId);
+            if (ability != null) {
+                ability.applyToPlayer(player);
+            }
+        }
+    }
 }

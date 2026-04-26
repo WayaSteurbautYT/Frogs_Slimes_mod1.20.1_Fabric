@@ -1,10 +1,12 @@
 package com.wayacreate.frogslimegamemode;
 
+import com.wayacreate.frogslimegamemode.achievements.AchievementManager;
 import com.wayacreate.frogslimegamemode.command.FrogSlimeCommand;
 import com.wayacreate.frogslimegamemode.command.HelperCommand;
 import com.wayacreate.frogslimegamemode.eating.EatingSystem;
 import com.wayacreate.frogslimegamemode.entity.ModEntities;
 import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
+import com.wayacreate.frogslimegamemode.gamemode.ModGameRules;
 import com.wayacreate.frogslimegamemode.item.ModItems;
 import com.wayacreate.frogslimegamemode.network.ModNetworking;
 import com.wayacreate.frogslimegamemode.tasks.TaskManager;
@@ -26,6 +28,8 @@ public class FrogSlimeGamemode implements ModInitializer {
         ModEntities.register();
         ModNetworking.registerServer();
         TaskManager.init();
+        AchievementManager.init();
+        ModGameRules.register();
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             FrogSlimeCommand.register(dispatcher);

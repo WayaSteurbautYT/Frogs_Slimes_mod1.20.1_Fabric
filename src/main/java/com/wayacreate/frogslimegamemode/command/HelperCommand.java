@@ -1,9 +1,11 @@
 package com.wayacreate.frogslimegamemode.command;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.wayacreate.frogslimegamemode.entity.FrogHelperEntity;
 import com.wayacreate.frogslimegamemode.entity.SlimeHelperEntity;
+import com.wayacreate.frogslimegamemode.integration.BaritoneIntegration;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.entity.Entity;
@@ -18,6 +20,17 @@ public class HelperCommand {
             .requires(source -> source.hasPermissionLevel(2))
             .then(CommandManager.argument("helper", EntityArgumentType.entity())
                 .executes(HelperCommand::showHelperInfo)
+                .then(CommandManager.literal("build")
+                    .then(CommandManager.argument("schematic", StringArgumentType.string())
+                        .executes(HelperCommand::setSchematicBuild)
+                    )
+                )
+                .then(CommandManager.literal("stop")
+                    .executes(HelperCommand::stopBuilding)
+                )
+                .then(CommandManager.literal("progress")
+                    .executes(HelperCommand::getBuildProgress)
+                )
             )
         );
     }
@@ -53,6 +66,64 @@ public class HelperCommand {
             return 1;
         } catch (Exception e) {
             context.getSource().sendError(Text.literal("Failed to get helper info: " + e.getMessage()));
+            return 0;
+        }
+    }
+    
+    private static int setSchematicBuild(CommandContext<ServerCommandSource> context) {
+        try {
+            Entity entity = EntityArgumentType.getEntity(context, "helper");
+            String schematic = StringArgumentType.getString(context, "schematic");
+            
+            if (!(entity instanceof net.minecraft.entity.passive.TameableEntity tameable)) {
+                context.getSource().sendError(Text.literal("Target is not tameable!"));
+                return 0;
+            }
+            
+            BaritoneIntegration.setSchematicBuild(tameable, schematic);
+            context.getSource().sendFeedback(() -> Text.literal("Set helper to build schematic: " + schematic), true);
+            
+            return 1;
+        } catch (Exception e) {
+            context.getSource().sendError(Text.literal("Failed to set schematic: " + e.getMessage()));
+            return 0;
+        }
+    }
+    
+    private static int stopBuilding(CommandContext<ServerCommandSource> context) {
+        try {
+            Entity entity = EntityArgumentType.getEntity(context, "helper");
+            
+            if (!(entity instanceof net.minecraft.entity.passive.TameableEntity tameable)) {
+                context.getSource().sendError(Text.literal("Target is not tameable!"));
+                return 0;
+            }
+            
+            BaritoneIntegration.stopBuilding(tameable);
+            context.getSource().sendFeedback(() -> Text.literal("Helper stopped building"), true);
+            
+            return 1;
+        } catch (Exception e) {
+            context.getSource().sendError(Text.literal("Failed to stop building: " + e.getMessage()));
+            return 0;
+        }
+    }
+    
+    private static int getBuildProgress(CommandContext<ServerCommandSource> context) {
+        try {
+            Entity entity = EntityArgumentType.getEntity(context, "helper");
+            
+            if (!(entity instanceof net.minecraft.entity.passive.TameableEntity tameable)) {
+                context.getSource().sendError(Text.literal("Target is not tameable!"));
+                return 0;
+            }
+            
+            int progress = BaritoneIntegration.getBuildProgress(tameable);
+            context.getSource().sendFeedback(() -> Text.literal("Build progress: " + progress + "%"), true);
+            
+            return 1;
+        } catch (Exception e) {
+            context.getSource().sendError(Text.literal("Failed to get progress: " + e.getMessage()));
             return 0;
         }
     }

@@ -3,6 +3,7 @@ package com.wayacreate.frogslimegamemode.entity;
 import com.wayacreate.frogslimegamemode.eating.MobAbility;
 import com.wayacreate.frogslimegamemode.evolution.EvolutionStage;
 import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
+import com.wayacreate.frogslimegamemode.gamemode.PlayerLevel;
 import com.wayacreate.frogslimegamemode.entity.ai.MiningGoal;
 import com.wayacreate.frogslimegamemode.entity.ai.LumberjackGoal;
 import net.minecraft.entity.EntityType;
@@ -23,6 +24,7 @@ import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.particle.ItemStackParticleEffect;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
@@ -152,6 +154,10 @@ public class SlimeHelperEntity extends TameableEntity {
         
         if (this.getOwner() instanceof PlayerEntity owner) {
             GamemodeManager.getData(owner).incrementMobsEaten();
+            // Grant XP to player for mob kills
+            if (owner instanceof ServerPlayerEntity serverPlayer) {
+                PlayerLevel.addXP(serverPlayer, 10.0);
+            }
         }
     }
     

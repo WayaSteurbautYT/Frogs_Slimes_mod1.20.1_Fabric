@@ -5,14 +5,8 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
 /**
- * Placeholder for Baritone integration.
- * This class provides a framework for integrating with the Baritone mod
- * to enable helpers to build schematics using Litematica.
- * 
- * To enable this feature:
- * 1. Add Baritone as a dependency in build.gradle
- * 2. Implement the actual Baritone API calls
- * 3. Add schematic building logic
+ * Baritone integration for helper schematic building.
+ * Used by HelperCommand to manage schematic building tasks.
  */
 public class BaritoneIntegration {
     

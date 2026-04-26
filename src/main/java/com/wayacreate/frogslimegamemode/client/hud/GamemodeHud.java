@@ -1,17 +1,19 @@
 package com.wayacreate.frogslimegamemode.client.hud;
 
 import com.wayacreate.frogslimegamemode.FrogSlimeGamemode;
-import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.text.Text;
 
-public class GamemodeHud implements ClientModInitializer {
+public class GamemodeHud {
     private static boolean gamemodeActive = false;
+    private static boolean initialized = false;
 
-    @Override
-    public void onInitializeClient() {
+    public static void onInitializeClient() {
+        if (initialized) return;
+        initialized = true;
+        
         HudRenderCallback.EVENT.register((drawContext, tickDelta) -> {
             if (gamemodeActive) {
                 MinecraftClient client = MinecraftClient.getInstance();
@@ -24,6 +26,8 @@ public class GamemodeHud implements ClientModInitializer {
                 drawContext.drawText(textRenderer, Text.literal(text), x, y, 0x00FF00, true);
             }
         });
+        
+        FrogSlimeGamemode.LOGGER.info("Gamemode HUD initialized");
     }
 
     public static void setGamemodeActive(boolean active) {

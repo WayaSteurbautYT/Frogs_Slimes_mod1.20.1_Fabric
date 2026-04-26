@@ -53,27 +53,32 @@ public class ModItems {
     
     // Funny armor pieces
     public static final Item MUSTARD_HELMET = registerItem("mustard_helmet",
-        new Item(new FabricItemSettings().maxCount(1)));
+        new MustardHelmetItem(new FabricItemSettings().maxCount(1)));
     
     public static final Item ORPHAN_SHIELD = registerItem("orphan_shield",
-        new Item(new FabricItemSettings().maxCount(1)));
+        new OrphanShieldItem(new FabricItemSettings().maxCount(1)));
     
     public static final Item PRANKSTER_CHESTPLATE = registerItem("prankster_chestplate",
-        new Item(new FabricItemSettings().maxCount(1)));
+        new PranksterChestplateItem(new FabricItemSettings().maxCount(1)));
     
-    // Role items for helpers
+    // Role items for helpers (using vanilla sticks with NBT)
+    // These are created as pre-configured sticks
     public static final Item MINER_ROLE = registerItem("miner_role",
-        new RoleItem("Miner", new FabricItemSettings().maxCount(1)));
+        new RoleItem(new FabricItemSettings().maxCount(1)));
     
     public static final Item LUMBERJACK_ROLE = registerItem("lumberjack_role",
-        new RoleItem("Lumberjack", new FabricItemSettings().maxCount(1)));
+        new RoleItem(new FabricItemSettings().maxCount(1)));
     
     public static final Item COMBAT_ROLE = registerItem("combat_role",
-        new RoleItem("Combat Specialist", new FabricItemSettings().maxCount(1)));
+        new RoleItem(new FabricItemSettings().maxCount(1)));
     
     // Manhunt compass
     public static final Item MANHUNT_COMPASS = registerItem("manhunt_compass",
         new ManhuntCompassItem(new FabricItemSettings().maxCount(1)));
+    
+    // Ability drop item
+    public static final Item ABILITY_DROP = registerItem("ability_drop",
+        new AbilityDropItem(new FabricItemSettings().maxCount(64)));
     
     public static final RegistryKey<ItemGroup> FROG_SLIME_GROUP = RegistryKey.of(RegistryKeys.ITEM_GROUP,
         new Identifier(FrogSlimeGamemode.MOD_ID, "frog_slime_group"));
@@ -106,6 +111,8 @@ public class ModItems {
                 entries.add(COMBAT_ROLE);
                 // Manhunt
                 entries.add(MANHUNT_COMPASS);
+                // Ability drops
+                entries.add(ABILITY_DROP);
             })
             .build()
     );
