@@ -52,248 +52,77 @@ A custom gamemode where you tame frog and slime helpers that fight mobs and evol
 - **Task Book**: View and track your challenges
 - **Final Evolution Crystal**: Unlock the ultimate slime form
 
-## 🎮 Crafting Recipes (Minecraft GUI)
+## 📚 Item Collections
 
-### Evolution Stone
-<div style="display: inline-block; background: #c6c6c6; border: 4px solid #555; border-radius: 4px; padding: 8px; margin: 10px;">
-  <div style="display: grid; grid-template-columns: repeat(3, 40px); gap: 2px;">
-    <div style="width: 40px; height: 40px; background: #8b8b8b; border: 2px solid #373737;"></div>
-    <div style="width: 40px; height: 40px; background: #8b8b8b; border: 2px solid #373737; display: flex; align-items: center; justify-content: center; position: relative;">
-      <span style="font-size: 24px;">💎</span>
-      <div style="position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background: #100010; border: 2px solid #500050; padding: 5px 8px; border-radius: 3px; white-space: nowrap; opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 10;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0">
-        <div style="color: #ffff55; font-weight: bold;">Diamond</div>
-        <div style="color: #aaaaaa; font-size: 11px;">Crafting Material</div>
-        <div style="color: #ff5555; font-size: 10px;">Durability: 1561</div>
-      </div>
-    </div>
-    <div style="width: 40px; height: 40px; background: #8b8b8b; border: 2px solid #373737;"></div>
-    <div style="width: 40px; height: 40px; background: #8b8b8b; border: 2px solid #373737; display: flex; align-items: center; justify-content: center;">
-      <span style="font-size: 24px;">💎</span>
-    </div>
-    <div style="width: 40px; height: 40px; background: #8b8b8b; border: 2px solid #373737; display: flex; align-items: center; justify-content: center;">
-      <span style="font-size: 24px;">🫧</span>
-    </div>
-    <div style="width: 40px; height: 40px; background: #8b8b8b; border: 2px solid #373737; display: flex; align-items: center; justify-content: center;">
-      <span style="font-size: 24px;">💎</span>
-    </div>
-    <div style="width: 40px; height: 40px; background: #8b8b8b; border: 2px solid #373737;"></div>
-    <div style="width: 40px; height: 40px; background: #8b8b8b; border: 2px solid #373737; display: flex; align-items: center; justify-content: center;">
-      <span style="font-size: 24px;">💎</span>
-    </div>
-    <div style="width: 40px; height: 40px; background: #8b8b8b; border: 2px solid #373737;"></div>
-  </div>
-  <div style="display: flex; align-items: center; justify-content: center; margin: 8px 0;">
-    <span style="color: #fff; font-size: 20px;">➡️</span>
-  </div>
-  <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-    <div style="width: 50px; height: 50px; background: #8b8b8b; border: 3px solid #373737; display: flex; align-items: center; justify-content: center;">
-      <span style="font-size: 30px;">✨</span>
-    </div>
-    <div style="color: #fff; font-size: 12px;">Evolution Stone</div>
-  </div>
-</div>
+### Evolution Items
+| Item | Texture | Stats | Abilities | NBT Data |
+|------|---------|-------|-----------|----------|
+| **Evolution Stone** | <img src="src/main/resources/assets/frogslimegamemode/textures/item/evolution_stone.png" width="32"> | Max Stack: 16 | Instantly evolves helpers to next stage | `{EvolutionPower: 1}` |
+| **Final Evolution Crystal** | <img src="src/main/resources/assets/frogslimegamemode/textures/item/final_evolution_crystal.png" width="32"> | Max Stack: 1 | Unlocks ultimate slime form after boss | `{FinalForm: true, BossDefeated: true}` |
 
-### Dream Sword
-<div style="display: inline-block; background: #c6c6c6; border: 4px solid #555; border-radius: 4px; padding: 8px; margin: 10px;">
-  <div style="display: grid; grid-template-columns: repeat(3, 40px); gap: 2px;">
-    <div style="width: 40px; height: 40px; background: #8b8b8b; border: 2px solid #373737;"></div>
-    <div style="width: 40px; height: 40px; background: #8b8b8b; border: 2px solid #373737; display: flex; align-items: center; justify-content: center;">
-      <span style="font-size: 24px;">🟨</span>
-    </div>
-    <div style="width: 40px; height: 40px; background: #8b8b8b; border: 2px solid #373737;"></div>
-    <div style="width: 40px; height: 40px; background: #8b8b8b; border: 2px solid #373737; display: flex; align-items: center; justify-content: center;">
-      <span style="font-size: 24px;">🟨</span>
-    </div>
-    <div style="width: 40px; height: 40px; background: #8b8b8b; border: 2px solid #373737; display: flex; align-items: center; justify-content: center;">
-      <span style="font-size: 24px;">⚔️</span>
-    </div>
-    <div style="width: 40px; height: 40px; background: #8b8b8b; border: 2px solid #373737; display: flex; align-items: center; justify-content: center;">
-      <span style="font-size: 24px;">🟨</span>
-    </div>
-    <div style="width: 40px; height: 40px; background: #8b8b8b; border: 2px solid #373737;"></div>
-    <div style="width: 40px; height: 40px; background: #8b8b8b; border: 2px solid #373737; display: flex; align-items: center; justify-content: center;">
-      <span style="font-size: 24px;">🟨</span>
-    </div>
-    <div style="width: 40px; height: 40px; background: #8b8b8b; border: 2px solid #373737;"></div>
-  </div>
-  <div style="display: flex; align-items: center; justify-content: center; margin: 8px 0;">
-    <span style="color: #fff; font-size: 20px;">➡️</span>
-  </div>
-  <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-    <div style="width: 50px; height: 50px; background: #8b8b8b; border: 3px solid #373737; display: flex; align-items: center; justify-content: center;">
-      <span style="font-size: 30px;">⚔️</span>
-    </div>
-    <div style="color: #fff; font-size: 12px;">Dream Sword</div>
-  </div>
-</div>
+### Food Items
+| Item | Texture | Hunger | Saturation | Effects |
+|------|---------|--------|------------|---------|
+| **Slime Food** | <img src="src/main/resources/assets/frogslimegamemode/textures/item/slime_food.png" width="32"> | 4 | 0.6 | Jump Boost II (30s), Resistance I (30s) |
+| **Frog Food** | <img src="src/main/resources/assets/frogslimegamemode/textures/item/frog_food.png" width="32"> | 3 | 0.5 | Speed I (30s), Water Breathing (30s) |
 
-### Slime Food
-<div style="display: inline-block; background: #c6c6c6; border: 4px solid #555; border-radius: 4px; padding: 8px; margin: 10px;">
-  <div style="display: grid; grid-template-columns: repeat(3, 40px); gap: 2px;">
-    <div style="width: 40px; height: 40px; background: #8b8b8b; border: 2px solid #373737; display: flex; align-items: center; justify-content: center;">
-      <span style="font-size: 24px;">🫧</span>
-    </div>
-    <div style="width: 40px; height: 40px; background: #8b8b8b; border: 2px solid #373737; display: flex; align-items: center; justify-content: center;">
-      <span style="font-size: 24px;">🫧</span>
-    </div>
-    <div style="width: 40px; height: 40px; background: #8b8b8b; border: 2px solid #373737; display: flex; align-items: center; justify-content: center;">
-      <span style="font-size: 24px;">🫧</span>
-    </div>
-    <div style="width: 40px; height: 40px; background: #8b8b8b; border: 2px solid #373737; display: flex; align-items: center; justify-content: center;">
-      <span style="font-size: 24px;">🫧</span>
-    </div>
-    <div style="width: 40px; height: 40px; background: #8b8b8b; border: 2px solid #373737; display: flex; align-items: center; justify-content: center;">
-      <span style="font-size: 24px;">🐰</span>
-    </div>
-    <div style="width: 40px; height: 40px; background: #8b8b8b; border: 2px solid #373737; display: flex; align-items: center; justify-content: center;">
-      <span style="font-size: 24px;">🫧</span>
-    </div>
-    <div style="width: 40px; height: 40px; background: #8b8b8b; border: 2px solid #373737; display: flex; align-items: center; justify-content: center;">
-      <span style="font-size: 24px;">🫧</span>
-    </div>
-    <div style="width: 40px; height: 40px; background: #8b8b8b; border: 2px solid #373737; display: flex; align-items: center; justify-content: center;">
-      <span style="font-size: 24px;">🫧</span>
-    </div>
-    <div style="width: 40px; height: 40px; background: #8b8b8b; border: 2px solid #373737; display: flex; align-items: center; justify-content: center;">
-      <span style="font-size: 24px;">🫧</span>
-    </div>
-  </div>
-  <div style="display: flex; align-items: center; justify-content: center; margin: 8px 0;">
-    <span style="color: #fff; font-size: 20px;">➡️</span>
-  </div>
-  <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-    <div style="width: 50px; height: 50px; background: #8b8b8b; border: 3px solid #373737; display: flex; align-items: center; justify-content: center;">
-      <span style="font-size: 30px;">🍖</span>
-    </div>
-    <div style="color: #fff; font-size: 12px;">Slime Food x8</div>
-  </div>
-</div>
+### YouTuber Swords
+| Item | Texture | Material | Attack Damage | Attack Speed | Special Ability |
+|------|---------|----------|---------------|--------------|-----------------|
+| **Dream's Blade** | <img src="src/main/resources/assets/frogslimegamemode/textures/item/dream_sword.png" width="32"> | Netherite | +3 | -2.4 | Speed III (10s) on use |
+| **Technoblade's Blade** | <img src="src/main/resources/assets/frogslimegamemode/textures/item/technoblade_sword.png" width="32"> | Netherite | +5 | -2.2 | Strength II (10s), Resistance II (10s) |
+| **Grian's Blade** | <img src="src/main/resources/assets/frogslimegamemode/textures/item/grian_sword.png" width="32"> | Diamond | +3 | -2.4 | Invisibility (5s) on use |
+| **Mumbo Jumbo's Blade** | <img src="src/main/resources/assets/frogslimegamemode/textures/item/mumbo_jumbo_sword.png" width="32"> | Diamond | +3 | -2.4 | Haste III (10s) on use |
+
+### Funny Armor
+| Item | Texture | Material | Protection | Special |
+|------|---------|----------|------------|---------|
+| **Mustard Helmet** | <img src="src/main/resources/assets/frogslimegamemode/textures/item/mustard_helmet.png" width="32"> | Gold | 2 | Has enchantment glint |
+| **Orphan Shield** | <img src="src/main/resources/assets/frogslimegamemode/textures/item/orphan_shield.png" width="32"> | Iron | - | Custom NBT: `{OrphanShield: true}` |
+| **Prankster Chestplate** | <img src="src/main/resources/assets/frogslimegamemode/textures/item/prankster_chestplate.png" width="32"> | Leather | 3 | Purple variant |
+
+### Utility Items
+| Item | Texture | Max Stack | Function |
+|------|---------|-----------|----------|
+| **Task Book** | <img src="src/main/resources/assets/frogslimegamemode/textures/item/task_book.png" width="32"> | 1 | Shows gamemode progress and objectives |
+| **Manhunt Compass** | <img src="src/main/resources/assets/frogslimegamemode/textures/item/manhunt_compass.png" width="32"> | 1 | Tracks nearest player |
+| **Ability Drop** | <img src="src/main/resources/assets/frogslimegamemode/textures/item/ability_drop.png" width="32"> | 64 | Dropped by mobs, grants abilities |
+
+### Role Items
+| Item | Texture | Function |
+|------|---------|----------|
+| **Miner Role** | <img src="src/main/resources/assets/frogslimegamemode/textures/item/miner_role.png" width="32"> | Assigns mining AI to helper |
+| **Lumberjack Role** | <img src="src/main/resources/assets/frogslimegamemode/textures/item/lumberjack_role.png" width="32"> | Assigns woodcutting AI to helper |
+| **Combat Role** | <img src="src/main/resources/assets/frogslimegamemode/textures/item/combat_role.png" width="32"> | Assigns combat AI to helper |
+
+### Spawn Eggs
+| Item | Texture | Entity |
+|------|---------|--------|
+| **Frog Helper Spawn Egg** | <img src="src/main/resources/assets/frogslimegamemode/textures/item/frog_helper_spawn_egg.png" width="32"> | Frog Helper |
+| **Slime Helper Spawn Egg** | <img src="src/main/resources/assets/frogslimegamemode/textures/item/slime_helper_spawn_egg.png" width="32"> | Slime Helper |
 
 ## 🏆 Achievements
 
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0;">
-  <div style="background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%); border: 2px solid #4ade80; border-radius: 8px; padding: 15px; text-align: center;">
-    <div style="font-size: 40px; margin-bottom: 10px;">🐸</div>
-    <div style="color: #4ade80; font-weight: bold; margin-bottom: 5px;">First Helper</div>
-    <div style="color: #aaa; font-size: 12px;">Tame your first frog or slime</div>
-  </div>
-  <div style="background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%); border: 2px solid #4ade80; border-radius: 8px; padding: 15px; text-align: center;">
-    <div style="font-size: 40px; margin-bottom: 10px;">⭐</div>
-    <div style="color: #4ade80; font-weight: bold; margin-bottom: 5px;">Evolution Beginner</div>
-    <div style="color: #aaa; font-size: 12px;">Evolve a helper to stage 1</div>
-  </div>
-  <div style="background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%); border: 2px solid #4ade80; border-radius: 8px; padding: 15px; text-align: center;">
-    <div style="font-size: 40px; margin-bottom: 10px;">⭐⭐</div>
-    <div style="color: #4ade80; font-weight: bold; margin-bottom: 5px;">Evolution Expert</div>
-    <div style="color: #aaa; font-size: 12px;">Evolve a helper to stage 2</div>
-  </div>
-  <div style="background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%); border: 2px solid #555; border-radius: 8px; padding: 15px; text-align: center;">
-    <div style="font-size: 40px; margin-bottom: 10px;">⭐⭐⭐</div>
-    <div style="color: #555; font-weight: bold; margin-bottom: 5px;">Evolution Master</div>
-    <div style="color: #555; font-size: 12px;">Evolve a helper to stage 3</div>
-  </div>
-  <div style="background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%); border: 2px solid #555; border-radius: 8px; padding: 15px; text-align: center;">
-    <div style="font-size: 40px; margin-bottom: 10px;">👑</div>
-    <div style="color: #555; font-weight: bold; margin-bottom: 5px;">Final Form</div>
-    <div style="color: #555; font-size: 12px;">Unlock the final slime evolution</div>
-  </div>
-  <div style="background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%); border: 2px solid #555; border-radius: 8px; padding: 15px; text-align: center;">
-    <div style="font-size: 40px; margin-bottom: 10px;">👹</div>
-    <div style="color: #555; font-weight: bold; margin-bottom: 5px;">Boss Slayer</div>
-    <div style="color: #555; font-size: 12px;">Defeat the Giant Slime Boss</div>
-  </div>
-  <div style="background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%); border: 2px solid #555; border-radius: 8px; padding: 15px; text-align: center;">
-    <div style="font-size: 40px; margin-bottom: 10px;">📋</div>
-    <div style="color: #555; font-weight: bold; margin-bottom: 5px;">Task Master</div>
-    <div style="color: #555; font-size: 12px;">Complete all 10 challenges</div>
-  </div>
-</div>
-
-## 📦 Item Collection with Stats
-
-<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin: 20px 0;">
-  <div style="background: #2d2d2d; border: 2px solid #555; border-radius: 8px; padding: 10px; text-align: center; position: relative;">
-    <div style="font-size: 40px;">✨</div>
-    <div style="color: #ffff55; font-size: 11px; font-weight: bold;">Evolution Stone</div>
-    <div style="color: #4ade80; font-size: 10px;">✨ Epic</div>
-    <div style="color: #ff5555; font-size: 9px;">Instant Evolution</div>
-  </div>
-  <div style="background: #2d2d2d; border: 2px solid #ffaa00; border-radius: 8px; padding: 10px; text-align: center; position: relative;">
-    <div style="font-size: 40px;">⚔️</div>
-    <div style="color: #ffff55; font-size: 11px; font-weight: bold;">Dream Sword</div>
-    <div style="color: #ffaa00; font-size: 10px;">🌟 Legendary</div>
-    <div style="color: #ff5555; font-size: 9px;">Attack: 12 | Speed: +0.5</div>
-  </div>
-  <div style="background: #2d2d2d; border: 2px solid #ffaa00; border-radius: 8px; padding: 10px; text-align: center; position: relative;">
-    <div style="font-size: 40px;">🗡️</div>
-    <div style="color: #ffff55; font-size: 11px; font-weight: bold;">Techno Sword</div>
-    <div style="color: #ffaa00; font-size: 10px;">🌟 Legendary</div>
-    <div style="color: #ff5555; font-size: 9px;">Attack: 14 | Knockback: +2</div>
-  </div>
-  <div style="background: #2d2d2d; border: 2px solid #555; border-radius: 8px; padding: 10px; text-align: center; position: relative;">
-    <div style="font-size: 40px;">🍖</div>
-    <div style="color: #ffff55; font-size: 11px; font-weight: bold;">Slime Food</div>
-    <div style="color: #4ade80; font-size: 10px;">🟢 Common</div>
-    <div style="color: #ff5555; font-size: 9px;">Health: +5 | Damage: +1</div>
-  </div>
-  <div style="background: #2d2d2d; border: 2px solid #555; border-radius: 8px; padding: 10px; text-align: center; position: relative;">
-    <div style="font-size: 40px;">🪰</div>
-    <div style="color: #ffff55; font-size: 11px; font-weight: bold;">Frog Food</div>
-    <div style="color: #4ade80; font-size: 10px;">🟢 Common</div>
-    <div style="color: #ff5555; font-size: 9px;">Health: +3 | Jump: +1</div>
-  </div>
-  <div style="background: #2d2d2d; border: 2px solid #5555ff; border-radius: 8px; padding: 10px; text-align: center; position: relative;">
-    <div style="font-size: 40px;">📖</div>
-    <div style="color: #ffff55; font-size: 11px; font-weight: bold;">Task Book</div>
-    <div style="color: #5555ff; font-size: 10px;">🔵 Rare</div>
-    <div style="color: #ff5555; font-size: 9px;">Task Tracking</div>
-  </div>
-</div>
+| Achievement | Icon | Description | Requirements |
+|-------------|------|-------------|---------------|
+| **First Helper** | 🐸 | Tame your first frog or slime | Tame any helper |
+| **Evolution Beginner** | ⭐ | Evolve a helper to stage 1 | Helper kills 10 mobs |
+| **Evolution Expert** | ⭐⭐ | Evolve a helper to stage 2 | Helper kills 25 mobs |
+| **Evolution Master** | ⭐⭐⭐ | Evolve a helper to stage 3 | Helper kills 50 mobs |
+| **Final Form** | 👑 | Unlock the final slime evolution | Defeat boss + use crystal |
+| **Boss Slayer** | 👹 | Defeat the Giant Slime Boss | Reach The End and win |
+| **Task Master** | 📋 | Complete all 10 challenges | Finish all tasks |
 
 ## ⭐ Evolution Skill Tree
 
-<div style="display: flex; flex-direction: column; gap: 15px; margin: 20px 0;">
-  <div style="background: linear-gradient(135deg, #1a3a1a 0%, #0d2d0d 100%); border: 2px solid #4ade80; border-radius: 10px; padding: 15px; display: flex; align-items: center; gap: 15px;">
-    <div style="width: 50px; height: 50px; background: #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px;">⚔️</div>
-    <div>
-      <div style="color: #4ade80; font-weight: bold;">Basic Attack</div>
-      <div style="color: #aaa; font-size: 12px;">Your helper can attack nearby mobs</div>
-      <div style="color: #4ade80; font-size: 11px;">✓ Unlocked</div>
-    </div>
-  </div>
-  <div style="background: linear-gradient(135deg, #1a3a1a 0%, #0d2d0d 100%); border: 2px solid #4ade80; border-radius: 10px; padding: 15px; display: flex; align-items: center; gap: 15px;">
-    <div style="width: 50px; height: 50px; background: #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px;">📦</div>
-    <div>
-      <div style="color: #4ade80; font-weight: bold;">Mob Collection</div>
-      <div style="color: #aaa; font-size: 12px;">Helper automatically collects drops</div>
-      <div style="color: #4ade80; font-size: 11px;">✓ Unlocked</div>
-    </div>
-  </div>
-  <div style="background: linear-gradient(135deg, #1a3a1a 0%, #0d2d0d 100%); border: 2px solid #4ade80; border-radius: 10px; padding: 15px; display: flex; align-items: center; gap: 15px;">
-    <div style="width: 50px; height: 50px; background: #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px;">⭐</div>
-    <div>
-      <div style="color: #4ade80; font-weight: bold;">Evolution Stage 1</div>
-      <div style="color: #aaa; font-size: 12px;">Unlock first evolution stage</div>
-      <div style="color: #4ade80; font-size: 11px;">✓ Unlocked (Kill 10 mobs)</div>
-    </div>
-  </div>
-  <div style="background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%); border: 2px solid #555; border-radius: 10px; padding: 15px; display: flex; align-items: center; gap: 15px;">
-    <div style="width: 50px; height: 50px; background: #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px;">⭐⭐</div>
-    <div>
-      <div style="color: #555; font-weight: bold;">Evolution Stage 2</div>
-      <div style="color: #aaa; font-size: 12px;">Unlock second evolution stage</div>
-      <div style="color: #ff5555; font-size: 11px;">🔒 Locked (Kill 25 mobs)</div>
-    </div>
-  </div>
-  <div style="background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%); border: 2px solid #555; border-radius: 10px; padding: 15px; display: flex; align-items: center; gap: 15px;">
-    <div style="width: 50px; height: 50px; background: #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px;">👑</div>
-    <div>
-      <div style="color: #555; font-weight: bold;">Final Evolution</div>
-      <div style="color: #aaa; font-size: 12px;">Unlock ultimate slime form</div>
-      <div style="color: #ff5555; font-size: 11px;">🔒 Locked (Defeat Giant Slime Boss)</div>
-    </div>
-  </div>
-</div>
+| Skill | Icon | Status | Requirements | Effect |
+|-------|------|--------|--------------|--------|
+| **Basic Attack** | ⚔️ | ✅ Unlocked | None | Helper attacks nearby mobs |
+| **Mob Collection** | 📦 | ✅ Unlocked | Basic Attack | Helper auto-collects drops |
+| **Evolution Stage 1** | ⭐ | ✅ Unlocked | Kill 10 mobs | +10 Health, +2 Damage |
+| **Evolution Stage 2** | ⭐⭐ | 🔒 Locked | Kill 25 mobs | +20 Health, +4 Damage |
+| **Evolution Stage 3** | ⭐⭐⭐ | 🔒 Locked | Kill 50 mobs | +30 Health, +6 Damage |
+| **Final Evolution** | 👑 | 🔒 Locked | Defeat Giant Slime Boss | 200 Health, 30 Damage, 100% KB Resistance |
 
 ### Quick Recipe Reference
 <table>
