@@ -5,6 +5,7 @@ import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ShieldItem;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -12,7 +13,7 @@ import net.minecraft.util.Rarity;
 
 import java.util.UUID;
 
-public class OrphanShieldItem extends Item {
+public class OrphanShieldItem extends ShieldItem {
     public static final String ORPHAN_SHIELD_NBT = "OrphanShield";
     private static final UUID ARMOR_MODIFIER_UUID = UUID.fromString("2AD3F246-FEE1-4E67-B886-69FD380BB150");
     

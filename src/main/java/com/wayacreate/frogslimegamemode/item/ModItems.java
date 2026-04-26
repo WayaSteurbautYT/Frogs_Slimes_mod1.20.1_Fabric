@@ -118,7 +118,7 @@ public class ModItems {
         
         // Manhunt compass - using vanilla compass with NBT
         MANHUNT_COMPASS = registerItem("manhunt_compass",
-            new Item(new FabricItemSettings().maxCount(1)));
+            new ManhuntCompassItem(new FabricItemSettings().maxCount(1)));
         
         // Ability drop item
         ABILITY_DROP = registerItem("ability_drop",
