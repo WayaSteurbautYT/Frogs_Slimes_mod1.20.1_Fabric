@@ -59,6 +59,7 @@ public final class ModNetworkingClient {
             String title = buf.readString();
             String subtitle = buf.readString();
             int color = buf.readInt();
+            net.minecraft.item.ItemStack itemStack = buf.readItemStack();
 
             client.execute(() -> {
                 if (client.player != null) {
@@ -80,6 +81,19 @@ public final class ModNetworkingClient {
                                 client.player.getY() + offsetY,
                                 client.player.getZ() + offsetZ,
                                 0, 0, 0);
+                        }
+                        
+                        // Spawn item particles showing the ability item
+                        for (int i = 0; i < 10; i++) {
+                            double offsetX = (client.world.random.nextDouble() - 0.5) * 1;
+                            double offsetY = client.world.random.nextDouble() * 1.5;
+                            double offsetZ = (client.world.random.nextDouble() - 0.5) * 1;
+                            client.world.addParticle(
+                                new net.minecraft.particle.ItemStackParticleEffect(net.minecraft.particle.ParticleTypes.ITEM, itemStack),
+                                client.player.getX() + offsetX,
+                                client.player.getY() + 1.5 + offsetY,
+                                client.player.getZ() + offsetZ,
+                                0, 0.1, 0);
                         }
                     }
                 }

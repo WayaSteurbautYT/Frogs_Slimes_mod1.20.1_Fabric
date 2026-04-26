@@ -172,11 +172,24 @@ public class AbilityDropItem extends Item {
                 if (user instanceof ServerPlayerEntity serverPlayer) {
                     com.wayacreate.frogslimegamemode.gamemode.GamemodeManager.getData(serverPlayer).addAbility(abilityId);
                     
-                    // Send totem animation with title popup and exp sound
+                    // Get the item to display in the animation
+                    net.minecraft.item.Item displayItem = getDropItemForAbility(abilityId);
+                    
+                    // Send totem animation packet with item for particles
                     ModNetworking.sendTotemAnimation(serverPlayer, 
                         "Ability Unlocked!", 
                         ability.getName() + " - " + ability.getDescription(), 
+                        Formatting.LIGHT_PURPLE,
+                        displayItem);
+                    
+                    // Send title animation
+                    ModNetworking.showTitle(serverPlayer, 
+                        "Ability Unlocked!", 
+                        ability.getName() + " - " + ability.getDescription(), 
                         Formatting.LIGHT_PURPLE);
+                    
+                    // Play level-up sound directly on server (client will hear it)
+                    serverPlayer.playSound(net.minecraft.sound.SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
                 }
                 
                 // Apply ability bonuses to the player

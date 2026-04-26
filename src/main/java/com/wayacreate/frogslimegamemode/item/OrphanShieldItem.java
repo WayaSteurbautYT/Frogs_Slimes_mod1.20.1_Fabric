@@ -1,6 +1,7 @@
 package com.wayacreate.frogslimegamemode.item;
 
 import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.item.ItemStack;
@@ -9,6 +10,8 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Rarity;
+import net.minecraft.util.UseAction;
+import net.minecraft.world.World;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -78,5 +81,22 @@ public class OrphanShieldItem extends ShieldItem {
                 }
             }
         }
+    }
+    
+    @Override
+    public UseAction getUseAction(ItemStack stack) {
+        return UseAction.BLOCK;
+    }
+    
+    @Override
+    public int getMaxUseTime(ItemStack stack) {
+        return 72000; // Allow holding for a long time (1 hour effectively)
+    }
+    
+    @Override
+    public void onStoppedUsing(ItemStack stack, World world, LivingEntity user, int remainingUseTicks) {
+        // Shield blocking logic is handled by vanilla ShieldItem
+        // This is called when the player stops holding right-click
+        super.onStoppedUsing(stack, world, user, remainingUseTicks);
     }
 }

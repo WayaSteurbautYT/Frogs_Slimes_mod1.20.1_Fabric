@@ -73,13 +73,18 @@ public final class ModNetworking {
         ServerPlayNetworking.send(player, ACHIEVEMENT_TOAST, buf);
     }
     
-    public static void sendTotemAnimation(ServerPlayerEntity player, String title, String subtitle, Formatting color) {
+    public static void sendTotemAnimation(ServerPlayerEntity player, String title, String subtitle, Formatting color, net.minecraft.item.Item item) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeString(title);
         buf.writeString(subtitle);
         int colorIndex = color.getColorIndex();
         buf.writeInt(colorIndex < 0 ? 15 : colorIndex);
+        buf.writeItemStack(new net.minecraft.item.ItemStack(item));
         ServerPlayNetworking.send(player, TOTEM_ANIMATION, buf);
+    }
+    
+    public static void sendTotemAnimation(ServerPlayerEntity player, String title, String subtitle, Formatting color) {
+        sendTotemAnimation(player, title, subtitle, color, net.minecraft.item.Items.TOTEM_OF_UNDYING);
     }
     
     public static void sendUseAbility(ServerPlayerEntity player) {

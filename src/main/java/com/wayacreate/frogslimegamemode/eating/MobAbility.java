@@ -55,7 +55,8 @@ public class MobAbility {
         MINING_FATIGUE_CURE,
         WITHER_CURE,
         BLINDNESS_CURE,
-        POISON_CURE
+        POISON_CURE,
+        TONGUE_GRAB
     }
     
     public MobAbility(String id, String name, String description, double damageBonus, double speedBonus, double healthBonus, double knockbackResistance) {
@@ -185,7 +186,7 @@ public class MobAbility {
         register(new MobAbility("polar_bear", "Arctic Fury", "Frozen strength", 3.0, 0.15, 10.0, 0.3, AbilityType.ICE_SUMMON, 180));
         register(new MobAbility("strider", "Lava Walker", "Nether traversal", 1.5, 0.2, 4.0, 0.1, AbilityType.FIRE_RESISTANCE, 100));
         register(new MobAbility("allay", "Collection Joy", "Item gathering", 0.5, 0.4, 1.0, 0.0, AbilityType.FORTUNE, 80));
-        register(new MobAbility("frog", "Tongue Grab", "Quick strikes", 1.0, 0.2, 2.0, 0.0, AbilityType.LEAP_ATTACK, 90));
+        register(new MobAbility("frog", "Tongue Grab", "Quick strikes", 1.0, 0.2, 2.0, 0.0, AbilityType.TONGUE_GRAB, 90));
         register(new MobAbility("tadpole", "Growth Potential", "Future power", 0.3, 0.1, 0.5, 0.0, AbilityType.REGENERATION, 50));
         register(new MobAbility("warden", "Sonic Power", "Deep dark sensing", 8.0, 0.0, 20.0, 0.5, AbilityType.SONIC_BOOM, 400));
         

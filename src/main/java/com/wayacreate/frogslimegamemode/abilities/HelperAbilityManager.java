@@ -45,6 +45,7 @@ public class HelperAbilityManager {
             case WITHER_CURE -> executeWitherCure(helper, world);
             case BLINDNESS_CURE -> executeBlindnessCure(helper, world);
             case POISON_CURE -> executePoisonCure(helper, world);
+            case TONGUE_GRAB -> executeTongueGrab(helper, world);
             case NONE -> {
                 // No ability to execute
             }
@@ -615,6 +616,76 @@ public class HelperAbilityManager {
         if (helper instanceof net.minecraft.entity.LivingEntity living) {
             living.removeStatusEffect(StatusEffects.POISON);
             living.heal(4.0f);
+        }
+    }
+    
+    private static void executeTongueGrab(Entity helper, ServerWorld world) {
+        Vec3d lookDir = helper.getRotationVector();
+        double grabRange = 10.0;
+        
+        // Find the closest entity in front of the helper
+        net.minecraft.entity.Entity target = null;
+        double closestDistance = grabRange;
+        
+        for (net.minecraft.entity.Entity entity : world.getOtherEntities(helper, helper.getBoundingBox().expand(grabRange))) {
+            if (entity instanceof net.minecraft.entity.LivingEntity) {
+                Vec3d toEntity = entity.getPos().subtract(helper.getPos()).normalize();
+                double dotProduct = lookDir.dotProduct(toEntity);
+                
+                // Check if entity is in front of helper (within 45 degree cone)
+                if (dotProduct > 0.7) {
+                    double distance = helper.distanceTo(entity);
+                    if (distance < closestDistance) {
+                        closestDistance = distance;
+                        target = entity;
+                    }
+                }
+            }
+        }
+        
+        if (target != null) {
+            // Pull target towards helper
+            Vec3d direction = helper.getPos().subtract(target.getPos()).normalize();
+            double pullStrength = 1.5;
+            target.addVelocity(direction.x * pullStrength, 0.5, direction.z * pullStrength);
+            target.velocityModified = true;
+            
+            // Damage target slightly
+            if (target instanceof net.minecraft.entity.LivingEntity livingTarget) {
+                if (helper instanceof net.minecraft.entity.LivingEntity livingHelper) {
+                    livingTarget.damage(world.getDamageSources().mobAttack(livingHelper), 2.0f);
+                } else {
+                    livingTarget.damage(world.getDamageSources().magic(), 2.0f);
+                }
+            }
+            
+            // Spawn tongue particles
+            for (int i = 0; i < 20; i++) {
+                double t = i / 20.0;
+                Vec3d particlePos = helper.getPos().add(0, 0.5, 0).add(
+                    target.getPos().subtract(helper.getPos()).multiply(t)
+                );
+                world.spawnParticles(ParticleTypes.ITEM_SLIME,
+                    particlePos.x, particlePos.y, particlePos.z,
+                    1, 0.0, 0.0, 0.0, 0.0);
+            }
+            
+            // Spawn heart particles at target
+            world.spawnParticles(ParticleTypes.HEART,
+                target.getX(), target.getY() + 1, target.getZ(),
+                3, 0.0, 0.0, 0.0, 0.0);
+        } else {
+            // No target found, just spawn particles in front
+            Vec3d targetPos = helper.getPos().add(lookDir.multiply(grabRange));
+            for (int i = 0; i < 15; i++) {
+                double t = i / 15.0;
+                Vec3d particlePos = helper.getPos().add(0, 0.5, 0).add(
+                    targetPos.subtract(helper.getPos()).multiply(t)
+                );
+                world.spawnParticles(ParticleTypes.ITEM_SLIME,
+                    particlePos.x, particlePos.y, particlePos.z,
+                    1, 0.0, 0.0, 0.0, 0.0);
+            }
         }
     }
 }

@@ -132,6 +132,7 @@ public class PlayerAbilityManager {
             case WITHER_CURE -> executeWitherCure(player, world);
             case BLINDNESS_CURE -> executeBlindnessCure(player, world);
             case POISON_CURE -> executePoisonCure(player, world);
+            case TONGUE_GRAB -> executeTongueGrab(player, world);
             case NONE -> {
                 // No ability to execute
             }
@@ -677,6 +678,70 @@ public class PlayerAbilityManager {
         
         player.removeStatusEffect(StatusEffects.POISON);
         player.heal(4.0f);
+    }
+    
+    private static void executeTongueGrab(ServerPlayerEntity player, ServerWorld world) {
+        Vec3d lookDir = player.getRotationVector();
+        double grabRange = 10.0;
+        
+        // Find the closest entity in front of the player
+        net.minecraft.entity.Entity target = null;
+        double closestDistance = grabRange;
+        
+        for (net.minecraft.entity.Entity entity : world.getOtherEntities(player, player.getBoundingBox().expand(grabRange))) {
+            if (entity instanceof net.minecraft.entity.LivingEntity) {
+                Vec3d toEntity = entity.getPos().subtract(player.getPos()).normalize();
+                double dotProduct = lookDir.dotProduct(toEntity);
+                
+                // Check if entity is in front of player (within 45 degree cone)
+                if (dotProduct > 0.7) {
+                    double distance = player.distanceTo(entity);
+                    if (distance < closestDistance) {
+                        closestDistance = distance;
+                        target = entity;
+                    }
+                }
+            }
+        }
+        
+        if (target != null) {
+            // Pull target towards player
+            Vec3d direction = player.getPos().subtract(target.getPos()).normalize();
+            double pullStrength = 1.5;
+            target.addVelocity(direction.x * pullStrength, 0.5, direction.z * pullStrength);
+            target.velocityModified = true;
+            
+            // Damage target slightly
+            if (target instanceof net.minecraft.entity.LivingEntity livingTarget) {
+                livingTarget.damage(world.getDamageSources().mobAttack(player), 2.0f);
+            }
+            
+            // Send tongue animation packet to client
+            ModNetworking.sendPlayerTongueAnimation(player, target.getId());
+            
+            // Spawn particles on server
+            for (int i = 0; i < 20; i++) {
+                double t = i / 20.0;
+                Vec3d particlePos = player.getPos().add(0, 1.0, 0).add(
+                    target.getPos().subtract(player.getPos()).multiply(t)
+                );
+                world.spawnParticles(ParticleTypes.ITEM_SLIME,
+                    particlePos.x, particlePos.y, particlePos.z,
+                    1, 0.0, 0.0, 0.0, 0.0);
+            }
+        } else {
+            // No target found, just spawn particles in front
+            Vec3d targetPos = player.getPos().add(lookDir.multiply(grabRange));
+            for (int i = 0; i < 15; i++) {
+                double t = i / 15.0;
+                Vec3d particlePos = player.getPos().add(0, 1.0, 0).add(
+                    targetPos.subtract(player.getPos()).multiply(t)
+                );
+                world.spawnParticles(ParticleTypes.ITEM_SLIME,
+                    particlePos.x, particlePos.y, particlePos.z,
+                    1, 0.0, 0.0, 0.0, 0.0);
+            }
+        }
     }
     
     public static void tick() {
