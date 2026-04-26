@@ -3,17 +3,12 @@ package com.wayacreate.frogslimegamemode.mixin;
 import com.wayacreate.frogslimegamemode.entity.SlimeHelperEntity;
 import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
 import com.wayacreate.frogslimegamemode.item.ModItems;
-import net.minecraft.entity.EntityType;
 import net.minecraft.entity.boss.dragon.EnderDragonEntity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.math.Box;
-import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -22,17 +17,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 
 @Mixin(EnderDragonEntity.class)
-public abstract class EnderDragonEntityMixin extends MobEntity {
-    protected EnderDragonEntityMixin(EntityType<? extends MobEntity> entityType, World world) {
-        super(entityType, world);
-    }
+public abstract class EnderDragonEntityMixin {
     
     @Inject(method = "tickMovement", at = @At("HEAD"))
     private void onTickMovement(CallbackInfo ci) {
-        if (!this.getWorld().isClient && this.getHealth() <= 0 && !this.isRemoved()) {
-            List<PlayerEntity> nearbyPlayers = this.getWorld().getEntitiesByClass(
+        EnderDragonEntity dragon = (EnderDragonEntity) (Object) this;
+        if (!dragon.getWorld().isClient && dragon.getHealth() <= 0 && !dragon.isRemoved()) {
+            List<PlayerEntity> nearbyPlayers = dragon.getWorld().getEntitiesByClass(
                 PlayerEntity.class,
-                this.getBoundingBox().expand(100),
+                dragon.getBoundingBox().expand(100),
                 player -> GamemodeManager.isInGamemode(player)
             );
             
@@ -40,9 +33,9 @@ public abstract class EnderDragonEntityMixin extends MobEntity {
                 if (player instanceof ServerPlayerEntity serverPlayer) {
                     GamemodeManager.triggerEnding(serverPlayer, true);
                     
-                    List<SlimeHelperEntity> slimes = this.getWorld().getEntitiesByClass(
+                    List<SlimeHelperEntity> slimes = dragon.getWorld().getEntitiesByClass(
                         SlimeHelperEntity.class,
-                        this.getBoundingBox().expand(100),
+                        dragon.getBoundingBox().expand(100),
                         slime -> slime.isOwner(player)
                     );
                     
@@ -50,7 +43,7 @@ public abstract class EnderDragonEntityMixin extends MobEntity {
                         SlimeHelperEntity slime = slimes.get(0);
                         
                         // Schedule the final evolution after 3 seconds (60 ticks) using a simple delay
-                        this.getWorld().getServer().execute(() -> {
+                        dragon.getWorld().getServer().execute(() -> {
                             new java.util.Timer().schedule(
                                 new java.util.TimerTask() {
                                     @Override
