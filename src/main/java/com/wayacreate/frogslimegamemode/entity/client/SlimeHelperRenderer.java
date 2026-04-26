@@ -20,4 +20,9 @@ public class SlimeHelperRenderer extends MobEntityRenderer<SlimeHelperEntity, Sl
     public Identifier getTexture(SlimeHelperEntity entity) {
         return entity.isFinalForm() ? FINAL_FORM_TEXTURE : TEXTURE;
     }
+    
+    @Override
+    public boolean hasLabel(SlimeHelperEntity entity) {
+        return false;
+    }
 }

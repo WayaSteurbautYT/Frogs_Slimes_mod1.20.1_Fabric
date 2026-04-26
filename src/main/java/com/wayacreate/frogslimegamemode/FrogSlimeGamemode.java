@@ -24,8 +24,9 @@ public class FrogSlimeGamemode implements ModInitializer {
     public void onInitialize() {
         LOGGER.info("Initializing Frog & Slime Gamemode by WayaCreate!");
 
-        ModItems.register();
+        // Register entities first (items depend on entity types)
         ModEntities.register();
+        ModItems.register();
         ModNetworking.registerServer();
         TaskManager.init();
         AchievementManager.init();

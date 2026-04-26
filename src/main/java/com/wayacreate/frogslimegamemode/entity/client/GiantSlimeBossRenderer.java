@@ -20,4 +20,9 @@ public class GiantSlimeBossRenderer extends MobEntityRenderer<GiantSlimeBossEnti
     public Identifier getTexture(GiantSlimeBossEntity entity) {
         return entity.isEnraged() ? ENRAGED_TEXTURE : TEXTURE;
     }
+    
+    @Override
+    public boolean hasLabel(GiantSlimeBossEntity entity) {
+        return false;
+    }
 }

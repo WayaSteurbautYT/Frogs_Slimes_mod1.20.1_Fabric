@@ -3,6 +3,7 @@ package com.wayacreate.frogslimegamemode.eating;
 import com.wayacreate.frogslimegamemode.entity.FrogHelperEntity;
 import com.wayacreate.frogslimegamemode.entity.SlimeHelperEntity;
 import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
+import com.wayacreate.frogslimegamemode.item.AbilityDropItem;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -22,6 +23,7 @@ import java.util.List;
 public class EatingSystem {
     private static final int TICK_INTERVAL = 10;
     private static final double HELPER_SEARCH_RADIUS = 48.0;
+    private static final double PLAYER_EAT_RADIUS = 2.5;
 
     public static void tick(MinecraftServer server) {
         if (server.getTicks() % TICK_INTERVAL != 0) {
@@ -33,6 +35,9 @@ public class EatingSystem {
                 if (!GamemodeManager.isInGamemode(player)) {
                     continue;
                 }
+
+                // Player eating mobs
+                playerEatNearbyMobs(player, world);
 
                 Box helperSearchBox = player.getBoundingBox().expand(HELPER_SEARCH_RADIUS);
 
@@ -53,6 +58,46 @@ public class EatingSystem {
                     collectNearbyItems(slime, world);
                     eatNearbyMobs(slime, world);
                 });
+            }
+        }
+    }
+    
+    private static void playerEatNearbyMobs(ServerPlayerEntity player, ServerWorld world) {
+        Box searchBox = player.getBoundingBox().expand(PLAYER_EAT_RADIUS);
+        
+        List<MobEntity> mobs = world.getEntitiesByClass(MobEntity.class, searchBox, e -> 
+            e.isAlive() && !(e instanceof FrogHelperEntity) && !(e instanceof SlimeHelperEntity) && e.getHealth() <= 8
+        );
+        
+        for (MobEntity mob : mobs) {
+            if (mob.getHealth() <= 4) {
+                // Kill the mob to drop items naturally
+                mob.damage(world.getDamageSources().generic(), Float.MAX_VALUE);
+                
+                // Give ability drop to player
+                MobAbility ability = MobAbility.getAbilityFromEntity(mob.getType());
+                
+                if (ability != null) {
+                    ItemStack abilityDrop = AbilityDropItem.createAbilityDrop(ability.getId());
+                    if (!abilityDrop.isEmpty()) {
+                        // Try to add to hotbar first, then main inventory
+                        if (!player.getInventory().insertStack(abilityDrop)) {
+                            // Drop on ground if inventory full
+                            world.spawnEntity(new ItemEntity(world, player.getX(), player.getY(), player.getZ(), abilityDrop));
+                        }
+                        
+                        player.sendMessage(Text.literal("You ate a ")
+                            .formatted(Formatting.GREEN)
+                            .append(Text.literal(mob.getName().getString())
+                                .formatted(Formatting.YELLOW))
+                            .append(Text.literal(" and gained ")
+                                .formatted(Formatting.GREEN))
+                            .append(ability.getFormattedName())
+                            .append(Text.literal("!").formatted(Formatting.GREEN)), false);
+                    }
+                }
+                
+                spawnEatParticles(world, mob.getX(), mob.getY(), mob.getZ());
             }
         }
     }

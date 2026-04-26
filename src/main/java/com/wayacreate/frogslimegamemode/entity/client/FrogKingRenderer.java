@@ -19,4 +19,9 @@ public class FrogKingRenderer extends MobEntityRenderer<FrogKingEntity, SlimeEnt
     public Identifier getTexture(FrogKingEntity entity) {
         return TEXTURE;
     }
+    
+    @Override
+    public boolean hasLabel(FrogKingEntity entity) {
+        return false;
+    }
 }

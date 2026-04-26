@@ -1,26 +1,26 @@
 package com.wayacreate.frogslimegamemode.mixin;
 
 import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
-import net.minecraft.server.PlayerManager;
+import com.wayacreate.frogslimegamemode.util.CreateWorldState;
 import net.minecraft.server.network.ServerPlayerEntity;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Mixin to automatically enable Frog & Slime gamemode when player joins
  * if the world was created with Frog & Slime mode selected.
+ *
+ * Temporarily disabled due to method signature mapping issues.
+ * TODO: Fix once world creation UI is implemented.
  */
-@Mixin(PlayerManager.class)
+// @Mixin(PlayerManager.class)
 public class PlayerManagerMixin {
-    
-    @Inject(method = "onPlayerConnect", at = @At("TAIL"))
+
+    // @Inject(method = "onPlayerConnect", at = @At("TAIL"))
     private void onPlayerConnect(ServerPlayerEntity player, CallbackInfo ci) {
         // Check if world was created with frogslime mode
-        if (com.wayacreate.frogslimegamemode.mixin.CreateWorldScreenMixin.isFrogSlimeMode()) {
+        if (CreateWorldState.isFrogSlimeMode()) {
             GamemodeManager.enableGamemode(player);
-            com.wayacreate.frogslimegamemode.mixin.CreateWorldScreenMixin.resetFrogSlimeMode();
+            CreateWorldState.resetFrogSlimeMode();
         }
     }
 }

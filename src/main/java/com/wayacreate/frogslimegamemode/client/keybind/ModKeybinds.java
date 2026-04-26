@@ -1,8 +1,8 @@
 package com.wayacreate.frogslimegamemode.client.keybind;
 
 import com.wayacreate.frogslimegamemode.client.gui.FrogSlimeGamemodeScreen;
-import com.wayacreate.frogslimegamemode.gui.SkillsScreen;
-import com.wayacreate.frogslimegamemode.gui.CollectionsScreen;
+import com.wayacreate.frogslimegamemode.client.gui.SkillsScreen;
+import com.wayacreate.frogslimegamemode.client.gui.CollectionsScreen;
 import com.wayacreate.frogslimegamemode.network.ModNetworking;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;

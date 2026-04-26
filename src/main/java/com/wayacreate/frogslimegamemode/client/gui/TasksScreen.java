@@ -1,4 +1,4 @@
-package com.wayacreate.frogslimegamemode.gui;
+package com.wayacreate.frogslimegamemode.client.gui;
 
 import com.wayacreate.frogslimegamemode.tasks.TaskType;
 import net.minecraft.client.gui.DrawContext;

@@ -13,12 +13,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(TitleScreen.class)
 public class TitleScreenMixin {
-    
+
     @Inject(method = "init", at = @At("HEAD"), cancellable = true)
     private void onInit(CallbackInfo ci) {
-        // Replace with custom title screen
-        MinecraftClient client = MinecraftClient.getInstance();
-        client.setScreen(new ModTitleScreen());
-        ci.cancel();
+        // Only replace if this is the vanilla TitleScreen, not ModTitleScreen
+        if (!this.getClass().getName().equals(ModTitleScreen.class.getName())) {
+            MinecraftClient client = MinecraftClient.getInstance();
+            client.setScreen(new ModTitleScreen());
+            ci.cancel();
+        }
     }
 }

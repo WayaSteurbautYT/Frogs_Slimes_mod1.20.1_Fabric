@@ -2,7 +2,6 @@ package com.wayacreate.frogslimegamemode.item;
 
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -14,19 +13,20 @@ public class OrphanShieldItem extends Item {
         super(settings);
     }
     
-    public static ItemStack createOrphanShield() {
-        ItemStack shield = new ItemStack(Items.SHIELD);
+    public static boolean isOrphanShield(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) return false;
+        if (!stack.isOf(ModItems.ORPHAN_SHIELD)) return false;
+        NbtCompound nbt = stack.getNbt();
+        return nbt != null && nbt.getBoolean(ORPHAN_SHIELD_NBT);
+    }
+    
+    @Override
+    public ItemStack getDefaultStack() {
+        ItemStack shield = new ItemStack(this);
         NbtCompound nbt = shield.getOrCreateNbt();
         nbt.putBoolean(ORPHAN_SHIELD_NBT, true);
         shield.setCustomName(Text.literal("Orphan Shield").formatted(Formatting.DARK_GRAY, Formatting.BOLD));
         return shield;
-    }
-    
-    public static boolean isOrphanShield(ItemStack stack) {
-        if (stack == null || stack.isEmpty()) return false;
-        if (!stack.isOf(Items.SHIELD)) return false;
-        NbtCompound nbt = stack.getNbt();
-        return nbt != null && nbt.getBoolean(ORPHAN_SHIELD_NBT);
     }
     
     @Override

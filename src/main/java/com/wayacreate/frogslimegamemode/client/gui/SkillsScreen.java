@@ -1,4 +1,4 @@
-package com.wayacreate.frogslimegamemode.gui;
+package com.wayacreate.frogslimegamemode.client.gui;
 
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;

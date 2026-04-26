@@ -19,4 +19,9 @@ public class FrogHelperRenderer extends MobEntityRenderer<FrogHelperEntity, Slim
     public Identifier getTexture(FrogHelperEntity entity) {
         return TEXTURE;
     }
+    
+    @Override
+    public boolean hasLabel(FrogHelperEntity entity) {
+        return false;
+    }
 }

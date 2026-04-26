@@ -19,7 +19,8 @@ public class ManhuntCompassItem extends Item {
         super(settings);
     }
     
-    public static ItemStack createCompass() {
+    @Override
+    public ItemStack getDefaultStack() {
         ItemStack compass = new ItemStack(Items.COMPASS);
         NbtCompound nbt = compass.getOrCreateNbt();
         nbt.putBoolean(MANHUNT_COMPASS_NBT, true);

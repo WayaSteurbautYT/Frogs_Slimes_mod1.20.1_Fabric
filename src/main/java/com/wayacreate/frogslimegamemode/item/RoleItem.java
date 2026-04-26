@@ -16,9 +16,43 @@ import net.minecraft.world.World;
 public class RoleItem extends Item {
     public static final String ROLE_ITEM_NBT = "RoleItem";
     public static final String ROLE_TYPE_NBT = "RoleType";
+    private final String roleType;
     
     public RoleItem(Settings settings) {
         super(settings);
+        this.roleType = null;
+    }
+    
+    public RoleItem(Settings settings, String roleType) {
+        super(settings);
+        this.roleType = roleType;
+    }
+    
+    @Override
+    public ItemStack getDefaultStack() {
+        ItemStack stick = new ItemStack(Items.STICK);
+        NbtCompound nbt = stick.getOrCreateNbt();
+        nbt.putBoolean(ROLE_ITEM_NBT, true);
+        nbt.putString(ROLE_TYPE_NBT, roleType != null ? roleType : "Unknown");
+        
+        Formatting color = getRoleColor(roleType);
+        stick.setCustomName(Text.literal((roleType != null ? roleType : "Role") + " Assignment Stick")
+            .formatted(color, Formatting.BOLD));
+        return stick;
+    }
+    
+    private Formatting getRoleColor(String role) {
+        if (role == null) return Formatting.GOLD;
+        switch (role.toLowerCase()) {
+            case "miner":
+                return Formatting.DARK_GRAY;
+            case "lumberjack":
+                return Formatting.DARK_GREEN;
+            case "combat specialist":
+                return Formatting.RED;
+            default:
+                return Formatting.GOLD;
+        }
     }
     
     public static ItemStack createRoleItem(String role) {
@@ -26,8 +60,23 @@ public class RoleItem extends Item {
         NbtCompound nbt = stick.getOrCreateNbt();
         nbt.putBoolean(ROLE_ITEM_NBT, true);
         nbt.putString(ROLE_TYPE_NBT, role);
-        stick.setCustomName(Text.literal(role + " Assignment Stick").formatted(Formatting.GOLD, Formatting.BOLD));
+        Formatting color = getRoleColorStatic(role);
+        stick.setCustomName(Text.literal(role + " Assignment Stick").formatted(color, Formatting.BOLD));
         return stick;
+    }
+    
+    private static Formatting getRoleColorStatic(String role) {
+        if (role == null) return Formatting.GOLD;
+        switch (role.toLowerCase()) {
+            case "miner":
+                return Formatting.DARK_GRAY;
+            case "lumberjack":
+                return Formatting.DARK_GREEN;
+            case "combat specialist":
+                return Formatting.RED;
+            default:
+                return Formatting.GOLD;
+        }
     }
     
     public static boolean isRoleItem(ItemStack stack) {

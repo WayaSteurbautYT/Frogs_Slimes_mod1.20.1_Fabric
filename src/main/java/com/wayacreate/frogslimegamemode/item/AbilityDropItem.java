@@ -28,21 +28,92 @@ public class AbilityDropItem extends Item {
             return ItemStack.EMPTY;
         }
         
-        // Use a nether star as the base item for ability drops
-        ItemStack drop = new ItemStack(Items.NETHER_STAR);
+        // Use vanilla items based on mob drops
+        ItemStack drop = new ItemStack(getDropItemForAbility(abilityId));
         NbtCompound nbt = drop.getOrCreateNbt();
         nbt.putBoolean(ABILITY_DROP_NBT, true);
         nbt.putString(ABILITY_ID_NBT, abilityId);
         
-        drop.setCustomName(Text.literal("Ability Essence: " + ability.getName())
-            .formatted(Formatting.LIGHT_PURPLE, Formatting.BOLD));
+        // Set color based on ability type
+        Formatting color = getAbilityColor(ability);
+        drop.setCustomName(Text.literal("Ability: " + ability.getName())
+            .formatted(color, Formatting.BOLD));
         
         return drop;
     }
     
+    private static Item getDropItemForAbility(String abilityId) {
+        // Map mob abilities to their vanilla drop items
+        switch (abilityId) {
+            case "blaze":
+                return Items.BLAZE_ROD;
+            case "enderman":
+                return Items.ENDER_PEARL;
+            case "iron_golem":
+                return Items.IRON_INGOT;
+            case "snow_golem":
+                return Items.SNOWBALL;
+            case "witch":
+                return Items.GLASS_BOTTLE;
+            case "ghast":
+                return Items.GHAST_TEAR;
+            case "piglin":
+                return Items.GOLD_INGOT;
+            case "warden":
+                return Items.SCULK_CATALYST;
+            case "creeper":
+                return Items.GUNPOWDER;
+            case "spider":
+                return Items.STRING;
+            case "skeleton":
+                return Items.BONE;
+            case "zombie":
+                return Items.ROTTEN_FLESH;
+            case "pig":
+                return Items.PORKCHOP;
+            case "cow":
+                return Items.LEATHER;
+            case "chicken":
+                return Items.FEATHER;
+            case "sheep":
+                return Items.WHITE_WOOL;
+            case "rabbit":
+                return Items.RABBIT_HIDE;
+            case "villager":
+                return Items.EMERALD;
+            default:
+                return Items.STICK;
+        }
+    }
+    
+    private static Formatting getAbilityColor(MobAbility ability) {
+        switch (ability.getActiveAbility()) {
+            case FIREBALL:
+                return Formatting.RED;
+            case LEAP_ATTACK:
+                return Formatting.GREEN;
+            case TELEPORT:
+                return Formatting.DARK_PURPLE;
+            case POISON_CLOUD:
+                return Formatting.DARK_GREEN;
+            case ICE_SUMMON:
+                return Formatting.AQUA;
+            case LIGHTNING_STRIKE:
+                return Formatting.YELLOW;
+            case SONIC_BOOM:
+                return Formatting.BLUE;
+            case WEB_SHOT:
+                return Formatting.GRAY;
+            case THORNS:
+                return Formatting.DARK_RED;
+            case NONE:
+            default:
+                return Formatting.LIGHT_PURPLE;
+        }
+    }
+    
     public static boolean isAbilityDrop(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return false;
-        if (!stack.isOf(Items.NETHER_STAR)) return false;
         NbtCompound nbt = stack.getNbt();
         return nbt != null && nbt.getBoolean(ABILITY_DROP_NBT);
     }

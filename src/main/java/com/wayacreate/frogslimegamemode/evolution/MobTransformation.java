@@ -1,39 +1,32 @@
 package com.wayacreate.frogslimegamemode.evolution;
 
-import net.minecraft.entity.EntityType;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
 public enum MobTransformation {
-    FROG("frog", EntityType.FROG, "Frog", Formatting.GREEN),
-    SLIME("slime", EntityType.SLIME, "Slime", Formatting.GREEN),
-    ENDERMAN("enderman", EntityType.ENDERMAN, "Ender Frog", Formatting.DARK_PURPLE),
-    BLAZE("blaze", EntityType.BLAZE, "Blaze Frog", Formatting.GOLD),
-    WITCH("witch", EntityType.WITCH, "Witch Frog", Formatting.LIGHT_PURPLE),
-    IRON_GOLEM("iron_golem", EntityType.IRON_GOLEM, "Iron Frog", Formatting.GRAY),
-    SNOW_GOLEM("snow_golem", EntityType.SNOW_GOLEM, "Frost Frog", Formatting.AQUA),
-    VILLAGER("villager", EntityType.VILLAGER, "Merchant Frog", Formatting.YELLOW),
-    PIGLIN("piglin", EntityType.PIGLIN, "Piglin Frog", Formatting.GOLD),
-    WARDEN("warden", EntityType.WARDEN, "Warden Frog", Formatting.DARK_BLUE);
+    FROG("frog", "Frog", Formatting.GREEN),
+    SLIME("slime", "Slime", Formatting.GREEN),
+    ENDERMAN("enderman", "Ender Frog", Formatting.DARK_PURPLE),
+    BLAZE("blaze", "Blaze Frog", Formatting.GOLD),
+    WITCH("witch", "Witch Frog", Formatting.LIGHT_PURPLE),
+    IRON_GOLEM("iron_golem", "Iron Frog", Formatting.GRAY),
+    SNOW_GOLEM("snow_golem", "Frost Frog", Formatting.AQUA),
+    VILLAGER("villager", "Merchant Frog", Formatting.YELLOW),
+    PIGLIN("piglin", "Piglin Frog", Formatting.GOLD),
+    WARDEN("warden", "Warden Frog", Formatting.DARK_BLUE);
     
     private final String id;
-    private final EntityType<?> entityType;
     private final String displayName;
     private final Formatting color;
     
-    MobTransformation(String id, EntityType<?> entityType, String displayName, Formatting color) {
+    MobTransformation(String id, String displayName, Formatting color) {
         this.id = id;
-        this.entityType = entityType;
         this.displayName = displayName;
         this.color = color;
     }
     
     public String getId() {
         return id;
-    }
-    
-    public EntityType<?> getEntityType() {
-        return entityType;
     }
     
     public String getDisplayName() {

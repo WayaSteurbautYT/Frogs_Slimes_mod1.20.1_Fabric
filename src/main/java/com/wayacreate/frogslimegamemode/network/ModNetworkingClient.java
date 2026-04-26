@@ -1,7 +1,7 @@
 package com.wayacreate.frogslimegamemode.network;
 
 import com.wayacreate.frogslimegamemode.client.hud.GamemodeHud;
-import com.wayacreate.frogslimegamemode.gui.TasksScreen;
+import com.wayacreate.frogslimegamemode.client.gui.TasksScreen;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.toast.SystemToast;
 import net.minecraft.text.Text;
