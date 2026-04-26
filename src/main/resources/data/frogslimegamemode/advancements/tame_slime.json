@@ -1,0 +1,21 @@
+{
+  "display": {
+    "icon": {
+      "item": "frogslimegamemode:slime_helper_spawn_egg"
+    },
+    "title": {
+      "translate": "advancements.frogslimegamemode.tame_slime.title"
+    },
+    "description": {
+      "translate": "advancements.frogslimegamemode.tame_slime.description"
+    },
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "parent": "frogslimegamemode:root",
+  "criteria": {
+    "tamed_slime": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

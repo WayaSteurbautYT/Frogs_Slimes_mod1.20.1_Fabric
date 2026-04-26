@@ -1,0 +1,48 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "SSS",
+    "SRS",
+    "SSS"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:slime_ball"
+    },
+    "R": {
+      "item": "minecraft:rabbit"
+    }
+  },
+  "result": {
+    "item": "frogslimegamemode:slime_food",
+    "count": 8
+  },
+  "criteria": {
+    "has_slime_ball": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": ["minecraft:slime_ball"]
+          }
+        ]
+      }
+    },
+    "has_rabbit": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": ["minecraft:rabbit"]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_slime_ball",
+      "has_rabbit"
+    ]
+  ]
+}

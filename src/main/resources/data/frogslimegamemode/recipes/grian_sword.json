@@ -1,0 +1,48 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " P ",
+    "PSP",
+    " P "
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:prismarine"
+    },
+    "S": {
+      "item": "minecraft:diamond_sword"
+    }
+  },
+  "result": {
+    "item": "frogslimegamemode:grian_sword",
+    "count": 1
+  },
+  "criteria": {
+    "has_prismarine": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": ["minecraft:prismarine"]
+          }
+        ]
+      }
+    },
+    "has_diamond_sword": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": ["minecraft:diamond_sword"]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_prismarine",
+      "has_diamond_sword"
+    ]
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "P P",
+    "PPP",
+    "PPP"
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:purple_wool"
+    }
+  },
+  "result": {
+    "item": "frogslimegamemode:prankster_chestplate",
+    "count": 1
+  },
+  "criteria": {
+    "has_purple_wool": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": ["minecraft:purple_wool"]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_purple_wool"
+    ]
+  ]
+}

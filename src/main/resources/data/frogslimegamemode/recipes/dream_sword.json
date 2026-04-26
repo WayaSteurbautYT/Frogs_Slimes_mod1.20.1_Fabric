@@ -1,0 +1,48 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " G ",
+    "GSG",
+    " G "
+  ],
+  "key": {
+    "G": {
+      "item": "minecraft:gold_block"
+    },
+    "S": {
+      "item": "minecraft:netherite_sword"
+    }
+  },
+  "result": {
+    "item": "frogslimegamemode:dream_sword",
+    "count": 1
+  },
+  "criteria": {
+    "has_gold_block": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": ["minecraft:gold_block"]
+          }
+        ]
+      }
+    },
+    "has_netherite_sword": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": ["minecraft:netherite_sword"]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_gold_block",
+      "has_netherite_sword"
+    ]
+  ]
+}

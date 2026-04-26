@@ -1,0 +1,68 @@
+package com.wayacreate.frogslimegamemode.item;
+
+import com.wayacreate.frogslimegamemode.FrogSlimeGamemode;
+import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
+import net.minecraft.util.Hand;
+import net.minecraft.util.TypedActionResult;
+import net.minecraft.world.World;
+
+public class TaskBookItem extends Item {
+    public TaskBookItem(Settings settings) {
+        super(settings);
+    }
+    
+    @Override
+    public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+        if (!world.isClient && user instanceof ServerPlayerEntity serverPlayer) {
+            if (GamemodeManager.isInGamemode(user)) {
+                var data = GamemodeManager.getData(user);
+                
+                user.sendMessage(Text.literal("═══════════════════════════")
+                    .formatted(Formatting.GOLD, Formatting.BOLD), false);
+                user.sendMessage(Text.literal("TASK BOOK")
+                    .formatted(Formatting.AQUA, Formatting.BOLD), false);
+                user.sendMessage(Text.literal("═══════════════════════════")
+                    .formatted(Formatting.GOLD, Formatting.BOLD), false);
+                user.sendMessage(Text.literal(""), false);
+                user.sendMessage(Text.literal("Current Progress:")
+                    .formatted(Formatting.YELLOW), false);
+                user.sendMessage(Text.literal("• Helpers Tamed: " + data.getHelpersSpawned())
+                    .formatted(Formatting.GREEN), false);
+                user.sendMessage(Text.literal("• Mobs Eaten: " + data.getMobsEaten())
+                    .formatted(Formatting.GREEN), false);
+                user.sendMessage(Text.literal("• Items Collected: " + data.getItemsCollected())
+                    .formatted(Formatting.GREEN), false);
+                user.sendMessage(Text.literal("• Jumps: " + data.getJumpCount())
+                    .formatted(Formatting.GREEN), false);
+                user.sendMessage(Text.literal("• Deaths: " + data.getDeathCount())
+                    .formatted(Formatting.RED), false);
+                user.sendMessage(Text.literal(""), false);
+                user.sendMessage(Text.literal("Current Objectives:")
+                    .formatted(Formatting.YELLOW), false);
+                user.sendMessage(Text.literal("• Tame a Frog Helper")
+                    .formatted(Formatting.GRAY), false);
+                user.sendMessage(Text.literal("• Tame a Slime Helper")
+                    .formatted(Formatting.GRAY), false);
+                user.sendMessage(Text.literal("• Evolve your helpers by killing mobs")
+                    .formatted(Formatting.GRAY), false);
+                user.sendMessage(Text.literal("• Defeat the Ender Dragon")
+                    .formatted(Formatting.DARK_RED), false);
+                user.sendMessage(Text.literal(""), false);
+                user.sendMessage(Text.literal("═══════════════════════════")
+                    .formatted(Formatting.GOLD, Formatting.BOLD), false);
+            } else {
+                user.sendMessage(Text.literal("You must be in Frog & Slime Gamemode to use this book!")
+                    .formatted(Formatting.RED), false);
+                user.sendMessage(Text.literal("Use /frogslime enable to activate the gamemode")
+                    .formatted(Formatting.GRAY), false);
+            }
+        }
+        return TypedActionResult.success(user.getStackInHand(hand));
+    }
+}

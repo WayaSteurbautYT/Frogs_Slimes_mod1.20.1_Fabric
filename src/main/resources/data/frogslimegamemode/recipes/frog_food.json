@@ -1,0 +1,48 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "FFF",
+    "FVF",
+    "FFF"
+  ],
+  "key": {
+    "F": {
+      "item": "minecraft:spider_eye"
+    },
+    "V": {
+      "item": "minecraft:cooked_chicken"
+    }
+  },
+  "result": {
+    "item": "frogslimegamemode:frog_food",
+    "count": 8
+  },
+  "criteria": {
+    "has_spider_eye": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": ["minecraft:spider_eye"]
+          }
+        ]
+      }
+    },
+    "has_cooked_chicken": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": ["minecraft:cooked_chicken"]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_spider_eye",
+      "has_cooked_chicken"
+    ]
+  ]
+}

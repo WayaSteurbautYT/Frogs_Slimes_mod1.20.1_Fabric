@@ -1,0 +1,115 @@
+{
+  "type": "minecraft:entity",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:slime_ball",
+          "weight": 20
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:slime_block",
+          "weight": 10
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "bonus_rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "frogslimegamemode:dream_sword",
+          "weight": 5,
+          "conditions": [
+            {
+              "condition": "minecraft:random_chance",
+              "chance": 0.05
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "frogslimegamemode:technoblade_sword",
+          "weight": 3,
+          "conditions": [
+            {
+              "condition": "minecraft:random_chance",
+              "chance": 0.03
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "frogslimegamemode:grian_sword",
+          "weight": 7,
+          "conditions": [
+            {
+              "condition": "minecraft:random_chance",
+              "chance": 0.07
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "frogslimegamemode:mumbo_jumbo_sword",
+          "weight": 7,
+          "conditions": [
+            {
+              "condition": "minecraft:random_chance",
+              "chance": 0.07
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "frogslimegamemode:mustard_helmet",
+          "weight": 10,
+          "conditions": [
+            {
+              "condition": "minecraft:random_chance",
+              "chance": 0.1
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "frogslimegamemode:orphan_shield",
+          "weight": 4,
+          "conditions": [
+            {
+              "condition": "minecraft:random_chance",
+              "chance": 0.04
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "frogslimegamemode:prankster_chestplate",
+          "weight": 10,
+          "conditions": [
+            {
+              "condition": "minecraft:random_chance",
+              "chance": 0.1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": {
+        "min": 3,
+        "max": 8
+      },
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:emerald"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "frogslimegamemode",
+  "version": "${version}",
+  "name": "Frog & Slime Gamemode",
+  "description": "A custom gamemode where frog and slime helpers beat Minecraft for you!",
+  "authors": [
+    "WayaCreate (Waya Steurbaut)"
+  ],
+  "contact": {
+    "homepage": "https://youtube.com/@wayacreate"
+  },
+  "license": "MIT",
+  "icon": "assets/frogslimegamemode/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.wayacreate.frogslimegamemode.FrogSlimeGamemode"
+    ],
+    "client": [
+      "com.wayacreate.frogslimegamemode.FrogSlimeGamemodeClient"
+    ]
+  },
+  "mixins": [
+    "frogslimegamemode.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.25",
+    "fabric-api": "*",
+    "minecraft": "~1.20.1",
+    "java": ">=17"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " R ",
+    "RSR",
+    " R "
+  ],
+  "key": {
+    "R": {
+      "item": "minecraft:redstone_block"
+    },
+    "S": {
+      "item": "minecraft:diamond_sword"
+    }
+  },
+  "result": {
+    "item": "frogslimegamemode:mumbo_jumbo_sword",
+    "count": 1
+  },
+  "criteria": {
+    "has_redstone_block": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": ["minecraft:redstone_block"]
+          }
+        ]
+      }
+    },
+    "has_diamond_sword": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": ["minecraft:diamond_sword"]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_redstone_block",
+      "has_diamond_sword"
+    ]
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "display": {
+    "icon": {
+      "item": "frogslimegamemode:final_evolution_crystal"
+    },
+    "title": {
+      "translate": "advancements.frogslimegamemode.final_evolution.title"
+    },
+    "description": {
+      "translate": "advancements.frogslimegamemode.final_evolution.description"
+    },
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": true
+  },
+  "parent": "frogslimegamemode:root",
+  "criteria": {
+    "obtained_crystal": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

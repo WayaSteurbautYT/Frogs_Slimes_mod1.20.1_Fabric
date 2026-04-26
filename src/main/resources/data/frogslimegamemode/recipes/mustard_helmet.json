@@ -1,0 +1,33 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "YYY",
+    "Y Y"
+  ],
+  "key": {
+    "Y": {
+      "item": "minecraft:yellow_wool"
+    }
+  },
+  "result": {
+    "item": "frogslimegamemode:mustard_helmet",
+    "count": 1
+  },
+  "criteria": {
+    "has_yellow_wool": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": ["minecraft:yellow_wool"]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_yellow_wool"
+    ]
+  ]
+}

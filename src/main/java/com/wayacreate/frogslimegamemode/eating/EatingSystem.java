@@ -1,0 +1,174 @@
+package com.wayacreate.frogslimegamemode.eating;
+
+import com.wayacreate.frogslimegamemode.entity.FrogHelperEntity;
+import com.wayacreate.frogslimegamemode.entity.SlimeHelperEntity;
+import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
+import net.minecraft.entity.ItemEntity;
+import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.particle.ItemStackParticleEffect;
+import net.minecraft.particle.ParticleTypes;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
+import net.minecraft.util.math.Box;
+
+import java.util.List;
+
+public class EatingSystem {
+    private static final int TICK_INTERVAL = 10;
+    private static final double HELPER_SEARCH_RADIUS = 48.0;
+
+    public static void tick(MinecraftServer server) {
+        if (server.getTicks() % TICK_INTERVAL != 0) {
+            return;
+        }
+
+        for (ServerWorld world : server.getWorlds()) {
+            for (ServerPlayerEntity player : world.getPlayers()) {
+                if (!GamemodeManager.isInGamemode(player)) {
+                    continue;
+                }
+
+                Box helperSearchBox = player.getBoundingBox().expand(HELPER_SEARCH_RADIUS);
+
+                world.getEntitiesByClass(
+                    FrogHelperEntity.class,
+                    helperSearchBox,
+                    frog -> frog.isAlive() && frog.getOwner() == player
+                ).forEach(frog -> {
+                    collectNearbyItems(frog, world);
+                    eatNearbyMobs(frog, world);
+                });
+
+                world.getEntitiesByClass(
+                    SlimeHelperEntity.class,
+                    helperSearchBox,
+                    slime -> slime.isAlive() && slime.getOwner() == player
+                ).forEach(slime -> {
+                    collectNearbyItems(slime, world);
+                    eatNearbyMobs(slime, world);
+                });
+            }
+        }
+    }
+    
+    private static void collectNearbyItems(Object helper, ServerWorld world) {
+        Box searchBox;
+        PlayerEntity owner = null;
+        
+        if (helper instanceof FrogHelperEntity frog) {
+            searchBox = frog.getBoundingBox().expand(3.0);
+            owner = (PlayerEntity) frog.getOwner();
+        } else if (helper instanceof SlimeHelperEntity slime) {
+            searchBox = slime.getBoundingBox().expand(3.0);
+            owner = (PlayerEntity) slime.getOwner();
+        } else {
+            return;
+        }
+        
+        if (owner == null || !GamemodeManager.isInGamemode(owner)) {
+            return;
+        }
+        
+        List<ItemEntity> items = world.getEntitiesByClass(ItemEntity.class, searchBox, e -> true);
+        for (ItemEntity item : items) {
+            if (!item.isRemoved() && !item.cannotPickup()) {
+                if (!owner.getInventory().insertStack(item.getStack())) {
+                    continue;
+                }
+                
+                GamemodeManager.getData(owner).addItemsCollected(item.getStack().getCount());
+                item.discard();
+            }
+        }
+    }
+    
+    private static void eatNearbyMobs(Object helper, ServerWorld world) {
+        Box searchBox;
+        PlayerEntity owner = null;
+        int evolutionStage = 0;
+        
+        if (helper instanceof FrogHelperEntity frog) {
+            searchBox = frog.getBoundingBox().expand(2.0 + (frog.getEvolutionStage() * 0.5));
+            owner = (PlayerEntity) frog.getOwner();
+            evolutionStage = frog.getEvolutionStage();
+        } else if (helper instanceof SlimeHelperEntity slime) {
+            searchBox = slime.getBoundingBox().expand(2.0 + (slime.getEvolutionStage() * 0.5));
+            owner = (PlayerEntity) slime.getOwner();
+            evolutionStage = slime.getEvolutionStage();
+        } else {
+            return;
+        }
+        
+        if (owner == null || !GamemodeManager.isInGamemode(owner)) {
+            return;
+        }
+        
+        // Only eat mobs if evolution stage >= 1
+        if (evolutionStage < 1) {
+            return;
+        }
+        
+        List<MobEntity> mobs = world.getEntitiesByClass(MobEntity.class, searchBox, e -> 
+            e.isAlive() && !(e instanceof FrogHelperEntity) && !(e instanceof SlimeHelperEntity) && e.getHealth() <= 10
+        );
+        
+        for (MobEntity mob : mobs) {
+            if (mob.getHealth() <= 5) {
+                // Kill the mob to drop items naturally
+                mob.damage(world.getDamageSources().generic(), Float.MAX_VALUE);
+                
+                // Eat the mob (give ability)
+                MobAbility ability = MobAbility.getAbilityFromEntity(mob.getType());
+                
+                if (ability != null) {
+                    if (helper instanceof FrogHelperEntity frog) {
+                        frog.addAbility(ability);
+                        if (owner != null) {
+                            owner.sendMessage(Text.literal("Your frog ate a ")
+                                .formatted(Formatting.GREEN)
+                                .append(Text.literal(mob.getName().getString())
+                                    .formatted(Formatting.YELLOW))
+                                .append(Text.literal(" and gained ")
+                                    .formatted(Formatting.GREEN))
+                                .append(ability.getFormattedName())
+                                .append(Text.literal("!").formatted(Formatting.GREEN)), false);
+                        }
+                    } else if (helper instanceof SlimeHelperEntity slime) {
+                        slime.addAbility(ability);
+                        if (owner != null) {
+                            owner.sendMessage(Text.literal("Your slime ate a ")
+                                .formatted(Formatting.GREEN)
+                                .append(Text.literal(mob.getName().getString())
+                                    .formatted(Formatting.YELLOW))
+                                .append(Text.literal(" and gained ")
+                                    .formatted(Formatting.GREEN))
+                                .append(ability.getFormattedName())
+                                .append(Text.literal("!").formatted(Formatting.GREEN)), false);
+                        }
+                    }
+                }
+                
+                spawnEatParticles(world, mob.getX(), mob.getY(), mob.getZ());
+            }
+        }
+    }
+    
+    private static void spawnEatParticles(ServerWorld world, double x, double y, double z) {
+        ItemStackParticleEffect slimeParticles = new ItemStackParticleEffect(ParticleTypes.ITEM, new ItemStack(Items.SLIME_BALL));
+        for (int i = 0; i < 15; i++) {
+            double offsetX = (world.random.nextDouble() - 0.5) * 1.0;
+            double offsetY = world.random.nextDouble() * 1.0;
+            double offsetZ = (world.random.nextDouble() - 0.5) * 1.0;
+            
+            world.spawnParticles(slimeParticles,
+                x + offsetX, y + offsetY, z + offsetZ,
+                1, 0, 0, 0, 0);
+        }
+    }
+}

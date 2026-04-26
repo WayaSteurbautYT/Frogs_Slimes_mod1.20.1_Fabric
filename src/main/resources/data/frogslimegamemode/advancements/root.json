@@ -1,0 +1,21 @@
+{
+  "display": {
+    "icon": {
+      "item": "frogslimegamemode:task_book"
+    },
+    "title": {
+      "translate": "advancements.frogslimegamemode.root.title"
+    },
+    "description": {
+      "translate": "advancements.frogslimegamemode.root.description"
+    },
+    "background": "minecraft:textures/block/moss_block.png",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "gamemode_enabled": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

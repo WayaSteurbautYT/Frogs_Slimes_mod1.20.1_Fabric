@@ -1,0 +1,24 @@
+{
+  "display": {
+    "icon": {
+      "item": "frogslimegamemode:evolution_stone"
+    },
+    "title": {
+      "translate": "advancements.frogslimegamemode.evolution_stone.title"
+    },
+    "description": {
+      "translate": "advancements.frogslimegamemode.evolution_stone.description"
+    },
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "parent": "frogslimegamemode:root",
+  "criteria": {
+    "crafted_evolution_stone": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "frogslimegamemode:evolution_stone"
+      }
+    }
+  }
+}
