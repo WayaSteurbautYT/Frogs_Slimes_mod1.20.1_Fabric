@@ -9,7 +9,6 @@
     "LivingEntityMixin"
   ],
   "client": [
-    "CreateWorldScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1
