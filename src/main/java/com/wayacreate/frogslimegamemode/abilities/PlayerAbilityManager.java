@@ -83,6 +83,12 @@ public class PlayerAbilityManager {
             executeAbility(player, ability);
             abilityCooldowns.put(uuid, ability.getAbilityCooldown() / 20); // Convert ticks to seconds
             
+            // Send totem animation when using ability
+            ModNetworking.sendTotemAnimation(player, 
+                "Ability Used!", 
+                ability.getName() + " - " + ability.getDescription(), 
+                Formatting.LIGHT_PURPLE);
+            
             player.sendMessage(Text.literal("Used: ")
                 .formatted(Formatting.GREEN)
                 .append(ability.getFormattedName()), true);
@@ -114,6 +120,18 @@ public class PlayerAbilityManager {
             case LIFE_STEAL -> executeLifeSteal(player, world);
             case SHIELD_BASH -> executeShieldBash(player, world);
             case LEVITATION -> executeLevitation(player, world);
+            case UNDEAD_HEALING -> executeUndeadHealing(player, world);
+            case REGENERATION -> executeRegeneration(player, world);
+            case STRENGTH_BOOST -> executeStrengthBoost(player, world);
+            case RESISTANCE_BOOST -> executeResistanceBoost(player, world);
+            case FORTUNE -> executeFortune(player, world);
+            case LOOTING -> executeLooting(player, world);
+            case SATURATION -> executeSaturation(player, world);
+            case HASTE -> executeHaste(player, world);
+            case MINING_FATIGUE_CURE -> executeMiningFatigueCure(player, world);
+            case WITHER_CURE -> executeWitherCure(player, world);
+            case BLINDNESS_CURE -> executeBlindnessCure(player, world);
+            case POISON_CURE -> executePoisonCure(player, world);
             case NONE -> {}
         }
     }
@@ -491,6 +509,172 @@ public class PlayerAbilityManager {
         player.addVelocity(0, 1.5, 0);
         player.velocityModified = true;
         player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 200, 0));
+    }
+    
+    private static void executeUndeadHealing(ServerPlayerEntity player, ServerWorld world) {
+        for (int i = 0; i < 20; i++) {
+            double px = (world.random.nextDouble() - 0.5) * 2;
+            double py = world.random.nextDouble() * 2;
+            double pz = (world.random.nextDouble() - 0.5) * 2;
+            world.spawnParticles(ParticleTypes.DAMAGE_INDICATOR,
+                player.getX() + px, player.getY() + py, player.getZ() + pz,
+                1, 0.0, 0.0, 0.0, 0.0);
+        }
+        
+        // Heal player and give regeneration
+        player.heal(10.0f);
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 400, 2));
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, 400, 1));
+    }
+    
+    private static void executeRegeneration(ServerPlayerEntity player, ServerWorld world) {
+        for (int i = 0; i < 25; i++) {
+            double px = (world.random.nextDouble() - 0.5) * 2;
+            double py = world.random.nextDouble() * 2;
+            double pz = (world.random.nextDouble() - 0.5) * 2;
+            world.spawnParticles(ParticleTypes.HEART,
+                player.getX() + px, player.getY() + py, player.getZ() + pz,
+                1, 0.0, 0.0, 0.0, 0.0);
+        }
+        
+        player.heal(12.0f);
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 600, 2));
+    }
+    
+    private static void executeStrengthBoost(ServerPlayerEntity player, ServerWorld world) {
+        for (int i = 0; i < 15; i++) {
+            double px = (world.random.nextDouble() - 0.5) * 2;
+            double py = world.random.nextDouble() * 2;
+            double pz = (world.random.nextDouble() - 0.5) * 2;
+            world.spawnParticles(ParticleTypes.RAID_OMEN,
+                player.getX() + px, player.getY() + py, player.getZ() + pz,
+                1, 0.0, 0.0, 0.0, 0.0);
+        }
+        
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.STRENGTH, 600, 2));
+    }
+    
+    private static void executeResistanceBoost(ServerPlayerEntity player, ServerWorld world) {
+        for (int i = 0; i < 15; i++) {
+            double px = (world.random.nextDouble() - 0.5) * 2;
+            double py = world.random.nextDouble() * 2;
+            double pz = (world.random.nextDouble() - 0.5) * 2;
+            world.spawnParticles(ParticleTypes.TOTEM_OF_UNDYING,
+                player.getX() + px, player.getY() + py, player.getZ() + pz,
+                1, 0.0, 0.0, 0.0, 0.0);
+        }
+        
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 600, 1));
+    }
+    
+    private static void executeFortune(ServerPlayerEntity player, ServerWorld world) {
+        for (int i = 0; i < 10; i++) {
+            double px = (world.random.nextDouble() - 0.5) * 2;
+            double py = world.random.nextDouble() * 2;
+            double pz = (world.random.nextDouble() - 0.5) * 2;
+            world.spawnParticles(ParticleTypes.ENCHANT,
+                player.getX() + px, player.getY() + py, player.getZ() + pz,
+                1, 0.0, 0.0, 0.0, 0.0);
+        }
+        
+        // Fortune is passive - give a short luck effect
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.LUCK, 300, 1));
+    }
+    
+    private static void executeLooting(ServerPlayerEntity player, ServerWorld world) {
+        for (int i = 0; i < 10; i++) {
+            double px = (world.random.nextDouble() - 0.5) * 2;
+            double py = world.random.nextDouble() * 2;
+            double pz = (world.random.nextDouble() - 0.5) * 2;
+            world.spawnParticles(ParticleTypes.ENCHANT,
+                player.getX() + px, player.getY() + py, player.getZ() + pz,
+                1, 0.0, 0.0, 0.0, 0.0);
+        }
+        
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.LUCK, 300, 2));
+    }
+    
+    private static void executeSaturation(ServerPlayerEntity player, ServerWorld world) {
+        for (int i = 0; i < 15; i++) {
+            double px = (world.random.nextDouble() - 0.5) * 2;
+            double py = world.random.nextDouble() * 2;
+            double pz = (world.random.nextDouble() - 0.5) * 2;
+            world.spawnParticles(ParticleTypes.HAPPY_VILLAGER,
+                player.getX() + px, player.getY() + py, player.getZ() + pz,
+                1, 0.0, 0.0, 0.0, 0.0);
+        }
+        
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.SATURATION, 400, 1));
+    }
+    
+    private static void executeHaste(ServerPlayerEntity player, ServerWorld world) {
+        for (int i = 0; i < 15; i++) {
+            double px = (world.random.nextDouble() - 0.5) * 2;
+            double py = world.random.nextDouble() * 2;
+            double pz = (world.random.nextDouble() - 0.5) * 2;
+            world.spawnParticles(ParticleTypes.SPLASH,
+                player.getX() + px, player.getY() + py, player.getZ() + pz,
+                1, 0.0, 0.0, 0.0, 0.0);
+        }
+        
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.HASTE, 600, 2));
+    }
+    
+    private static void executeMiningFatigueCure(ServerPlayerEntity player, ServerWorld world) {
+        for (int i = 0; i < 15; i++) {
+            double px = (world.random.nextDouble() - 0.5) * 2;
+            double py = world.random.nextDouble() * 2;
+            double pz = (world.random.nextDouble() - 0.5) * 2;
+            world.spawnParticles(ParticleTypes.MYCELIUM,
+                player.getX() + px, player.getY() + py, player.getZ() + pz,
+                1, 0.0, 0.0, 0.0, 0.0);
+        }
+        
+        player.removeStatusEffect(StatusEffects.MINING_FATIGUE);
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.HASTE, 200, 1));
+    }
+    
+    private static void executeWitherCure(ServerPlayerEntity player, ServerWorld world) {
+        for (int i = 0; i < 15; i++) {
+            double px = (world.random.nextDouble() - 0.5) * 2;
+            double py = world.random.nextDouble() * 2;
+            double pz = (world.random.nextDouble() - 0.5) * 2;
+            world.spawnParticles(ParticleTypes.DRIPPING_HONEY,
+                player.getX() + px, player.getY() + py, player.getZ() + pz,
+                1, 0.0, 0.0, 0.0, 0.0);
+        }
+        
+        player.removeStatusEffect(StatusEffects.WITHER);
+        player.heal(5.0f);
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 200, 1));
+    }
+    
+    private static void executeBlindnessCure(ServerPlayerEntity player, ServerWorld world) {
+        for (int i = 0; i < 15; i++) {
+            double px = (world.random.nextDouble() - 0.5) * 2;
+            double py = world.random.nextDouble() * 2;
+            double pz = (world.random.nextDouble() - 0.5) * 2;
+            world.spawnParticles(ParticleTypes.END_ROD,
+                player.getX() + px, player.getY() + py, player.getZ() + pz,
+                1, 0.0, 0.0, 0.0, 0.0);
+        }
+        
+        player.removeStatusEffect(StatusEffects.BLINDNESS);
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.NIGHT_VISION, 300, 0));
+    }
+    
+    private static void executePoisonCure(ServerPlayerEntity player, ServerWorld world) {
+        for (int i = 0; i < 15; i++) {
+            double px = (world.random.nextDouble() - 0.5) * 2;
+            double py = world.random.nextDouble() * 2;
+            double pz = (world.random.nextDouble() - 0.5) * 2;
+            world.spawnParticles(ParticleTypes.HEART,
+                player.getX() + px, player.getY() + py, player.getZ() + pz,
+                1, 0.0, 0.0, 0.0, 0.0);
+        }
+        
+        player.removeStatusEffect(StatusEffects.POISON);
+        player.heal(4.0f);
     }
     
     public static void tick() {

@@ -33,6 +33,18 @@ public class HelperAbilityManager {
             case LIFE_STEAL -> executeLifeSteal(helper, world);
             case SHIELD_BASH -> executeShieldBash(helper, world);
             case LEVITATION -> executeLevitation(helper, world);
+            case UNDEAD_HEALING -> executeUndeadHealing(helper, world);
+            case REGENERATION -> executeRegeneration(helper, world);
+            case STRENGTH_BOOST -> executeStrengthBoost(helper, world);
+            case RESISTANCE_BOOST -> executeResistanceBoost(helper, world);
+            case FORTUNE -> executeFortune(helper, world);
+            case LOOTING -> executeLooting(helper, world);
+            case SATURATION -> executeSaturation(helper, world);
+            case HASTE -> executeHaste(helper, world);
+            case MINING_FATIGUE_CURE -> executeMiningFatigueCure(helper, world);
+            case WITHER_CURE -> executeWitherCure(helper, world);
+            case BLINDNESS_CURE -> executeBlindnessCure(helper, world);
+            case POISON_CURE -> executePoisonCure(helper, world);
             case NONE -> {}
         }
     }
@@ -413,6 +425,194 @@ public class HelperAbilityManager {
         
         if (helper instanceof net.minecraft.entity.LivingEntity living) {
             living.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 200, 0));
+        }
+    }
+    
+    private static void executeUndeadHealing(Entity helper, ServerWorld world) {
+        for (int i = 0; i < 20; i++) {
+            double px = (world.random.nextDouble() - 0.5) * 2;
+            double py = world.random.nextDouble() * 2;
+            double pz = (world.random.nextDouble() - 0.5) * 2;
+            world.spawnParticles(ParticleTypes.DAMAGE_INDICATOR,
+                helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
+                1, 0.0, 0.0, 0.0, 0.0);
+        }
+        
+        if (helper instanceof net.minecraft.entity.LivingEntity living) {
+            living.heal(10.0f);
+            living.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 400, 2));
+            living.addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, 400, 1));
+        }
+    }
+    
+    private static void executeRegeneration(Entity helper, ServerWorld world) {
+        for (int i = 0; i < 25; i++) {
+            double px = (world.random.nextDouble() - 0.5) * 2;
+            double py = world.random.nextDouble() * 2;
+            double pz = (world.random.nextDouble() - 0.5) * 2;
+            world.spawnParticles(ParticleTypes.HEART,
+                helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
+                1, 0.0, 0.0, 0.0, 0.0);
+        }
+        
+        if (helper instanceof net.minecraft.entity.LivingEntity living) {
+            living.heal(12.0f);
+            living.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 600, 2));
+        }
+    }
+    
+    private static void executeStrengthBoost(Entity helper, ServerWorld world) {
+        for (int i = 0; i < 15; i++) {
+            double px = (world.random.nextDouble() - 0.5) * 2;
+            double py = world.random.nextDouble() * 2;
+            double pz = (world.random.nextDouble() - 0.5) * 2;
+            world.spawnParticles(ParticleTypes.RAID_OMEN,
+                helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
+                1, 0.0, 0.0, 0.0, 0.0);
+        }
+        
+        if (helper instanceof net.minecraft.entity.LivingEntity living) {
+            living.addStatusEffect(new StatusEffectInstance(StatusEffects.STRENGTH, 600, 2));
+        }
+    }
+    
+    private static void executeResistanceBoost(Entity helper, ServerWorld world) {
+        for (int i = 0; i < 15; i++) {
+            double px = (world.random.nextDouble() - 0.5) * 2;
+            double py = world.random.nextDouble() * 2;
+            double pz = (world.random.nextDouble() - 0.5) * 2;
+            world.spawnParticles(ParticleTypes.TOTEM_OF_UNDYING,
+                helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
+                1, 0.0, 0.0, 0.0, 0.0);
+        }
+        
+        if (helper instanceof net.minecraft.entity.LivingEntity living) {
+            living.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 600, 1));
+        }
+    }
+    
+    private static void executeFortune(Entity helper, ServerWorld world) {
+        for (int i = 0; i < 10; i++) {
+            double px = (world.random.nextDouble() - 0.5) * 2;
+            double py = world.random.nextDouble() * 2;
+            double pz = (world.random.nextDouble() - 0.5) * 2;
+            world.spawnParticles(ParticleTypes.ENCHANT,
+                helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
+                1, 0.0, 0.0, 0.0, 0.0);
+        }
+        
+        if (helper instanceof net.minecraft.entity.LivingEntity living) {
+            living.addStatusEffect(new StatusEffectInstance(StatusEffects.LUCK, 300, 1));
+        }
+    }
+    
+    private static void executeLooting(Entity helper, ServerWorld world) {
+        for (int i = 0; i < 10; i++) {
+            double px = (world.random.nextDouble() - 0.5) * 2;
+            double py = world.random.nextDouble() * 2;
+            double pz = (world.random.nextDouble() - 0.5) * 2;
+            world.spawnParticles(ParticleTypes.ENCHANT,
+                helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
+                1, 0.0, 0.0, 0.0, 0.0);
+        }
+        
+        if (helper instanceof net.minecraft.entity.LivingEntity living) {
+            living.addStatusEffect(new StatusEffectInstance(StatusEffects.LUCK, 300, 2));
+        }
+    }
+    
+    private static void executeSaturation(Entity helper, ServerWorld world) {
+        for (int i = 0; i < 15; i++) {
+            double px = (world.random.nextDouble() - 0.5) * 2;
+            double py = world.random.nextDouble() * 2;
+            double pz = (world.random.nextDouble() - 0.5) * 2;
+            world.spawnParticles(ParticleTypes.HAPPY_VILLAGER,
+                helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
+                1, 0.0, 0.0, 0.0, 0.0);
+        }
+        
+        if (helper instanceof net.minecraft.entity.LivingEntity living) {
+            living.addStatusEffect(new StatusEffectInstance(StatusEffects.SATURATION, 400, 1));
+        }
+    }
+    
+    private static void executeHaste(Entity helper, ServerWorld world) {
+        for (int i = 0; i < 15; i++) {
+            double px = (world.random.nextDouble() - 0.5) * 2;
+            double py = world.random.nextDouble() * 2;
+            double pz = (world.random.nextDouble() - 0.5) * 2;
+            world.spawnParticles(ParticleTypes.SPLASH,
+                helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
+                1, 0.0, 0.0, 0.0, 0.0);
+        }
+        
+        if (helper instanceof net.minecraft.entity.LivingEntity living) {
+            living.addStatusEffect(new StatusEffectInstance(StatusEffects.HASTE, 600, 2));
+        }
+    }
+    
+    private static void executeMiningFatigueCure(Entity helper, ServerWorld world) {
+        for (int i = 0; i < 15; i++) {
+            double px = (world.random.nextDouble() - 0.5) * 2;
+            double py = world.random.nextDouble() * 2;
+            double pz = (world.random.nextDouble() - 0.5) * 2;
+            world.spawnParticles(ParticleTypes.MYCELIUM,
+                helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
+                1, 0.0, 0.0, 0.0, 0.0);
+        }
+        
+        if (helper instanceof net.minecraft.entity.LivingEntity living) {
+            living.removeStatusEffect(StatusEffects.MINING_FATIGUE);
+            living.addStatusEffect(new StatusEffectInstance(StatusEffects.HASTE, 200, 1));
+        }
+    }
+    
+    private static void executeWitherCure(Entity helper, ServerWorld world) {
+        for (int i = 0; i < 15; i++) {
+            double px = (world.random.nextDouble() - 0.5) * 2;
+            double py = world.random.nextDouble() * 2;
+            double pz = (world.random.nextDouble() - 0.5) * 2;
+            world.spawnParticles(ParticleTypes.DRIPPING_HONEY,
+                helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
+                1, 0.0, 0.0, 0.0, 0.0);
+        }
+        
+        if (helper instanceof net.minecraft.entity.LivingEntity living) {
+            living.removeStatusEffect(StatusEffects.WITHER);
+            living.heal(5.0f);
+            living.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 200, 1));
+        }
+    }
+    
+    private static void executeBlindnessCure(Entity helper, ServerWorld world) {
+        for (int i = 0; i < 15; i++) {
+            double px = (world.random.nextDouble() - 0.5) * 2;
+            double py = world.random.nextDouble() * 2;
+            double pz = (world.random.nextDouble() - 0.5) * 2;
+            world.spawnParticles(ParticleTypes.END_ROD,
+                helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
+                1, 0.0, 0.0, 0.0, 0.0);
+        }
+        
+        if (helper instanceof net.minecraft.entity.LivingEntity living) {
+            living.removeStatusEffect(StatusEffects.BLINDNESS);
+            living.addStatusEffect(new StatusEffectInstance(StatusEffects.NIGHT_VISION, 300, 0));
+        }
+    }
+    
+    private static void executePoisonCure(Entity helper, ServerWorld world) {
+        for (int i = 0; i < 15; i++) {
+            double px = (world.random.nextDouble() - 0.5) * 2;
+            double py = world.random.nextDouble() * 2;
+            double pz = (world.random.nextDouble() - 0.5) * 2;
+            world.spawnParticles(ParticleTypes.HEART,
+                helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
+                1, 0.0, 0.0, 0.0, 0.0);
+        }
+        
+        if (helper instanceof net.minecraft.entity.LivingEntity living) {
+            living.removeStatusEffect(StatusEffects.POISON);
+            living.heal(4.0f);
         }
     }
 }

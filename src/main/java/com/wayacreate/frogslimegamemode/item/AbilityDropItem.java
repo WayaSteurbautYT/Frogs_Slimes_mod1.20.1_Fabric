@@ -43,73 +43,100 @@ public class AbilityDropItem extends Item {
     }
     
     private static Item getDropItemForAbility(String abilityId) {
-        // Map mob abilities to their vanilla drop items
-        switch (abilityId) {
-            case "blaze":
-                return Items.BLAZE_ROD;
-            case "enderman":
-                return Items.ENDER_PEARL;
-            case "iron_golem":
-                return Items.IRON_INGOT;
-            case "snow_golem":
-                return Items.SNOWBALL;
-            case "witch":
-                return Items.GLASS_BOTTLE;
-            case "ghast":
-                return Items.GHAST_TEAR;
-            case "piglin":
-                return Items.GOLD_INGOT;
-            case "warden":
-                return Items.SCULK_CATALYST;
-            case "creeper":
-                return Items.GUNPOWDER;
-            case "spider":
-                return Items.STRING;
-            case "skeleton":
-                return Items.BONE;
-            case "zombie":
-                return Items.ROTTEN_FLESH;
-            case "pig":
-                return Items.PORKCHOP;
-            case "cow":
-                return Items.LEATHER;
-            case "chicken":
-                return Items.FEATHER;
-            case "sheep":
-                return Items.WHITE_WOOL;
-            case "rabbit":
-                return Items.RABBIT_HIDE;
-            case "villager":
-                return Items.EMERALD;
-            default:
-                return Items.STICK;
-        }
+        // Map mob abilities to their vanilla drop items - comprehensive coverage
+        return switch (abilityId) {
+            // Nether mobs
+            case "blaze", "magma_cube" -> Items.BLAZE_ROD;
+            case "enderman", "endermite", "vex" -> Items.ENDER_PEARL;
+            case "ghast" -> Items.GHAST_TEAR;
+            case "piglin", "zombified_piglin", "piglin_brute", "hoglin", "zoglin" -> Items.GOLD_INGOT;
+            case "strider" -> Items.STRING;
+            
+            // Overworld hostile mobs
+            case "zombie", "husk", "drowned" -> Items.ROTTEN_FLESH;
+            case "skeleton", "stray", "wither_skeleton" -> Items.BONE;
+            case "creeper" -> Items.GUNPOWDER;
+            case "spider", "cave_spider" -> Items.STRING;
+            case "silverfish" -> Items.SPIDER_EYE;
+            
+            // Special mobs
+            case "warden" -> Items.SCULK_CATALYST;
+            case "phantom" -> Items.PHANTOM_MEMBRANE;
+            case "witch" -> Items.GLASS_BOTTLE;
+            case "evoker", "vindicator", "pillager", "ravager" -> Items.EMERALD;
+            case "guardian", "elder_guardian" -> Items.PRISMARINE_SHARD;
+            case "shulker" -> Items.SHULKER_SHELL;
+            
+            // Passive mobs
+            case "pig" -> Items.PORKCHOP;
+            case "cow", "mooshroom" -> Items.LEATHER;
+            case "chicken" -> Items.FEATHER;
+            case "sheep" -> Items.WHITE_WOOL;
+            case "rabbit" -> Items.RABBIT_HIDE;
+            case "horse", "donkey", "mule", "llama", "trader_llama" -> Items.LEATHER;
+            case "fox", "wolf", "cat", "ocelot" -> Items.BONE;
+            case "parrot" -> Items.FEATHER;
+            case "turtle" -> Items.SCUTE;
+            case "dolphin" -> Items.COD;
+            case "squid", "glow_squid" -> Items.INK_SAC;
+            case "pufferfish", "tropical_fish", "salmon", "cod" -> Items.COD;
+            case "bee" -> Items.HONEYCOMB;
+            case "axolotl" -> Items.AXOLOTL_BUCKET;
+            case "goat", "panda", "polar_bear" -> Items.LEATHER;
+            case "frog", "tadpole" -> Items.SLIME_BALL;
+            case "allay" -> Items.AMETHYST_SHARD;
+            case "villager", "wandering_trader" -> Items.EMERALD;
+            
+            // Special items
+            case "iron_golem" -> Items.IRON_INGOT;
+            case "snow_golem" -> Items.SNOWBALL;
+            
+            // YouTuber references
+            case "dream_speedrunner" -> Items.ENDER_PEARL;
+            case "technoblade_pig" -> Items.GOLDEN_APPLE;
+            case "grian_minecraft" -> Items.FEATHER;
+            case "mumbo_jumbo" -> Items.REDSTONE;
+            
+            // Default fallback
+            default -> Items.STICK;
+        };
     }
     
     private static Formatting getAbilityColor(MobAbility ability) {
-        switch (ability.getActiveAbility()) {
-            case FIREBALL:
-                return Formatting.RED;
-            case LEAP_ATTACK:
-                return Formatting.GREEN;
-            case TELEPORT:
-                return Formatting.DARK_PURPLE;
-            case POISON_CLOUD:
-                return Formatting.DARK_GREEN;
-            case ICE_SUMMON:
-                return Formatting.AQUA;
-            case LIGHTNING_STRIKE:
-                return Formatting.YELLOW;
-            case SONIC_BOOM:
-                return Formatting.BLUE;
-            case WEB_SHOT:
-                return Formatting.GRAY;
-            case THORNS:
-                return Formatting.DARK_RED;
-            case NONE:
-            default:
-                return Formatting.LIGHT_PURPLE;
-        }
+        return switch (ability.getActiveAbility()) {
+            case FIREBALL -> Formatting.RED;
+            case LEAP_ATTACK -> Formatting.GREEN;
+            case TELEPORT -> Formatting.DARK_PURPLE;
+            case POISON_CLOUD -> Formatting.DARK_GREEN;
+            case ICE_SUMMON -> Formatting.AQUA;
+            case LIGHTNING_STRIKE -> Formatting.YELLOW;
+            case SONIC_BOOM -> Formatting.BLUE;
+            case WEB_SHOT -> Formatting.GRAY;
+            case THORNS -> Formatting.DARK_RED;
+            case HEALING -> Formatting.LIGHT_PURPLE;
+            case INVISIBILITY -> Formatting.WHITE;
+            case FIRE_RESISTANCE -> Formatting.GOLD;
+            case WATER_BREATH -> Formatting.DARK_AQUA;
+            case NIGHT_VISION -> Formatting.DARK_BLUE;
+            case SPEED_BOOST -> Formatting.YELLOW;
+            case KNOCKBACK_WAVE -> Formatting.RED;
+            case LIFE_STEAL -> Formatting.DARK_RED;
+            case SHIELD_BASH -> Formatting.BLUE;
+            case LEVITATION -> Formatting.LIGHT_PURPLE;
+            case UNDEAD_HEALING -> Formatting.DARK_GRAY;
+            case REGENERATION -> Formatting.PINK;
+            case STRENGTH_BOOST -> Formatting.RED;
+            case RESISTANCE_BOOST -> Formatting.BLUE;
+            case FORTUNE -> Formatting.GOLD;
+            case LOOTING -> Formatting.AQUA;
+            case SATURATION -> Formatting.GREEN;
+            case HASTE -> Formatting.YELLOW;
+            case MINING_FATIGUE_CURE -> Formatting.LIME;
+            case WITHER_CURE -> Formatting.DARK_PURPLE;
+            case BLINDNESS_CURE -> Formatting.WHITE;
+            case POISON_CURE -> Formatting.GREEN;
+            case NONE, default -> Formatting.LIGHT_PURPLE;
+        };
     }
     
     public static boolean isAbilityDrop(ItemStack stack) {
