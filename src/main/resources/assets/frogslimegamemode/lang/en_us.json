@@ -64,5 +64,9 @@
   
   "selectWorld.gameMode.frogslime": "Frog & Slime",
   "key.frogslimegamemode.open_gui": "Open Frog & Slime GUI",
+  "key.frogslimegamemode.open_skills": "Open Skills Screen",
+  "key.frogslimegamemode.open_collections": "Open Collections Screen",
+  "key.frogslimegamemode.use_ability": "Use Active Ability",
+  "key.frogslimegamemode.switch_ability": "Switch Ability",
   "category.frogslimegamemode": "Frog & Slime Gamemode"
 }

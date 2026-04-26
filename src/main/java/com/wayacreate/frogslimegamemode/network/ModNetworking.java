@@ -16,6 +16,8 @@ public final class ModNetworking {
     public static final Identifier ACHIEVEMENT_TOAST = new Identifier(FrogSlimeGamemode.MOD_ID, "achievement_toast");
     public static final Identifier TOTEM_ANIMATION = new Identifier(FrogSlimeGamemode.MOD_ID, "totem_animation");
     public static final Identifier USE_ABILITY = new Identifier(FrogSlimeGamemode.MOD_ID, "use_ability");
+    public static final Identifier PLAYER_TONGUE_ANIMATION = new Identifier(FrogSlimeGamemode.MOD_ID, "player_tongue_animation");
+    public static final Identifier SWITCH_ABILITY = new Identifier(FrogSlimeGamemode.MOD_ID, "switch_ability");
 
     private ModNetworking() {
     }
@@ -26,9 +28,14 @@ public final class ModNetworking {
         ServerPlayNetworking.registerGlobalReceiver(USE_ABILITY, (server, player, handler, buf, responseSender) -> {
             server.execute(() -> {
                 // Handle player ability activation
-                // For now, just send a message
-                player.sendMessage(net.minecraft.text.Text.literal("Ability key pressed!")
-                    .formatted(net.minecraft.util.Formatting.GREEN), true);
+                com.wayacreate.frogslimegamemode.abilities.PlayerAbilityManager.useCurrentAbility(player);
+            });
+        });
+        
+        ServerPlayNetworking.registerGlobalReceiver(SWITCH_ABILITY, (server, player, handler, buf, responseSender) -> {
+            server.execute(() -> {
+                // Handle ability switching
+                com.wayacreate.frogslimegamemode.abilities.PlayerAbilityManager.switchToNextAbility(player);
             });
         });
     }
@@ -78,5 +85,11 @@ public final class ModNetworking {
     public static void sendUseAbility(ServerPlayerEntity player) {
         PacketByteBuf buf = PacketByteBufs.create();
         ServerPlayNetworking.send(player, USE_ABILITY, buf);
+    }
+    
+    public static void sendPlayerTongueAnimation(ServerPlayerEntity player, int targetEntityId) {
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeInt(targetEntityId);
+        ServerPlayNetworking.send(player, PLAYER_TONGUE_ANIMATION, buf);
     }
 }

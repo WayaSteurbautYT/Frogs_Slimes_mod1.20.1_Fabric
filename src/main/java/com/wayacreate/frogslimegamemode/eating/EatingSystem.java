@@ -71,6 +71,9 @@ public class EatingSystem {
         
         for (MobEntity mob : mobs) {
             if (mob.getHealth() <= 4) {
+                // Send tongue animation packet to client
+                com.wayacreate.frogslimegamemode.network.ModNetworking.sendPlayerTongueAnimation(player, mob.getId());
+                
                 // Kill the mob to drop items naturally
                 mob.damage(world.getDamageSources().generic(), Float.MAX_VALUE);
                 

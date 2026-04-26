@@ -10,6 +10,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class ManhuntCompassItem extends Item {
@@ -58,14 +59,22 @@ public class ManhuntCompassItem extends Item {
                     }
                 }
                 
+                NbtCompound nbt = stack.getOrCreateNbt();
+                
                 if (nearestPlayer != null) {
                     // Update tooltip with target info
                     stack.setCustomName(Text.literal("Tracking: " + nearestPlayer.getName().getString())
                         .formatted(Formatting.RED, Formatting.BOLD));
                     
-                    // Store target UUID in NBT
-                    NbtCompound nbt = stack.getOrCreateNbt();
-                    nbt.putUuid("TargetUUID", nearestPlayer.getUuid());
+                    // Store target position in NBT for compass tracking (vanilla compass uses this)
+                    BlockPos targetPos = new BlockPos(
+                        (int) nearestPlayer.getX(),
+                        (int) nearestPlayer.getY(),
+                        (int) nearestPlayer.getZ()
+                    );
+                    nbt.putInt("TargetX", targetPos.getX());
+                    nbt.putInt("TargetY", targetPos.getY());
+                    nbt.putInt("TargetZ", targetPos.getZ());
                     
                     // Send direction message only when selected
                     if (selected) {
@@ -76,8 +85,9 @@ public class ManhuntCompassItem extends Item {
                 } else {
                     stack.setCustomName(Text.literal("No target found")
                         .formatted(Formatting.GRAY));
-                    NbtCompound nbt = stack.getOrCreateNbt();
-                    nbt.remove("TargetUUID");
+                    nbt.remove("TargetX");
+                    nbt.remove("TargetY");
+                    nbt.remove("TargetZ");
                 }
             }
         }

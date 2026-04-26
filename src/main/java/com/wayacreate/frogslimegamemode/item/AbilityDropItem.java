@@ -140,25 +140,28 @@ public class AbilityDropItem extends Item {
         if (!world.isClient) {
             MobAbility ability = MobAbility.getAbility(abilityId);
             if (ability != null) {
-                // Apply ability bonuses to the player
-                applyAbilityToPlayer(user, ability);
-                
-                // Send totem animation with title popup and exp sound
+                // Add ability to player's unlocked abilities
                 if (user instanceof ServerPlayerEntity serverPlayer) {
+                    com.wayacreate.frogslimegamemode.gamemode.GamemodeManager.getData(serverPlayer).addAbility(abilityId);
+                    
+                    // Send totem animation with title popup and exp sound
                     ModNetworking.sendTotemAnimation(serverPlayer, 
-                        "Ability Absorbed!", 
-                        "You gained " + ability.getName(), 
+                        "Ability Unlocked!", 
+                        ability.getName() + " - " + ability.getDescription(), 
                         Formatting.LIGHT_PURPLE);
                 }
+                
+                // Apply ability bonuses to the player
+                applyAbilityToPlayer(user, ability);
                 
                 // Consume the item
                 stack.decrement(1);
                 
                 // Send message
-                user.sendMessage(Text.literal("You absorbed the ")
+                user.sendMessage(Text.literal("You unlocked the ")
                     .formatted(Formatting.LIGHT_PURPLE)
                     .append(ability.getFormattedName())
-                    .append(Text.literal("!").formatted(Formatting.LIGHT_PURPLE)), false);
+                    .append(Text.literal("! Press [TAB] to switch abilities.").formatted(Formatting.YELLOW)), false);
                 
                 return TypedActionResult.success(stack);
             }

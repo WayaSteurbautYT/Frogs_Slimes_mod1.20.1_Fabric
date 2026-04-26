@@ -16,6 +16,7 @@ public class ModKeybinds {
     public static KeyBinding openSkillsKey;
     public static KeyBinding openCollectionsKey;
     public static KeyBinding useAbilityKey;
+    public static KeyBinding switchAbilityKey;
     
     public static void register() {
         openGuiKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
@@ -46,6 +47,13 @@ public class ModKeybinds {
             "category.frogslimegamemode"
         ));
         
+        switchAbilityKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+            "key.frogslimegamemode.switch_ability",
+            InputUtil.Type.KEYSYM,
+            GLFW.GLFW_KEY_TAB,
+            "category.frogslimegamemode"
+        ));
+        
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (openGuiKey.wasPressed()) {
                 if (client.player != null) {
@@ -61,6 +69,12 @@ public class ModKeybinds {
             if (useAbilityKey.wasPressed()) {
                 if (client.player != null) {
                     ClientPlayNetworking.send(ModNetworking.USE_ABILITY, 
+                        net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create());
+                }
+            }
+            if (switchAbilityKey.wasPressed()) {
+                if (client.player != null) {
+                    ClientPlayNetworking.send(ModNetworking.SWITCH_ABILITY, 
                         net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create());
                 }
             }

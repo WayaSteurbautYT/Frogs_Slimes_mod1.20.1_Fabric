@@ -1,5 +1,6 @@
 package com.wayacreate.frogslimegamemode;
 
+import com.wayacreate.frogslimegamemode.abilities.PlayerAbilityManager;
 import com.wayacreate.frogslimegamemode.achievements.AchievementManager;
 import com.wayacreate.frogslimegamemode.command.FrogSlimeCommand;
 import com.wayacreate.frogslimegamemode.command.HelperCommand;
@@ -41,6 +42,7 @@ public class FrogSlimeGamemode implements ModInitializer {
             GamemodeManager.tick(server);
             EatingSystem.tick(server);
             TaskManager.tick(server);
+            PlayerAbilityManager.tick();
         });
 
         LOGGER.info("Frog & Slime Gamemode initialized! Prepare for an unexpected ending...");

@@ -6,6 +6,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.toast.SystemToast;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.math.Vec3d;
 
 public final class ModNetworkingClient {
     private ModNetworkingClient() {
@@ -84,5 +85,46 @@ public final class ModNetworkingClient {
                 }
             });
         });
+
+        ClientPlayNetworking.registerGlobalReceiver(ModNetworking.PLAYER_TONGUE_ANIMATION, (client, handler, buf, responseSender) -> {
+            int targetEntityId = buf.readInt();
+
+            client.execute(() -> {
+                if (client.player != null && client.world != null) {
+                    net.minecraft.entity.Entity target = client.world.getEntityById(targetEntityId);
+                    if (target != null) {
+                        // Spawn tongue particles from player to target
+                        spawnTongueParticles(client, target);
+                        // Play frog eat sound
+                        client.player.playSound(net.minecraft.sound.SoundEvents.ENTITY_FROG_EAT, 1.0f, 1.0f);
+                    }
+                }
+            });
+        });
+    }
+    
+    private static void spawnTongueParticles(net.minecraft.client.MinecraftClient client, net.minecraft.entity.Entity target) {
+        if (client.player == null || client.world == null) return;
+        
+        Vec3d startPos = client.player.getPos().add(0, 1.0, 0);
+        Vec3d endPos = target.getPos().add(0, 0.5, 0);
+        Vec3d direction = endPos.subtract(startPos);
+        double distance = direction.length();
+        int particleCount = (int) (distance * 3);
+        
+        for (int i = 0; i < particleCount; i++) {
+            double t = i / (double) particleCount;
+            Vec3d particlePos = startPos.add(direction.multiply(t));
+            
+            double offsetX = (client.world.random.nextDouble() - 0.5) * 0.15;
+            double offsetY = (client.world.random.nextDouble() - 0.5) * 0.15;
+            double offsetZ = (client.world.random.nextDouble() - 0.5) * 0.15;
+            
+            client.world.addParticle(net.minecraft.particle.ParticleTypes.ITEM_SLIME,
+                particlePos.x + offsetX,
+                particlePos.y + offsetY,
+                particlePos.z + offsetZ,
+                0, 0, 0);
+        }
     }
 }
