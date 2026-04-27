@@ -53,8 +53,11 @@ public class ModItems {
     public static Item HUNTER_NET;
     public static Item ESCAPE_PEARL;
     
-    // Ability drop item
+    // Ability drop item (placeholder for crafting)
     public static Item ABILITY_DROP;
+    
+    // Mob ability item (final crafted ability)
+    public static Item MOB_ABILITY;
     
     // Ability stick - beginner-friendly crafting component
     public static Item ABILITY_STICK;
@@ -154,9 +157,13 @@ public class ModItems {
         ESCAPE_PEARL = registerItem("escape_pearl",
             new EscapePearlItem(new FabricItemSettings().maxCount(16)));
         
-        // Ability drop item
+        // Ability drop item (placeholder for crafting)
         ABILITY_DROP = registerItem("ability_drop",
             new AbilityDropItem(new FabricItemSettings().maxCount(64).maxDamage(0)));
+        
+        // Mob ability item (final crafted ability)
+        MOB_ABILITY = registerItem("mob_ability",
+            new MobAbilityItem(new FabricItemSettings().maxCount(64).maxDamage(0)));
         
         // Ability stick - beginner-friendly crafting component
         ABILITY_STICK = registerItem("ability_stick",
@@ -209,6 +216,7 @@ public class ModItems {
                     entries.add(ESCAPE_PEARL);
                     // Ability drops
                     entries.add(ABILITY_DROP);
+                    entries.add(MOB_ABILITY);
                     entries.add(ABILITY_STICK);
                     // Block items
                     entries.add(FROG_CRAFTING_TABLE_ITEM);

@@ -1,12 +1,10 @@
 package com.wayacreate.frogslimegamemode.item;
 
 import com.wayacreate.frogslimegamemode.eating.MobAbility;
-import com.wayacreate.frogslimegamemode.network.ModNetworking;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
@@ -27,13 +25,11 @@ public class AbilityDropItem extends Item {
             return ItemStack.EMPTY;
         }
         
-        // Use vanilla items based on mob drops for textures
         ItemStack drop = new ItemStack(getDropItemForAbility(abilityId));
         NbtCompound nbt = drop.getOrCreateNbt();
         nbt.putBoolean(ABILITY_DROP_NBT, true);
         nbt.putString(ABILITY_ID_NBT, abilityId);
         
-        // Set color based on ability type
         Formatting color = getAbilityColor(ability);
         drop.setCustomName(Text.literal("Ability: " + ability.getName())
             .formatted(color, Formatting.BOLD));
@@ -42,7 +38,6 @@ public class AbilityDropItem extends Item {
     }
     
     public static net.minecraft.item.Item getDropItemForAbility(String abilityId) {
-        // Return vanilla items based on ability ID for better visuals
         return switch (abilityId) {
             case "zombie" -> net.minecraft.item.Items.ROTTEN_FLESH;
             case "skeleton" -> net.minecraft.item.Items.BONE;
@@ -125,7 +120,7 @@ public class AbilityDropItem extends Item {
         };
     }
     
-    private static Formatting getAbilityColor(MobAbility ability) {
+    public static Formatting getAbilityColor(MobAbility ability) {
         return switch (ability.getActiveAbility()) {
             case FIREBALL -> Formatting.RED;
             case LEAP_ATTACK -> Formatting.GREEN;
@@ -179,101 +174,47 @@ public class AbilityDropItem extends Item {
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
         ItemStack stack = user.getStackInHand(hand);
         
-        String abilityId = getAbilityId(stack);
-        
-        // Fallback: if no NBT, use a default ability for testing
-        if (!isAbilityDrop(stack) || abilityId == null) {
-            abilityId = "zombie"; // Default ability for testing
-        }
-        
         if (!world.isClient) {
-            MobAbility ability = MobAbility.getAbility(abilityId);
-            
-            if (ability != null) {
-                // Add ability to player's unlocked abilities
-                if (user instanceof ServerPlayerEntity serverPlayer) {
-                    com.wayacreate.frogslimegamemode.gamemode.GamemodeManager.getData(serverPlayer).addAbility(abilityId);
-                    
-                    // Get the item to display in the animation
-                    net.minecraft.item.Item displayItem = getDropItemForAbility(abilityId);
-                    
-                    // Send totem animation packet with item for particles
-                    ModNetworking.sendTotemAnimation(serverPlayer, 
-                        "Ability Unlocked!", 
-                        ability.getName() + " - " + ability.getDescription(), 
-                        Formatting.LIGHT_PURPLE,
-                        displayItem);
-                    
-                    // Send title animation
-                    ModNetworking.showTitle(serverPlayer, 
-                        "Ability Unlocked!", 
-                        ability.getName() + " - " + ability.getDescription(), 
-                        Formatting.LIGHT_PURPLE);
-                    
-                    // Play level-up sound directly on server (client will hear it)
-                    serverPlayer.playSound(net.minecraft.sound.SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
-                }
-                
-                // Apply ability bonuses to the player
-                applyAbilityToPlayerStatic(user, ability);
-                
-                // Consume the item
-                stack.decrement(1);
-                
-                // Send message
-                user.sendMessage(Text.literal("You unlocked the ")
-                    .formatted(Formatting.LIGHT_PURPLE)
-                    .append(ability.getFormattedName())
-                    .append(Text.literal("! Press [TAB] to switch abilities.").formatted(Formatting.YELLOW)), false);
-                
-                return TypedActionResult.success(stack);
-            }
+            user.sendMessage(Text.literal("This is an ability drop. Put it in an anvil with the mob's item to create the final ability!")
+                .formatted(Formatting.YELLOW), false);
         }
         
-        return TypedActionResult.success(stack);
+        return TypedActionResult.pass(stack);
     }
     
     public static void applyAbilityToPlayerStatic(PlayerEntity player, MobAbility ability) {
-        // Apply temporary or permanent ability effects to player
-        // For now, we'll apply temporary effects
-        int duration = 600; // 30 seconds
+        int duration = 600;
         
-        // Speed bonus
         if (ability.getSpeedBonus() > 0) {
             player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
                 net.minecraft.entity.effect.StatusEffects.SPEED,
                 duration, (int) Math.min(ability.getSpeedBonus() * 2, 2)));
         }
         
-        // Health bonus (absorption)
         if (ability.getHealthBonus() > 0) {
             player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
                 net.minecraft.entity.effect.StatusEffects.ABSORPTION,
                 duration, (int) Math.min(ability.getHealthBonus() / 5, 4)));
         }
         
-        // Damage bonus (strength)
         if (ability.getDamageBonus() > 0) {
             player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
                 net.minecraft.entity.effect.StatusEffects.STRENGTH,
                 duration, (int) Math.min(ability.getDamageBonus() / 3, 2)));
         }
         
-        // Fire resistance for fire-based abilities
         if (ability.getActiveAbility() == MobAbility.AbilityType.FIREBALL) {
             player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
                 net.minecraft.entity.effect.StatusEffects.FIRE_RESISTANCE,
                 duration, 0));
         }
         
-        // Jump boost for leap attack
         if (ability.getActiveAbility() == MobAbility.AbilityType.LEAP_ATTACK) {
             player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
                 net.minecraft.entity.effect.StatusEffects.JUMP_BOOST,
                 duration, 2));
         }
         
-        // Night vision for enderman ability
         if (ability.getActiveAbility() == MobAbility.AbilityType.TELEPORT) {
             player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
                 net.minecraft.entity.effect.StatusEffects.NIGHT_VISION,

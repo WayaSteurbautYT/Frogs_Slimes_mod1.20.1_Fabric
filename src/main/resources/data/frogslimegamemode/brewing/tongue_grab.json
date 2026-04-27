@@ -1,5 +1,5 @@
 {
-  "type": "minecraft:brewing",
+  "type": "minecraft:potion_brewing",
   "input": {
     "item": "minecraft:potion"
   },

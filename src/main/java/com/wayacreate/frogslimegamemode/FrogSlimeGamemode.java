@@ -5,6 +5,7 @@ import com.wayacreate.frogslimegamemode.achievements.AchievementManager;
 import com.wayacreate.frogslimegamemode.block.ModBlocks;
 import com.wayacreate.frogslimegamemode.command.FrogSlimeCommand;
 import com.wayacreate.frogslimegamemode.command.HelperCommand;
+import com.wayacreate.frogslimegamemode.crafting.AnvilRecipeHandler;
 import com.wayacreate.frogslimegamemode.dimension.ModDimensions;
 import com.wayacreate.frogslimegamemode.eating.EatingSystem;
 import com.wayacreate.frogslimegamemode.entity.ModEntities;
@@ -42,6 +43,7 @@ public class FrogSlimeGamemode implements ModInitializer {
         TaskManager.init();
         AchievementManager.init();
         ModGameRules.register();
+        AnvilRecipeHandler.register();
         
         FrogSlimeGamemode.LOGGER.info("Dimension teleportation available via /frogslime dimension command");
 

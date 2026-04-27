@@ -110,6 +110,9 @@ public class GamemodeManager {
     }
     
     private static void giveStarterItems(ServerPlayerEntity player) {
+        // Give Guide Book
+        player.getInventory().insertStack(createGuideBook());
+        
         // Give Task Book
         if (com.wayacreate.frogslimegamemode.item.ModItems.TASK_BOOK != null) {
             player.getInventory().insertStack(new net.minecraft.item.ItemStack(com.wayacreate.frogslimegamemode.item.ModItems.TASK_BOOK));
@@ -158,6 +161,29 @@ public class GamemodeManager {
         // Bow and arrows for early combat
         player.getInventory().insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.BOW));
         player.getInventory().insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.ARROW, 64));
+    }
+    
+    private static net.minecraft.item.ItemStack createGuideBook() {
+        net.minecraft.item.ItemStack book = new net.minecraft.item.ItemStack(net.minecraft.item.Items.WRITABLE_BOOK);
+        net.minecraft.nbt.NbtCompound nbt = book.getOrCreateNbt();
+        net.minecraft.nbt.NbtList pages = new net.minecraft.nbt.NbtList();
+        
+        pages.add(net.minecraft.nbt.NbtString.of("{\"text\":\"§l§6Frog & Slime Gamemode Guide\\n\\n§rWelcome to the Frog & Slime Gamemode! Your frog and slime helpers will assist you on your journey to beat the game.\"}"));
+        pages.add(net.minecraft.nbt.NbtString.of("{\"text\":\"§l§aGetting Started\\n\\n§r• You start with a §bFrog Ability§r (Tongue Grab)\\n• Use §e[TAB]§r to switch between abilities\\n• Eat mobs to unlock new abilities\\n• Press §e[RIGHT CLICK]§r on mobs to eat them\"}"));
+        pages.add(net.minecraft.nbt.NbtString.of("{\"text\":\"§l§cMob Abilities\\n\\n§rEach mob gives unique powers:\\n• §cZombie§r - Fireball attack\\n• §eSkeleton§r - Poison cloud\\n• §aSpider§r - Web shot\\n• §4Creeper§r - Explosion resistance\\n• §dEnderman§r - Teleport\"}"));
+        pages.add(net.minecraft.nbt.NbtString.of("{\"text\":\"§l§9Crafting Mob Abilities\\n\\n§rTo create a usable ability item:\\n\\n1. Kill mobs to get their drops\\n2. Combine the drop with an §bAbility Drop§r in an §eAnvil\\n3. This creates a §6Mob Ability Item§r you can use\"}"));
+        pages.add(net.minecraft.nbt.NbtString.of("{\"text\":\"§l§5Anvil Crafting Examples\\n\\n§r§cRotten Flesh§r + §bAbility Drop§r = §6Zombie Ability\\n§eBone§r + §bAbility Drop§r = §6Skeleton Ability\\n§aSpider Eye§r + §bAbility Drop§r = §6Spider Ability\\n§4Gunpowder§r + §bAbility Drop§r = §6Creeper Ability\"}"));
+        pages.add(net.minecraft.nbt.NbtString.of("{\"text\":\"§l§bYour Helpers\\n\\n§rYou have spawn eggs for:\\n• §aFrog Helper§r - Melee combat\\n• §bSlime Helper§r - Ranged attacks\\n\\nThey will fight for you and gather resources!\"}"));
+        pages.add(net.minecraft.nbt.NbtString.of("{\"text\":\"§l§eEvolution System\\n\\n§rAs you progress, your helpers can evolve into stronger forms. Kill bosses and complete challenges to unlock evolutions!\"}"));
+        pages.add(net.minecraft.nbt.NbtString.of("{\"text\":\"§l§dCommands\\n\\n§r§e/frogslime enable§r - Start gamemode\\n§e/frogslime disable§r - Stop gamemode\\n§e/frogslime dimension§r - Teleport to custom dimension\\n§e/helper§r - Control your helpers\"}"));
+        pages.add(net.minecraft.nbt.NbtString.of("{\"text\":\"§l§cTips\\n\\n§r• Keep your helpers alive!\\n• Collect many mob abilities\\n• Use the Task Book for objectives\\n• Work with other players in multiplayer\\n• Beware the unexpected ending...\"}"));
+        pages.add(net.minecraft.nbt.NbtString.of("{\"text\":\"§l§6Good Luck!\\n\\n§rMay your frog and slime helpers lead you to victory... or something unexpected.\\n\\n§7- WayaCreate\"}"));
+        
+        nbt.put("pages", pages);
+        nbt.putString("title", "Frog & Slime Guide");
+        book.setCustomName(Text.literal("Frog & Slime Guide").formatted(Formatting.GOLD, Formatting.BOLD));
+        
+        return book;
     }
     
     public static void grantAdvancement(ServerPlayerEntity player, String advancementId) {
