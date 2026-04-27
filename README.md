@@ -197,18 +197,89 @@ Experience the mod's items, crafting, and collections with an authentic Minecraf
 
 ## How to Play
 
-1. **Start the gamemode**: `/frogslime enable` or open the game menu
-2. **Spawn helpers** using spawn eggs (craftable with vanilla materials)
-3. **Right-click** to tame frogs and slimes in the wild
-4. **Let them fight** mobs and evolve automatically (40% drop chance for abilities)
-5. **Use Evolution Stones** to speed up evolution (craftable and upgradeable)
-6. **Assign roles** to helpers with `/helper <role>` for specialized AI
-7. **Open Task Book** with right-click to see challenges
-8. **Complete tasks** to unlock rewards
+### Getting Started
+
+1. **Start the gamemode**: `/frogslime enable`
+   - You'll receive a starter kit with iron gear, food, tools, and a **Guide Book**
+   - Read the Guide Book for detailed instructions on all features
+   - You start with the **Frog Ability** (Tongue Grab) unlocked
+
+2. **Spawn helpers** using the spawn eggs from your starter kit
+   - **Frog Helper**: Melee combat specialist
+   - **Slime Helper**: Ranged attack specialist
+
+3. **Let them fight** mobs and evolve automatically
+   - Helpers gain XP from killing mobs
+   - Each evolution stage increases health and damage
+   - Helpers may drop **Ability Drops** when killing mobs (40% chance)
+
+4. **Unlock Mob Abilities** by eating mobs
+   - Right-click on mobs to eat them
+   - Each mob gives a unique ability (Zombie = Fireball, Enderman = Teleport, etc.)
+   - Switch abilities with **[TAB]** key
+   - Abilities give passive bonuses and active powers
+
+5. **Craft Mob Ability Items** in the Anvil
+   - Kill mobs to get their drops (rotten flesh, bones, spider eyes, etc.)
+   - Combine the mob drop with an **Ability Drop** in an **Anvil**
+   - This creates a **Mob Ability Item** you can use to permanently unlock that ability
+   - Example: Rotten Flesh + Ability Drop = Zombie Ability Item
+
+6. **Use Evolution Stones** to speed up evolution
+   - Craftable with vanilla materials
+   - Instantly evolves helpers to the next stage
+
+7. **Assign roles** to helpers with `/helper <role>` for specialized AI
+   - Miner, Lumberjack, Combat, Builder, Farmer
+
+8. **Open Task Book** with right-click to see challenges
+   - Complete 10 insane challenges for rewards
+
 9. **Brew custom potions** for special effects
-10. **Kill other players** for special abilities (PvP mode)
-11. **Journey to The End** to face the GIANT SLIME BOSS
-12. **Beat the boss** for the shocking finale... or will you?
+   - Frog Power, Slime Resilience, WayaCreate Blessing, and more
+
+10. **Journey to The End** to face the GIANT SLIME BOSS
+    - The Ender Dragon has been replaced with a Giant Slime!
+    - Defeat it with your slime helper nearby for the final evolution
+
+11. **Beat the boss** for the shocking finale... or will you?
+
+### Mob Abilities System
+
+**How to Unlock Abilities:**
+1. **Eat Mobs**: Right-click on mobs to eat them and unlock their abilities
+2. **Craft in Anvil**: Combine mob drops with Ability Drops in an Anvil to create permanent ability items
+3. **Use Ability Items**: Right-click the crafted ability item to permanently unlock it
+
+**Common Mob Abilities:**
+| Mob | Drop | Ability | Effect |
+|-----|------|---------|--------|
+| Zombie | Rotten Flesh | Fireball | Shoot fireballs at enemies |
+| Skeleton | Bone | Poison Cloud | Creates poison gas around you |
+| Spider | Spider Eye | Web Shot | Shoot webs to slow enemies |
+| Creeper | Gunpowder | Explosion Resistance | Immune to explosions |
+| Enderman | Ender Pearl | Teleport | Teleport on right-click |
+| Witch | Potion | Healing | Regenerate health faster |
+| Blaze | Blaze Rod | Fire Resistance | Immune to fire |
+| Slime | Slime Ball | Bounce | Higher jump height |
+| Chicken | Feather | Levitation | Float in the air |
+| Rabbit | Rabbit Foot | Speed Boost | Move faster |
+| Guardian | Prismarine Crystals | Water Breathing | Breathe underwater |
+| Phantom | Phantom Membrane | Night Vision | See in the dark |
+| Shulker | Shulker Shell | Thorns | Reflect damage |
+
+**Anvil Crafting Examples:**
+- Rotten Flesh + Ability Drop = Zombie Ability Item
+- Bone + Ability Drop = Skeleton Ability Item
+- Spider Eye + Ability Drop = Spider Ability Item
+- Gunpowder + Ability Drop = Creeper Ability Item
+- Ender Pearl + Ability Drop = Enderman Ability Item
+
+**Using Abilities:**
+- Press **[TAB]** to switch between unlocked abilities
+- Some abilities are passive (always active)
+- Some abilities are active (right-click to use)
+- Check the Guide Book for full ability list
 
 ### Evolution System
 
