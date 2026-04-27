@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "WWW",
+    "SCS",
+    "SSS"
+  ],
+  "key": {
+    "W": {
+      "item": "minecraft:crafting_table"
+    },
+    "S": {
+      "item": "minecraft:slime_ball"
+    },
+    "C": {
+      "item": "minecraft:crafting_table"
+    }
+  },
+  "result": {
+    "item": "frogslimegamemode:frog_crafting_table",
+    "count": 1
+  }
+}

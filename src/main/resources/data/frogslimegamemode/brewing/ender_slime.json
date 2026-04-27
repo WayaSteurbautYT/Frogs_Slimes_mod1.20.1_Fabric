@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:brewing",
+  "input": {
+    "item": "minecraft:potion"
+  },
+  "ingredient": {
+    "item": "minecraft:ender_pearl"
+  },
+  "output": {
+    "item": "minecraft:potion",
+    "nbt": {
+      "Potion": "frogslimegamemode:ender_slime"
+    }
+  }
+}

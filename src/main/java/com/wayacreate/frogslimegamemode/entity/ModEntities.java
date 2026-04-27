@@ -14,6 +14,7 @@ public class ModEntities {
     public static EntityType<SlimeHelperEntity> SLIME_HELPER;
     public static EntityType<GiantSlimeBossEntity> GIANT_SLIME_BOSS;
     public static EntityType<FrogKingEntity> FROG_KING;
+    public static EntityType<SlimeEndermanEntity> SLIME_ENDERMAN;
     
     private static <T extends Entity> EntityType<T> registerEntity(String name, EntityType<T> entityType) {
         return Registry.register(Registries.ENTITY_TYPE, new Identifier(FrogSlimeGamemode.MOD_ID, name), entityType);
@@ -48,10 +49,18 @@ public class ModEntities {
                 .build("frog_king")
         );
         
+        SLIME_ENDERMAN = registerEntity("slime_enderman",
+            EntityType.Builder.create(SlimeEndermanEntity::new, SpawnGroup.MONSTER)
+                .setDimensions(2.5f, 3.0f)
+                .maxTrackingRange(16)
+                .build("slime_enderman")
+        );
+        
         FabricDefaultAttributeRegistry.register(FROG_HELPER, FrogHelperEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(SLIME_HELPER, SlimeHelperEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(GIANT_SLIME_BOSS, GiantSlimeBossEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(FROG_KING, FrogKingEntity.createAttributes());
-        FrogSlimeGamemode.LOGGER.info("Registered 4 entity types");
+        FabricDefaultAttributeRegistry.register(SLIME_ENDERMAN, SlimeEndermanEntity.createAttributes());
+        FrogSlimeGamemode.LOGGER.info("Registered 5 entity types");
     }
 }

@@ -1,10 +1,13 @@
 package com.wayacreate.frogslimegamemode.command;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.wayacreate.frogslimegamemode.dimension.TransformedEndTeleporter;
 import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
 import com.wayacreate.frogslimegamemode.gamemode.ManhuntManager;
+import com.wayacreate.frogslimegamemode.gamemode.RankManager;
+import com.wayacreate.frogslimegamemode.gamemode.TeamManager;
 import com.wayacreate.frogslimegamemode.network.ModNetworking;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
@@ -26,6 +29,8 @@ public class FrogSlimeCommand {
             .then(CommandManager.literal("reset")
                 .executes(FrogSlimeCommand::resetData))
             .then(CommandManager.literal("manhunt")
+                .then(CommandManager.literal("auto")
+                    .executes(FrogSlimeCommand::startAutoManhunt))
                 .then(CommandManager.literal("speedrunner")
                     .executes(FrogSlimeCommand::setSpeedrunner))
                 .then(CommandManager.literal("solo")
@@ -39,6 +44,28 @@ public class FrogSlimeCommand {
                     .executes(FrogSlimeCommand::teleportToTransformedEnd))
                 .then(CommandManager.literal("return")
                     .executes(FrogSlimeCommand::returnFromDimension)))
+            .then(CommandManager.literal("role")
+                .then(CommandManager.literal("giverole")
+                    .executes(FrogSlimeCommand::giveRoleItem)))
+            .then(CommandManager.literal("team")
+                .then(CommandManager.literal("create")
+                    .then(CommandManager.argument("name", StringArgumentType.string())
+                        .then(CommandManager.argument("color", StringArgumentType.string())
+                            .executes(FrogSlimeCommand::createTeam))))
+                .then(CommandManager.literal("join")
+                    .then(CommandManager.argument("name", StringArgumentType.string())
+                        .executes(FrogSlimeCommand::joinTeam)))
+                .then(CommandManager.literal("leave")
+                    .executes(FrogSlimeCommand::leaveTeam))
+                .then(CommandManager.literal("list")
+                    .executes(FrogSlimeCommand::listTeams))
+                .then(CommandManager.literal("tp")
+                    .then(CommandManager.argument("player", StringArgumentType.string())
+                        .executes(FrogSlimeCommand::teleportToTeamMember))))
+            .then(CommandManager.literal("rank")
+                .then(CommandManager.argument("player", StringArgumentType.string())
+                    .then(CommandManager.argument("rank", StringArgumentType.string())
+                        .executes(FrogSlimeCommand::setPlayerRank))))
         );
     }
     
@@ -114,6 +141,16 @@ public class FrogSlimeCommand {
             player.sendMessage(Text.literal("Use /frogslime enable to start a new game.")
                 .formatted(Formatting.YELLOW), false);
             
+            return 1;
+        }
+        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        return 0;
+    }
+    
+    private static int startAutoManhunt(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        if (player != null) {
+            ManhuntManager.startAutoManhunt(player);
             return 1;
         }
         context.getSource().sendError(Text.literal("Only players can use this command!"));
@@ -196,6 +233,103 @@ public class FrogSlimeCommand {
         if (player != null) {
             TransformedEndTeleporter.teleportFromTransformedEnd(player);
             return 1;
+        }
+        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        return 0;
+    }
+    
+    private static int giveRoleItem(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        if (player != null) {
+            // Give a role selection item
+            com.wayacreate.frogslimegamemode.item.RoleItem roleItem = new com.wayacreate.frogslimegamemode.item.RoleItem(
+                new net.fabricmc.fabric.api.item.v1.FabricItemSettings().maxCount(1), "Selection");
+            net.minecraft.item.ItemStack stack = new net.minecraft.item.ItemStack(roleItem);
+            player.getInventory().insertStack(stack);
+            player.sendMessage(Text.literal("Use this item to select your role!").formatted(Formatting.GREEN), false);
+            return 1;
+        }
+        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        return 0;
+    }
+    
+    private static int createTeam(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        String name = StringArgumentType.getString(context, "name");
+        String color = StringArgumentType.getString(context, "color");
+        
+        if (player != null) {
+            if (TeamManager.createTeam(name, color, player)) {
+                return 1;
+            } else {
+                context.getSource().sendError(Text.literal("Team already exists!"));
+                return 0;
+            }
+        }
+        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        return 0;
+    }
+    
+    private static int joinTeam(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        String name = StringArgumentType.getString(context, "name");
+        
+        if (player != null) {
+            if (TeamManager.joinTeam(name, player)) {
+                return 1;
+            }
+            return 0;
+        }
+        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        return 0;
+    }
+    
+    private static int leaveTeam(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        
+        if (player != null) {
+            if (TeamManager.leaveTeam(player)) {
+                return 1;
+            }
+            return 0;
+        }
+        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        return 0;
+    }
+    
+    private static int listTeams(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        
+        if (player != null) {
+            TeamManager.listTeams(player);
+            return 1;
+        }
+        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        return 0;
+    }
+    
+    private static int teleportToTeamMember(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        String targetName = StringArgumentType.getString(context, "player");
+        
+        if (player != null) {
+            TeamManager.teleportToTeamMember(player, targetName);
+            return 1;
+        }
+        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        return 0;
+    }
+    
+    private static int setPlayerRank(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        String targetName = StringArgumentType.getString(context, "player");
+        String rankName = StringArgumentType.getString(context, "rank");
+        
+        if (player != null) {
+            if (RankManager.setRankByName(targetName, rankName, player)) {
+                return 1;
+            }
+            return 0;
         }
         context.getSource().sendError(Text.literal("Only players can use this command!"));
         return 0;

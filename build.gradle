@@ -21,6 +21,37 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 }
 
+loom {
+    runs {
+        server {
+            server()
+            name("Minecraft Server")
+            runDir("run/server")
+        }
+        
+        client {
+            client()
+            name("Minecraft Client")
+            runDir("run/client")
+            programArgs("--username", "Player1")
+        }
+        
+        client2 {
+            client()
+            name("Minecraft Client 2")
+            runDir("run/client2")
+            programArgs("--username", "Player2")
+        }
+        
+        client3 {
+            client()
+            name("Minecraft Client 3")
+            runDir("run/client3")
+            programArgs("--username", "Player3")
+        }
+    }
+}
+
 processResources {
     inputs.property "version", project.version
     filteringCharset "UTF-8"

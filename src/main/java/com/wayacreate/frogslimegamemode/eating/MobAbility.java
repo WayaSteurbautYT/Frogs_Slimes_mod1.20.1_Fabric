@@ -205,6 +205,45 @@ public class MobAbility {
         // Special player kill rewards
         register(new MobAbility("wayacreate", "WayaCreate Power", "Creator's blessing - All stats boosted", 5.0, 0.3, 15.0, 0.3, AbilityType.REGENERATION, 200));
         register(new MobAbility("derpy_derp", "Derpy Derp", "Hah you suck! - Really you got the worse ability", -2.0, -0.1, -5.0, 0.0, AbilityType.NONE, 0));
+        
+        // More mob abilities inspired by games/movies
+        register(new MobAbility("basalt_giant", "Earthquake Stomp", "World of Warcraft inspired - Ground tremor", 7.0, 0.1, 25.0, 0.5, AbilityType.KNOCKBACK_WAVE, 350));
+        register(new MobAbility("piglin_beast", "Dark Souls Fury", "Dark Souls inspired - Relentless assault", 8.0, 0.2, 20.0, 0.4, AbilityType.LIFE_STEAL, 400));
+        register(new MobAbility("sculk_crawler", "Xenomorph Strike", "Alien inspired - Silent predator", 6.0, 0.3, 10.0, 0.2, AbilityType.INVISIBILITY, 250));
+        register(new MobAbility("ancient_guardian", "Gondor Shield", "LOTR inspired - Tower defense", 6.0, 0.0, 30.0, 0.6, AbilityType.THORNS, 380));
+        register(new MobAbility("nether_star_born", "Force Choke", "Star Wars inspired - Dark side power", 9.0, 0.2, 15.0, 0.3, AbilityType.LIGHTNING_STRIKE, 450));
+        register(new MobAbility("dragon_soul", "Shout Power", "Skyrim inspired - Thu'um mastery", 10.0, 0.3, 20.0, 0.4, AbilityType.FIREBALL, 500));
+        register(new MobAbility("wither_king", "Nazgul Screech", "LOTR inspired - Ringwraith terror", 8.0, 0.15, 25.0, 0.5, AbilityType.WITHER_CURE, 420));
+        register(new MobAbility("ice_walker", "Winter is Coming", "GOT inspired - White Walker power", 7.0, 0.2, 18.0, 0.4, AbilityType.ICE_SUMMON, 380));
+        register(new MobAbility("jungle_trap", "Temple Guardian", "Indiana Jones inspired - Trap master", 5.0, 0.1, 15.0, 0.3, AbilityType.POISON_CLOUD, 300));
+        register(new MobAbility("desert_pharaoh", "Curse of the Pharaoh", "Egyptian mythology - Ancient curse", 6.0, 0.0, 20.0, 0.4, AbilityType.BLINDNESS_CURE, 350));
+        register(new MobAbility("ocean_kraken", "Leviathan Grip", "Pirates inspired - Sea monster", 8.0, 0.1, 25.0, 0.5, AbilityType.WATER_BREATH, 400));
+        register(new MobAbility("sky_leviathan", "Avatar Ride", "Avatar inspired - Airbender power", 7.0, 0.4, 15.0, 0.3, AbilityType.LEVITATION, 320));
+        register(new MobAbility("mushroom_giant", "Mario Jump", "Mario inspired - Super jump", 4.0, 0.3, 12.0, 0.2, AbilityType.LEAP_ATTACK, 200));
+        register(new MobAbility("hyrule_guardian", "Zelda Laser", "Zelda inspired - Ancient technology", 6.0, 0.1, 15.0, 0.3, AbilityType.PROJECTILE_SHOT, 280));
+        register(new MobAbility("pokemon_master", "Pikachu Thunder", "Pokemon inspired - Electric power", 5.0, 0.2, 10.0, 0.2, AbilityType.LIGHTNING_STRIKE, 250));
+        register(new MobAbility("overwatch_tracer", "Blink Dash", "Overwatch inspired - Time manipulation", 4.0, 0.5, 5.0, 0.1, AbilityType.TELEPORT, 150));
+        register(new MobAbility("mcu_thor", "God of Thunder", "Marvel inspired - Mjolnir power", 9.0, 0.2, 25.0, 0.5, AbilityType.LIGHTNING_STRIKE, 450));
+        register(new MobAbility("harry_potter", "Expelliarmus", "Harry Potter inspired - Wizard magic", 5.0, 0.15, 12.0, 0.2, AbilityType.PROJECTILE_SHOT, 220));
+        register(new MobAbility("matrix_ninja", "Bullet Time", "Matrix inspired - Slow motion", 6.0, 0.4, 8.0, 0.2, AbilityType.SPEED_BOOST, 200));
+        register(new MobAbility("terminator", "I'll Be Back", "Terminator inspired - Indestructible", 8.0, 0.1, 30.0, 0.6, AbilityType.RESISTANCE_BOOST, 400));
+        register(new MobAbility("predator", "Cloaked Hunter", "Predator inspired - Invisible hunter", 6.0, 0.25, 15.0, 0.3, AbilityType.INVISIBILITY, 280));
+        register(new MobAbility("alien_queen", "Xenomorph Mother", "Aliens inspired - Hive mind", 7.0, 0.2, 20.0, 0.4, AbilityType.POISON_CLOUD, 350));
+        register(new MobAbility("godzilla", "Atomic Breath", "Godzilla inspired - Monster power", 12.0, 0.1, 40.0, 0.7, AbilityType.EXPLOSION, 600));
+        register(new MobAbility("king_kong", "Gorilla Strength", "King Kong inspired - Ape power", 10.0, 0.2, 35.0, 0.6, AbilityType.KNOCKBACK_WAVE, 550));
+        register(new MobAbility("dovahkiin", "Dragonborn", "Skyrim inspired - Dragon slayer", 8.0, 0.3, 20.0, 0.4, AbilityType.FIREBALL, 400));
+        register(new MobAbility("witcher", "Sign Magic", "Witcher inspired - Monster hunter", 6.0, 0.2, 15.0, 0.3, AbilityType.LIFE_STEAL, 300));
+        register(new MobAbility("geralt", "White Wolf", "Witcher inspired - Sword master", 7.0, 0.25, 18.0, 0.35, AbilityType.STRENGTH_BOOST, 320));
+        register(new MobAbility("kratos", "God of War", "God of War inspired - Spartan rage", 11.0, 0.2, 30.0, 0.6, AbilityType.STRENGTH_BOOST, 500));
+        register(new MobAbility("master_chief", "Spartan Armor", "Halo inspired - MJOLNIR power", 9.0, 0.15, 28.0, 0.55, AbilityType.SHIELD_BASH, 450));
+        register(new MobAbility("doom_slayer", "Rip and Tear", "DOOM inspired - Demon slayer", 12.0, 0.3, 25.0, 0.5, AbilityType.LIFE_STEAL, 550));
+        register(new MobAbility("link", "Master Sword", "Zelda inspired - Hero of Time", 7.0, 0.2, 18.0, 0.35, AbilityType.STRENGTH_BOOST, 350));
+        register(new MobAbility("samus", "Power Suit", "Metroid inspired - Chozo technology", 8.0, 0.2, 20.0, 0.4, AbilityType.PROJECTILE_SHOT, 380));
+        register(new MobAbility("minecraft_steve", "Mining Master", "Minecraft OG - Diamond power", 5.0, 0.1, 15.0, 0.25, AbilityType.HASTE, 250));
+        register(new MobAbility("notch", "Creator God", "Minecraft creator - Infinite power", 15.0, 0.5, 50.0, 0.8, AbilityType.REGENERATION, 600));
+        register(new MobAbility("herobrine", "Ghostly Eyes", "Minecraft legend - Supernatural", 10.0, 0.3, 25.0, 0.5, AbilityType.TELEPORT, 450));
+        register(new MobAbility("ender_dragon", "Dragon's Breath", "End boss - Ultimate power", 14.0, 0.25, 45.0, 0.7, AbilityType.FIREBALL, 580));
+        register(new MobAbility("wither_boss", "Withering Decay", "Nether boss - Death power", 13.0, 0.2, 40.0, 0.65, AbilityType.WITHER_CURE, 550));
     }
     
     private static void register(MobAbility ability) {

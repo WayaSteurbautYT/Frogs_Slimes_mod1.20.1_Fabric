@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:brewing",
+  "input": {
+    "item": "minecraft:potion"
+  },
+  "ingredient": {
+    "item": "minecraft:compass"
+  },
+  "output": {
+    "item": "minecraft:potion",
+    "nbt": {
+      "Potion": "frogslimegamemode:manhunt_tracker"
+    }
+  }
+}

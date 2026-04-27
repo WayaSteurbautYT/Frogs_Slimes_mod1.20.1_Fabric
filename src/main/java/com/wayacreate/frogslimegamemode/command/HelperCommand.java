@@ -6,10 +6,12 @@ import com.mojang.brigadier.context.CommandContext;
 import com.wayacreate.frogslimegamemode.entity.FrogHelperEntity;
 import com.wayacreate.frogslimegamemode.entity.SlimeHelperEntity;
 import com.wayacreate.frogslimegamemode.integration.BaritoneIntegration;
+import com.wayacreate.frogslimegamemode.item.RoleItem;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
@@ -17,7 +19,20 @@ import net.minecraft.text.Text;
 public class HelperCommand {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registryAccess, CommandManager.RegistrationEnvironment environment) {
         dispatcher.register(CommandManager.literal("helper")
-            .requires(source -> source.hasPermissionLevel(2))
+            .requires(source -> source.hasPermissionLevel(0))
+            .then(CommandManager.literal("giverole")
+                .then(CommandManager.argument("role", StringArgumentType.string())
+                    .suggests((context, builder) -> {
+                        builder.suggest("Miner");
+                        builder.suggest("Lumberjack");
+                        builder.suggest("Combat Specialist");
+                        builder.suggest("Farmer");
+                        builder.suggest("Builder");
+                        return builder.buildFuture();
+                    })
+                    .executes(context -> giveRoleItem(context))
+                )
+            )
             .then(CommandManager.argument("helper", EntityArgumentType.entity())
                 .executes(HelperCommand::showHelperInfo)
                 .then(CommandManager.literal("build")
@@ -124,6 +139,27 @@ public class HelperCommand {
             return 1;
         } catch (Exception e) {
             context.getSource().sendError(Text.literal("Failed to get progress: " + e.getMessage()));
+            return 0;
+        }
+    }
+    
+    private static int giveRoleItem(CommandContext<ServerCommandSource> context) {
+        try {
+            String role = StringArgumentType.getString(context, "role");
+            PlayerEntity player = context.getSource().getPlayer();
+            
+            if (player == null) {
+                context.getSource().sendError(Text.literal("This command can only be used by players!"));
+                return 0;
+            }
+            
+            ItemStack roleItem = RoleItem.createRoleItem(role);
+            player.getInventory().insertStack(roleItem);
+            
+            context.getSource().sendFeedback(() -> Text.literal("Gave " + role + " role assignment item to " + player.getName().getString()), true);
+            return 1;
+        } catch (Exception e) {
+            context.getSource().sendError(Text.literal("Failed to give role item: " + e.getMessage()));
             return 0;
         }
     }

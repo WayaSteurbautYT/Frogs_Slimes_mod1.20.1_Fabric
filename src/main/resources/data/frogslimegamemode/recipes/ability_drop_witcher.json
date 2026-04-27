@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "minecraft:netherite_sword"
+    },
+    {
+      "item": "frogslimegamemode:ability_stick"
+    }
+  ],
+  "result": {
+    "item": "frogslimegamemode:ability_drop",
+    "count": 1
+  }
+}

@@ -4,6 +4,8 @@ import com.wayacreate.frogslimegamemode.gamemode.ManhuntManager;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -12,8 +14,29 @@ import net.minecraft.util.TypedActionResult;
 import net.minecraft.world.World;
 
 public class EscapePearlItem extends Item {
+    public static final String ESCAPE_PEARL_NBT = "EscapePearl";
+    
     public EscapePearlItem(Settings settings) {
         super(settings);
+    }
+    
+    @Override
+    public ItemStack getDefaultStack() {
+        ItemStack stack = new ItemStack(Items.ENDER_PEARL);
+        NbtCompound nbt = stack.getOrCreateNbt();
+        nbt.putBoolean(ESCAPE_PEARL_NBT, true);
+        stack.setCustomName(Text.literal("Escape Pearl").formatted(Formatting.AQUA, Formatting.BOLD));
+        return stack;
+    }
+    
+    @Override
+    public Text getName(ItemStack stack) {
+        return Text.literal("Escape Pearl").formatted(Formatting.AQUA, Formatting.BOLD);
+    }
+    
+    @Override
+    public boolean hasGlint(ItemStack stack) {
+        return true;
     }
 
     @Override

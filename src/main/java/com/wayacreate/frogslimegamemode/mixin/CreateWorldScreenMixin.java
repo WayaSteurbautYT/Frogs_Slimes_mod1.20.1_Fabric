@@ -8,8 +8,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Mixin to add Frog & Slime gamemode option to world creation screen.
- * TODO: Add UI button - currently gamemode must be enabled via /frogslime enable command
+ * Mixin to handle Frog & Slime gamemode state during world creation.
+ * Note: UI button implementation would require complex mixin work due to visibility constraints.
+ * Users can enable the gamemode via the /frogslime enable command.
  */
 @Mixin(CreateWorldScreen.class)
 public class CreateWorldScreenMixin {

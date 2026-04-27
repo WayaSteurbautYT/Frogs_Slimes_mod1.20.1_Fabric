@@ -1,9 +1,11 @@
 package com.wayacreate.frogslimegamemode.item;
 
 import com.wayacreate.frogslimegamemode.FrogSlimeGamemode;
+import com.wayacreate.frogslimegamemode.block.ModBlocks;
 import com.wayacreate.frogslimegamemode.entity.ModEntities;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
@@ -53,6 +55,14 @@ public class ModItems {
     
     // Ability drop item
     public static Item ABILITY_DROP;
+    
+    // Ability stick - beginner-friendly crafting component
+    public static Item ABILITY_STICK;
+    
+    // Block items
+    public static Item FROG_CRAFTING_TABLE_ITEM;
+    public static Item FROG_POTION_STAND_ITEM;
+    public static Item ABILITY_CRAFTING_TABLE_ITEM;
     
     public static final RegistryKey<ItemGroup> FROG_SLIME_GROUP = RegistryKey.of(RegistryKeys.ITEM_GROUP,
         new Identifier(FrogSlimeGamemode.MOD_ID, "frog_slime_group"));
@@ -148,6 +158,20 @@ public class ModItems {
         ABILITY_DROP = registerItem("ability_drop",
             new AbilityDropItem(new FabricItemSettings().maxCount(64).maxDamage(0)));
         
+        // Ability stick - beginner-friendly crafting component
+        ABILITY_STICK = registerItem("ability_stick",
+            new Item(new FabricItemSettings().maxCount(64)));
+        
+        // Block items (register after blocks are registered)
+        FROG_CRAFTING_TABLE_ITEM = registerItem("frog_crafting_table",
+            new BlockItem(ModBlocks.FROG_CRAFTING_TABLE, new FabricItemSettings()));
+        
+        FROG_POTION_STAND_ITEM = registerItem("frog_potion_stand",
+            new BlockItem(ModBlocks.FROG_POTION_STAND, new FabricItemSettings()));
+        
+        ABILITY_CRAFTING_TABLE_ITEM = registerItem("ability_crafting_table",
+            new BlockItem(ModBlocks.ABILITY_CRAFTING_TABLE, new FabricItemSettings()));
+        
         // Register item group
         FROG_SLIME_ITEM_GROUP = Registry.register(Registries.ITEM_GROUP,
             FROG_SLIME_GROUP,
@@ -185,6 +209,11 @@ public class ModItems {
                     entries.add(ESCAPE_PEARL);
                     // Ability drops
                     entries.add(ABILITY_DROP);
+                    entries.add(ABILITY_STICK);
+                    // Block items
+                    entries.add(FROG_CRAFTING_TABLE_ITEM);
+                    entries.add(FROG_POTION_STAND_ITEM);
+                    entries.add(ABILITY_CRAFTING_TABLE_ITEM);
                 })
                 .build()
         );

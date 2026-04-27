@@ -18,6 +18,25 @@ public class GamemodeManager {
     private static final Map<UUID, GamemodeData> players = new HashMap<>();
     
     public static void enableGamemode(ServerPlayerEntity player) {
+        enableGamemode(player, true);
+    }
+    
+    public static void enableGamemode(ServerPlayerEntity player, boolean enableAllPlayers) {
+        MinecraftServer server = player.getServer();
+        if (server == null) return;
+        
+        if (enableAllPlayers) {
+            // Enable gamemode for all online players
+            for (ServerPlayerEntity onlinePlayer : server.getPlayerManager().getPlayerList()) {
+                enableGamemodeForPlayer(onlinePlayer);
+            }
+        } else {
+            // Enable only for the specific player
+            enableGamemodeForPlayer(player);
+        }
+    }
+    
+    private static void enableGamemodeForPlayer(ServerPlayerEntity player) {
         UUID uuid = player.getUuid();
         if (!players.containsKey(uuid)) {
             // Load from persistent state if exists
@@ -44,6 +63,11 @@ public class GamemodeManager {
             // Mark as enabled in persistent state
             persistentData.setGamemodeEnabled(true);
             state.markDirty();
+            
+            // Ensure player is NOT invulnerable - critical for SMP gameplay
+            player.setInvulnerable(false);
+            player.getAbilities().invulnerable = false;
+            player.sendAbilitiesUpdate();
             
             player.sendMessage(Text.literal("Frog & Slime Gamemode ACTIVATED!")
                 .formatted(Formatting.GREEN, Formatting.BOLD), false);
@@ -96,15 +120,44 @@ public class GamemodeManager {
             player.getInventory().insertStack(new net.minecraft.item.ItemStack(com.wayacreate.frogslimegamemode.item.ModItems.ORPHAN_SHIELD));
         }
         
-        // Give some basic food
-        player.getInventory().insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.COOKED_BEEF, 16));
+        // SMP-Ready Starter Kit
+        // Food (enough for survival)
+        player.getInventory().insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.COOKED_BEEF, 32));
+        player.getInventory().insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.GOLDEN_CARROT, 16));
         
-        // Give some basic tools
+        // Tools (iron for early game, not overpowered)
         player.getInventory().insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.IRON_SWORD));
         player.getInventory().insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.IRON_PICKAXE));
+        player.getInventory().insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.IRON_AXE));
+        player.getInventory().insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.IRON_SHOVEL));
         
-        // Give torches
-        player.getInventory().insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.TORCH, 32));
+        // Armor (iron for protection but not invincible)
+        player.getInventory().insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.IRON_HELMET));
+        player.getInventory().insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.IRON_CHESTPLATE));
+        player.getInventory().insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.IRON_LEGGINGS));
+        player.getInventory().insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.IRON_BOOTS));
+        
+        // Torches and basic supplies
+        player.getInventory().insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.TORCH, 64));
+        player.getInventory().insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.COAL, 32));
+        
+        // Building blocks (cobblestone for building)
+        player.getInventory().insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.COBBLESTONE, 64));
+        
+        // Spawn eggs for helpers (one of each)
+        if (com.wayacreate.frogslimegamemode.item.ModItems.FROG_HELPER_SPAWN_EGG != null) {
+            player.getInventory().insertStack(new net.minecraft.item.ItemStack(com.wayacreate.frogslimegamemode.item.ModItems.FROG_HELPER_SPAWN_EGG));
+        }
+        if (com.wayacreate.frogslimegamemode.item.ModItems.SLIME_HELPER_SPAWN_EGG != null) {
+            player.getInventory().insertStack(new net.minecraft.item.ItemStack(com.wayacreate.frogslimegamemode.item.ModItems.SLIME_HELPER_SPAWN_EGG));
+        }
+        
+        // Water bucket for survival
+        player.getInventory().insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.WATER_BUCKET));
+        
+        // Bow and arrows for early combat
+        player.getInventory().insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.BOW));
+        player.getInventory().insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.ARROW, 64));
     }
     
     public static void grantAdvancement(ServerPlayerEntity player, String advancementId) {
@@ -154,6 +207,27 @@ public class GamemodeManager {
         }
     }
     
+    public static void onPlayerLeave(ServerPlayerEntity player) {
+        UUID uuid = player.getUuid();
+        if (players.containsKey(uuid)) {
+            // Save data to persistent state before removing
+            GamemodeData data = players.get(uuid);
+            GamemodeState state = GamemodeState.get(player.getServer());
+            GamemodeState.PlayerData persistentData = state.getPlayerData(uuid);
+            
+            // Sync abilities
+            for (String abilityId : data.getPlayerAbilities()) {
+                persistentData.addAbility(abilityId);
+            }
+            
+            persistentData.setGamemodeEnabled(true);
+            state.markDirty();
+            
+            // Remove from memory (data persists in GamemodeState)
+            players.remove(uuid);
+        }
+    }
+    
     public static boolean isInGamemode(PlayerEntity player) {
         return players.containsKey(player.getUuid());
     }
@@ -167,7 +241,7 @@ public class GamemodeManager {
             data.tick();
         }
         
-        // Periodically save to persistent state
+        // Periodically save to persistent state and ensure players are not invulnerable
         GamemodeState state = GamemodeState.get(server);
         for (UUID uuid : players.keySet()) {
             GamemodeData data = players.get(uuid);
@@ -179,6 +253,16 @@ public class GamemodeManager {
             }
             
             persistentData.setGamemodeEnabled(true);
+            
+            // Ensure player is NOT invulnerable - critical for SMP gameplay
+            ServerPlayerEntity player = server.getPlayerManager().getPlayer(uuid);
+            if (player != null) {
+                if (player.isInvulnerable() || player.getAbilities().invulnerable) {
+                    player.setInvulnerable(false);
+                    player.getAbilities().invulnerable = false;
+                    player.sendAbilitiesUpdate();
+                }
+            }
         }
         state.markDirty();
     }

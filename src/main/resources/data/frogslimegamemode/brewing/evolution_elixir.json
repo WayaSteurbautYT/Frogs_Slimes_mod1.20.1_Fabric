@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:brewing",
+  "input": {
+    "item": "minecraft:potion"
+  },
+  "ingredient": {
+    "item": "frogslimegamemode:evolution_stone"
+  },
+  "output": {
+    "item": "minecraft:potion",
+    "nbt": {
+      "Potion": "frogslimegamemode:evolution_elixir"
+    }
+  }
+}

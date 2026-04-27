@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:brewing",
+  "input": {
+    "item": "minecraft:potion"
+  },
+  "ingredient": {
+    "item": "minecraft:nether_star"
+  },
+  "output": {
+    "item": "minecraft:potion",
+    "nbt": {
+      "Potion": "frogslimegamemode:wayacreate_blessing"
+    }
+  }
+}

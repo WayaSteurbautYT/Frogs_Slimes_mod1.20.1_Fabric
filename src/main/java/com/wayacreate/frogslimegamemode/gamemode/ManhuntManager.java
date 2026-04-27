@@ -2,6 +2,7 @@ package com.wayacreate.frogslimegamemode.gamemode;
 
 import com.wayacreate.frogslimegamemode.network.ModNetworking;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
@@ -29,6 +30,13 @@ public class ManhuntManager {
     private static final Set<UUID> soloSpeedrunners = new HashSet<>();
     private static final Map<UUID, Long> startTime = new HashMap<>();
     private static final Map<UUID, Integer> deaths = new HashMap<>();
+    private static final Map<UUID, String> playerRoles = new HashMap<>(); // "hunter" or "speedrunner"
+    private static final Set<UUID> hunters = new HashSet<>(); // Track all hunters for grouping
+    private static final Set<UUID> activeSpeedrunners = new HashSet<>(); // Track alive speedrunners
+    private static final Set<UUID> ghostSpeedrunners = new HashSet<>(); // Track dead speedrunners (ghosts)
+    private static boolean autoManhuntMode = false;
+    private static int countdownTicks = 0;
+    private static final int COUNTDOWN_SECONDS = 30;
     
     // Ability cooldowns (in ticks)
     private static final int HUNTER_TRACK_COOLDOWN = 100;
@@ -40,6 +48,72 @@ public class ManhuntManager {
     
     public static void setSpeedrunner(ServerPlayerEntity speedrunner) {
         setSpeedrunner(speedrunner, false);
+    }
+    
+    /**
+     * Start auto-assignment manhunt mode with countdown
+     * Randomly assigns one speedrunner and the rest as hunters
+     */
+    public static void startAutoManhunt(ServerPlayerEntity initiator) {
+        MinecraftServer server = initiator.getServer();
+        if (server == null) return;
+        
+        java.util.List<ServerPlayerEntity> players = new java.util.ArrayList<>(server.getPlayerManager().getPlayerList());
+        if (players.size() < 2) {
+            initiator.sendMessage(Text.literal("Need at least 2 players for auto manhunt!")
+                .formatted(Formatting.RED), false);
+            return;
+        }
+        
+        autoManhuntMode = true;
+        countdownTicks = COUNTDOWN_SECONDS * 20; // Convert to ticks
+        
+        // Clear existing games
+        for (ServerPlayerEntity player : players) {
+            endGame(player);
+            playerRoles.remove(player.getUuid());
+            hunters.clear();
+        }
+        
+        // Randomly select one speedrunner
+        java.util.Collections.shuffle(players);
+        ServerPlayerEntity speedrunner = players.get(0);
+        
+        // Assign the rest as hunters
+        java.util.List<ServerPlayerEntity> hunterList = players.subList(1, players.size());
+        
+        // Set roles
+        playerRoles.put(speedrunner.getUuid(), "speedrunner");
+        for (ServerPlayerEntity hunter : hunterList) {
+            playerRoles.put(hunter.getUuid(), "hunter");
+            hunters.add(hunter.getUuid());
+        }
+        
+        server.getPlayerManager().broadcast(
+            Text.literal("[MANHUNT] ")
+                .formatted(Formatting.GOLD, Formatting.BOLD)
+                .append(Text.literal("Auto Manhunt starting in " + COUNTDOWN_SECONDS + " seconds!")
+                    .formatted(Formatting.YELLOW)),
+            false
+        );
+        
+        server.getPlayerManager().broadcast(
+            Text.literal("[MANHUNT] ")
+                .formatted(Formatting.GOLD)
+                .append(Text.literal(speedrunner.getName().getString() + " is the SPEEDRUNNER!")
+                    .formatted(Formatting.GREEN, Formatting.BOLD)),
+            false
+        );
+        
+        for (ServerPlayerEntity hunter : hunterList) {
+            server.getPlayerManager().broadcast(
+                Text.literal("[MANHUNT] ")
+                    .formatted(Formatting.GOLD)
+                    .append(Text.literal(hunter.getName().getString() + " is a HUNTER!")
+                        .formatted(Formatting.RED, Formatting.BOLD)),
+                false
+            );
+        }
     }
     
     public static void setSoloSpeedrunner(ServerPlayerEntity speedrunner) {
@@ -54,6 +128,7 @@ public class ManhuntManager {
         speedrunnerEscapeCooldowns.put(speedrunner.getUuid(), 0);
         speedrunnerSpeedCooldowns.put(speedrunner.getUuid(), 0);
         speedrunnerInvisCooldowns.put(speedrunner.getUuid(), 0);
+        activeSpeedrunners.add(speedrunner.getUuid());
         
         if (solo) {
             soloSpeedrunners.add(speedrunner.getUuid());
@@ -82,6 +157,13 @@ public class ManhuntManager {
     }
     
     public static void setHunter(ServerPlayerEntity hunter, ServerPlayerEntity target) {
+        // Check if target is already a hunter - prevent hunters from hunting each other
+        if (hunters.contains(target.getUuid())) {
+            hunter.sendMessage(Text.literal("Cannot target another hunter!")
+                .formatted(Formatting.RED), false);
+            return;
+        }
+        
         speedrunners.put(hunter.getUuid(), target.getUuid());
         gameActive.put(hunter.getUuid(), true);
         hunterCooldowns.put(hunter.getUuid(), 0);
@@ -89,6 +171,9 @@ public class ManhuntManager {
         hunterBlockCooldowns.put(hunter.getUuid(), 0);
         hunterSlowCooldowns.put(hunter.getUuid(), 0);
         deaths.put(hunter.getUuid(), 0);
+        
+        // Add to hunters set for grouping
+        hunters.add(hunter.getUuid());
         
         hunter.sendMessage(Text.literal("You are a hunter! Track down ")
             .formatted(Formatting.RED)
@@ -122,6 +207,8 @@ public class ManhuntManager {
         soloSpeedrunners.remove(uuid);
         startTime.remove(uuid);
         deaths.remove(uuid);
+        activeSpeedrunners.remove(uuid);
+        ghostSpeedrunners.remove(uuid);
         
         player.sendMessage(Text.literal("Manhunt game ended.")
             .formatted(Formatting.GRAY), false);
@@ -134,12 +221,17 @@ public class ManhuntManager {
         speedrunner.getServer().getPlayerManager().broadcast(
             Text.literal("[MANHUNT] ")
                 .formatted(Formatting.GOLD, Formatting.BOLD)
-                .append(Text.literal(speedrunner.getName().getString() + " beat the game in " + timeStr + "!")
+                .append(Text.literal("Speedrunners win! " + speedrunner.getName().getString() + " beat the game in " + timeStr + "!")
                     .formatted(Formatting.GREEN, Formatting.BOLD)),
             false
         );
         
-        endGame(speedrunner);
+        // End game for all participants
+        for (ServerPlayerEntity player : speedrunner.getServer().getPlayerManager().getPlayerList()) {
+            if (isInGame(player)) {
+                endGame(player);
+            }
+        }
     }
     
     public static void onSpeedrunnerDeath(ServerPlayerEntity speedrunner) {
@@ -174,17 +266,50 @@ public class ManhuntManager {
                     .formatted(Formatting.YELLOW), false);
             }
         } else {
-            // In multiplayer, hunters win if speedrunner dies
+            // In multiplayer, speedrunner becomes a ghost
+            activeSpeedrunners.remove(uuid);
+            ghostSpeedrunners.add(uuid);
+            
+            // Set to spectator mode
+            speedrunner.changeGameMode(net.minecraft.world.GameMode.SPECTATOR);
+            
             speedrunner.getServer().getPlayerManager().broadcast(
                 Text.literal("[MANHUNT] ")
                     .formatted(Formatting.GOLD, Formatting.BOLD)
-                    .append(Text.literal("Hunters win! " + speedrunner.getName().getString() + " was eliminated.")
+                    .append(Text.literal(speedrunner.getName().getString() + " died and is now a ghost!")
+                        .formatted(Formatting.GRAY, Formatting.ITALIC)),
+                false
+            );
+            
+            speedrunner.sendMessage(Text.literal("You are now a ghost. Watch the remaining speedrunners complete the game!")
+                .formatted(Formatting.GRAY), false);
+            
+            // Check if all speedrunners are dead (hunters win)
+            checkHuntersWinCondition(speedrunner);
+        }
+    }
+    
+    private static void checkHuntersWinCondition(ServerPlayerEntity deadSpeedrunner) {
+        // Count total speedrunners (including ghosts)
+        int totalSpeedrunners = 0;
+        for (UUID uuid : speedrunners.keySet()) {
+            if (speedrunners.get(uuid).equals(uuid)) {
+                totalSpeedrunners++;
+            }
+        }
+        
+        // If all speedrunners are ghosts, hunters win
+        if (activeSpeedrunners.isEmpty() && totalSpeedrunners > 0) {
+            deadSpeedrunner.getServer().getPlayerManager().broadcast(
+                Text.literal("[MANHUNT] ")
+                    .formatted(Formatting.GOLD, Formatting.BOLD)
+                    .append(Text.literal("Hunters win! All speedrunners have been eliminated.")
                         .formatted(Formatting.RED, Formatting.BOLD)),
                 false
             );
             
             // End game for all participants
-            for (ServerPlayerEntity player : speedrunner.getServer().getPlayerManager().getPlayerList()) {
+            for (ServerPlayerEntity player : deadSpeedrunner.getServer().getPlayerManager().getPlayerList()) {
                 if (isInGame(player)) {
                     endGame(player);
                 }
@@ -270,6 +395,31 @@ public class ManhuntManager {
     }
     
     public static void tick(net.minecraft.server.MinecraftServer server) {
+        // Handle countdown for auto manhunt
+        if (autoManhuntMode && countdownTicks > 0) {
+            countdownTicks--;
+            int secondsLeft = countdownTicks / 20;
+            
+            if (countdownTicks % 20 == 0 && secondsLeft > 0) {
+                server.getPlayerManager().broadcast(
+                    Text.literal("[MANHUNT] ")
+                        .formatted(Formatting.GOLD, Formatting.BOLD)
+                        .append(Text.literal("Starting in " + secondsLeft + " seconds!")
+                            .formatted(Formatting.YELLOW)),
+                    false
+                );
+            }
+            
+            if (countdownTicks == 0) {
+                startAutoManhuntGame(server);
+            }
+        }
+        
+        // Apply glow effects to players in auto manhunt mode
+        if (autoManhuntMode) {
+            applyGlowEffects(server);
+        }
+        
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
             if (!isInGame(player)) continue;
             
@@ -305,6 +455,76 @@ public class ManhuntManager {
                 }
             }
         }
+    }
+    
+    private static void startAutoManhuntGame(MinecraftServer server) {
+        autoManhuntMode = false;
+        
+        // Get the speedrunner from playerRoles
+        UUID speedrunnerUuid = null;
+        for (Map.Entry<UUID, String> entry : playerRoles.entrySet()) {
+            if (entry.getValue().equals("speedrunner")) {
+                speedrunnerUuid = entry.getKey();
+                break;
+            }
+        }
+        
+        if (speedrunnerUuid == null) return;
+        
+        ServerPlayerEntity speedrunner = server.getPlayerManager().getPlayer(speedrunnerUuid);
+        if (speedrunner == null) return;
+        
+        // Start the speedrunner game
+        setSpeedrunner(speedrunner, false);
+        
+        // Assign all hunters to target the speedrunner
+        for (UUID hunterUuid : hunters) {
+            ServerPlayerEntity hunter = server.getPlayerManager().getPlayer(hunterUuid);
+            if (hunter != null) {
+                setHunter(hunter, speedrunner);
+                // Give hunter clock
+                giveHunterClock(hunter);
+            }
+        }
+        
+        // Give speedrunner clock
+        giveSpeedrunnerClock(speedrunner);
+        
+        server.getPlayerManager().broadcast(
+            Text.literal("[MANHUNT] ")
+                .formatted(Formatting.GOLD, Formatting.BOLD)
+                .append(Text.literal("GO! The hunt begins!")
+                    .formatted(Formatting.GREEN, Formatting.BOLD)),
+            false
+        );
+    }
+    
+    private static void applyGlowEffects(MinecraftServer server) {
+        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            String role = playerRoles.get(player.getUuid());
+            if (role == null) continue;
+            
+            // Apply glow effect based on role
+            if (role.equals("hunter")) {
+                player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
+                    net.minecraft.entity.effect.StatusEffects.GLOWING, 40, 0, false, false));
+            } else if (role.equals("speedrunner")) {
+                player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
+                    net.minecraft.entity.effect.StatusEffects.GLOWING, 40, 0, false, false));
+            }
+        }
+    }
+    
+    private static void giveHunterClock(ServerPlayerEntity hunter) {
+        // Give hunter a clock to track time
+        if (com.wayacreate.frogslimegamemode.item.ModItems.HUNTER_TRACKER != null) {
+            hunter.getInventory().insertStack(new net.minecraft.item.ItemStack(com.wayacreate.frogslimegamemode.item.ModItems.HUNTER_TRACKER));
+        }
+    }
+    
+    private static void giveSpeedrunnerClock(ServerPlayerEntity speedrunner) {
+        // Give speedrunner a clock to track time
+        speedrunner.getInventory().insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.CLOCK));
     }
     
     private static void decreaseIndividualCooldowns(ServerPlayerEntity player, Map<UUID, Integer> cooldowns) {
@@ -398,7 +618,7 @@ public class ManhuntManager {
         
         hunterBlockCooldowns.put(hunter.getUuid(), HUNTER_BLOCK_COOLDOWN);
         
-        // Create a temporary wall between hunter and target
+        // Create a temporary shield wall between hunter and target
         net.minecraft.util.math.Vec3d direction = hunter.getPos().subtract(target.getPos()).normalize();
         BlockPos wallPos = target.getBlockPos().add((int)(direction.x * 3), 0, (int)(direction.z * 3));
         ServerWorld world = (ServerWorld) hunter.getWorld();
@@ -408,15 +628,16 @@ public class ManhuntManager {
                 for (int z = -2; z <= 2; z++) {
                     BlockPos placePos = wallPos.add(x, y, z);
                     if (world.getBlockState(placePos).isAir()) {
-                        world.setBlockState(placePos, net.minecraft.block.Blocks.OBSIDIAN.getDefaultState());
+                        // Use shield blocks (polished blackstone or similar) instead of obsidian
+                        world.setBlockState(placePos, net.minecraft.block.Blocks.POLISHED_BLACKSTONE_BRICKS.getDefaultState());
                         // Schedule block removal after 5 seconds
-                        world.scheduleBlockTick(placePos, net.minecraft.block.Blocks.OBSIDIAN, 100);
+                        world.scheduleBlockTick(placePos, net.minecraft.block.Blocks.POLISHED_BLACKSTONE_BRICKS, 100);
                     }
                 }
             }
         }
         
-        hunter.sendMessage(Text.literal("Block wall created!")
+        hunter.sendMessage(Text.literal("Shield wall created!")
             .formatted(Formatting.GREEN), false);
     }
     

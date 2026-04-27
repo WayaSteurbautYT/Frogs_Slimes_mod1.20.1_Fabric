@@ -4,10 +4,12 @@ import com.wayacreate.frogslimegamemode.entity.FrogHelperEntity;
 import com.wayacreate.frogslimegamemode.entity.SlimeHelperEntity;
 import com.wayacreate.frogslimegamemode.eating.MobAbility;
 import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
+import com.wayacreate.frogslimegamemode.network.ModNetworking;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,42 +19,129 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PlayerEntity.class)
 public abstract class PlayerEntityMixin {
-    @Inject(method = "attack", at = @At("TAIL"))
+    @Inject(method = "attack", at = @At("HEAD"))
     private void onAttack(Entity target, CallbackInfo ci) {
         PlayerEntity player = (PlayerEntity) (Object) this;
         
-        if (!player.getWorld().isClient && !target.isAlive()) {
-            player.getWorld().getEntitiesByClass(
-                FrogHelperEntity.class,
-                player.getBoundingBox().expand(32),
-                frog -> frog.isOwner(player)
-            ).forEach(FrogHelperEntity::onKilledMob);
-            
-            player.getWorld().getEntitiesByClass(
-                SlimeHelperEntity.class,
-                player.getBoundingBox().expand(32),
-                slime -> slime.isOwner(player)
-            ).forEach(SlimeHelperEntity::onKilledMob);
-            
-            // Player eating mobs for abilities
-            if (GamemodeManager.isInGamemode(player) && target instanceof MobEntity mob) {
-                MobAbility ability = MobAbility.getAbilityFromEntity(mob.getType());
-                if (ability != null) {
-                    GamemodeManager.getData(player).addAbility(ability.getId());
-                    player.sendMessage(Text.literal("You consumed ")
-                        .formatted(Formatting.GREEN)
-                        .append(Text.literal(mob.getName().getString())
-                            .formatted(Formatting.YELLOW))
-                        .append(Text.literal(" and gained ")
-                            .formatted(Formatting.GREEN))
-                        .append(ability.getFormattedName())
-                        .append(Text.literal("!").formatted(Formatting.GREEN)), false);
+        if (!player.getWorld().isClient) {
+            // Check if player is holding an ability drop item and left-clicking air
+            if (target == null) {
+                ItemStack stack = player.getMainHandStack();
+                if (com.wayacreate.frogslimegamemode.item.AbilityDropItem.isAbilityDrop(stack)) {
+                    consumeAbilityDrop(player, stack);
+                    ci.cancel();
+                    return;
                 }
             }
             
-            // Player kill rewards - grant 3 abilities when killing a player
-            if (GamemodeManager.isInGamemode(player) && target instanceof PlayerEntity killedPlayer) {
-                grantPlayerKillRewards(player, killedPlayer);
+            if (!target.isAlive()) {
+                player.getWorld().getEntitiesByClass(
+                    FrogHelperEntity.class,
+                    player.getBoundingBox().expand(32),
+                    frog -> frog.isOwner(player)
+                ).forEach(FrogHelperEntity::onKilledMob);
+                
+                player.getWorld().getEntitiesByClass(
+                    SlimeHelperEntity.class,
+                    player.getBoundingBox().expand(32),
+                    slime -> slime.isOwner(player)
+                ).forEach(SlimeHelperEntity::onKilledMob);
+                
+                // Player eating mobs for abilities
+                if (GamemodeManager.isInGamemode(player) && target instanceof MobEntity mob) {
+                    MobAbility ability = MobAbility.getAbilityFromEntity(mob.getType());
+                    if (ability != null) {
+                        GamemodeManager.getData(player).addAbility(ability.getId());
+                        player.sendMessage(Text.literal("You consumed ")
+                            .formatted(Formatting.GREEN)
+                            .append(Text.literal(mob.getName().getString())
+                                .formatted(Formatting.YELLOW))
+                            .append(Text.literal(" and gained ")
+                                .formatted(Formatting.GREEN))
+                            .append(ability.getFormattedName())
+                            .append(Text.literal("!").formatted(Formatting.GREEN)), false);
+                    }
+                }
+                
+                // Player kill rewards - grant 3 abilities when killing a player
+                if (GamemodeManager.isInGamemode(player) && target instanceof PlayerEntity killedPlayer) {
+                    grantPlayerKillRewards(player, killedPlayer);
+                    
+                    // Broadcast notification
+                    player.getServer().getPlayerManager().broadcast(
+                        Text.literal("[KILL] ")
+                            .formatted(Formatting.RED, Formatting.BOLD)
+                            .append(Text.literal(player.getName().getString())
+                                .formatted(Formatting.YELLOW))
+                            .append(Text.literal(" killed ")
+                                .formatted(Formatting.GRAY))
+                            .append(Text.literal(killedPlayer.getName().getString())
+                                .formatted(Formatting.YELLOW))
+                            .append(Text.literal(" and stole their abilities!")
+                                .formatted(Formatting.RED)),
+                        false
+                    );
+                    
+                    // Speedrun mode: if speedrunner kills hunter, give extra reward
+                    if (com.wayacreate.frogslimegamemode.gamemode.ManhuntManager.isSpeedrunner(player) && 
+                        com.wayacreate.frogslimegamemode.gamemode.ManhuntManager.isHunter(killedPlayer)) {
+                        // Drop ability item for killer
+                        var abilities = GamemodeManager.getData(killedPlayer).getPlayerAbilities();
+                        if (!abilities.isEmpty()) {
+                            String randomAbility = abilities.get((int) (Math.random() * abilities.size()));
+                            ItemStack abilityDrop = com.wayacreate.frogslimegamemode.item.AbilityDropItem.createAbilityDrop(randomAbility);
+                            player.dropItem(abilityDrop, false);
+                            player.sendMessage(Text.literal("Hunter dropped an ability!")
+                                .formatted(Formatting.GREEN, Formatting.BOLD), false);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private void consumeAbilityDrop(PlayerEntity player, ItemStack stack) {
+        String abilityId = com.wayacreate.frogslimegamemode.item.AbilityDropItem.getAbilityId(stack);
+        
+        if (abilityId != null && !abilityId.isEmpty()) {
+            MobAbility ability = MobAbility.getAbility(abilityId);
+            
+            if (ability != null) {
+                // Add ability to player's unlocked abilities
+                if (player instanceof net.minecraft.server.network.ServerPlayerEntity serverPlayer) {
+                    com.wayacreate.frogslimegamemode.gamemode.GamemodeManager.getData(serverPlayer).addAbility(abilityId);
+                    
+                    // Get the item to display in the animation
+                    net.minecraft.item.Item displayItem = com.wayacreate.frogslimegamemode.item.AbilityDropItem.getDropItemForAbility(abilityId);
+                    
+                    // Send totem animation packet with item for particles
+                    ModNetworking.sendTotemAnimation(serverPlayer, 
+                        "Ability Unlocked!", 
+                        ability.getName() + " - " + ability.getDescription(), 
+                        Formatting.LIGHT_PURPLE,
+                        displayItem);
+                    
+                    // Send title animation
+                    ModNetworking.showTitle(serverPlayer, 
+                        "Ability Unlocked!", 
+                        ability.getName() + " - " + ability.getDescription(), 
+                        Formatting.LIGHT_PURPLE);
+                    
+                    // Play level-up sound directly on server (client will hear it)
+                    serverPlayer.playSound(net.minecraft.sound.SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+                }
+                
+                // Apply ability bonuses to the player
+                com.wayacreate.frogslimegamemode.item.AbilityDropItem.applyAbilityToPlayerStatic(player, ability);
+                
+                // Consume the item
+                stack.decrement(1);
+                
+                // Send message
+                player.sendMessage(Text.literal("You unlocked the ")
+                    .formatted(Formatting.LIGHT_PURPLE)
+                    .append(ability.getFormattedName())
+                    .append(Text.literal("! Press [TAB] to switch abilities.").formatted(Formatting.YELLOW)), false);
             }
         }
     }
@@ -70,6 +159,13 @@ public abstract class PlayerEntityMixin {
         PlayerEntity player = (PlayerEntity) (Object) this;
         if (!player.getWorld().isClient && GamemodeManager.isInGamemode(player)) {
             GamemodeManager.getData(player).incrementDeathCount();
+            
+            // Drop ability items on death
+            var abilities = GamemodeManager.getData(player).getPlayerAbilities();
+            for (String abilityId : abilities) {
+                ItemStack drop = com.wayacreate.frogslimegamemode.item.AbilityDropItem.createAbilityDrop(abilityId);
+                player.dropItem(drop, false);
+            }
         }
     }
     

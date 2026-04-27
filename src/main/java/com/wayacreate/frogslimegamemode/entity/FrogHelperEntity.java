@@ -147,7 +147,10 @@ public class FrogHelperEntity extends TameableEntity {
         }
         
         if (this.getOwner() instanceof PlayerEntity owner) {
-            GamemodeManager.getData(owner).incrementMobsEaten();
+            var gamemodeData = GamemodeManager.getData(owner);
+            if (gamemodeData != null) {
+                gamemodeData.incrementMobsEaten();
+            }
             // Grant XP to player for mob kills
             if (owner instanceof ServerPlayerEntity serverPlayer) {
                 PlayerLevel.addXP(serverPlayer, 10.0);

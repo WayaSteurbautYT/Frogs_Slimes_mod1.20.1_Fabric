@@ -3,11 +3,17 @@
   "natural": false,
   "ambient_light": 0,
   "fixed_time": 6000,
-  "infiniburn": "minecraft:end",
+  "infiniburn": "#minecraft:infiniburn_end",
   "respawn_anchor_works": false,
   "has_raids": false,
   "ultrawarm": false,
   "bed_works": false,
   "has_skylight": true,
-  "has_ceiling": false
+  "has_ceiling": false,
+  "monster_spawn_block_light_limit": 0,
+  "monster_spawn_light_level": 0,
+  "logical_height": 256,
+  "height": 256,
+  "min_y": 0,
+  "coordinate_scale": 1.0
 }
