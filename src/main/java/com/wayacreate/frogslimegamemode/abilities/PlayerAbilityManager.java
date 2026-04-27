@@ -28,6 +28,7 @@ public class PlayerAbilityManager {
         }
         
         var abilities = GamemodeManager.getData(player).getPlayerAbilities();
+        
         if (abilities.isEmpty()) {
             player.sendMessage(Text.literal("You have no abilities yet!")
                 .formatted(Formatting.RED), true);

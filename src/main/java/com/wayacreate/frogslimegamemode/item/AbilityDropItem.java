@@ -5,7 +5,6 @@ import com.wayacreate.frogslimegamemode.network.ModNetworking;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -28,7 +27,7 @@ public class AbilityDropItem extends Item {
             return ItemStack.EMPTY;
         }
         
-        // Use vanilla items based on mob drops
+        // Use vanilla items based on mob drops for textures
         ItemStack drop = new ItemStack(getDropItemForAbility(abilityId));
         NbtCompound nbt = drop.getOrCreateNbt();
         nbt.putBoolean(ABILITY_DROP_NBT, true);
@@ -42,63 +41,45 @@ public class AbilityDropItem extends Item {
         return drop;
     }
     
-    private static Item getDropItemForAbility(String abilityId) {
-        // Map mob abilities to their vanilla drop items - comprehensive coverage
+    public static net.minecraft.item.Item getDropItemForAbility(String abilityId) {
+        // Return vanilla items based on ability ID for better visuals
         return switch (abilityId) {
-            // Nether mobs
-            case "blaze", "magma_cube" -> Items.BLAZE_ROD;
-            case "enderman", "endermite", "vex" -> Items.ENDER_PEARL;
-            case "ghast" -> Items.GHAST_TEAR;
-            case "piglin", "zombified_piglin", "piglin_brute", "hoglin", "zoglin" -> Items.GOLD_INGOT;
-            case "strider" -> Items.STRING;
-            
-            // Overworld hostile mobs
-            case "zombie", "husk", "drowned" -> Items.ROTTEN_FLESH;
-            case "skeleton", "stray", "wither_skeleton" -> Items.BONE;
-            case "creeper" -> Items.GUNPOWDER;
-            case "spider", "cave_spider" -> Items.STRING;
-            case "silverfish" -> Items.SPIDER_EYE;
-            
-            // Special mobs
-            case "warden" -> Items.SCULK_CATALYST;
-            case "phantom" -> Items.PHANTOM_MEMBRANE;
-            case "witch" -> Items.GLASS_BOTTLE;
-            case "evoker", "vindicator", "pillager", "ravager" -> Items.EMERALD;
-            case "guardian", "elder_guardian" -> Items.PRISMARINE_SHARD;
-            case "shulker" -> Items.SHULKER_SHELL;
-            
-            // Passive mobs
-            case "pig" -> Items.PORKCHOP;
-            case "cow", "mooshroom" -> Items.LEATHER;
-            case "chicken" -> Items.FEATHER;
-            case "sheep" -> Items.WHITE_WOOL;
-            case "rabbit" -> Items.RABBIT_HIDE;
-            case "horse", "donkey", "mule", "llama", "trader_llama" -> Items.LEATHER;
-            case "fox", "wolf", "cat", "ocelot" -> Items.BONE;
-            case "parrot" -> Items.FEATHER;
-            case "turtle" -> Items.SCUTE;
-            case "dolphin" -> Items.COD;
-            case "squid", "glow_squid" -> Items.INK_SAC;
-            case "pufferfish", "tropical_fish", "salmon", "cod" -> Items.COD;
-            case "bee" -> Items.HONEYCOMB;
-            case "axolotl" -> Items.AXOLOTL_BUCKET;
-            case "goat", "panda", "polar_bear" -> Items.LEATHER;
-            case "frog", "tadpole" -> Items.SLIME_BALL;
-            case "allay" -> Items.AMETHYST_SHARD;
-            case "villager", "wandering_trader" -> Items.EMERALD;
-            
-            // Special items
-            case "iron_golem" -> Items.IRON_INGOT;
-            case "snow_golem" -> Items.SNOWBALL;
-            
-            // YouTuber references
-            case "dream_speedrunner" -> Items.ENDER_PEARL;
-            case "technoblade_pig" -> Items.GOLDEN_APPLE;
-            case "grian_minecraft" -> Items.FEATHER;
-            case "mumbo_jumbo" -> Items.REDSTONE;
-            
-            // Default fallback
-            default -> Items.STICK;
+            case "zombie" -> net.minecraft.item.Items.ROTTEN_FLESH;
+            case "skeleton" -> net.minecraft.item.Items.BONE;
+            case "spider" -> net.minecraft.item.Items.SPIDER_EYE;
+            case "creeper" -> net.minecraft.item.Items.GUNPOWDER;
+            case "enderman" -> net.minecraft.item.Items.ENDER_PEARL;
+            case "witch" -> net.minecraft.item.Items.POTION;
+            case "blaze" -> net.minecraft.item.Items.BLAZE_ROD;
+            case "slime" -> net.minecraft.item.Items.SLIME_BALL;
+            case "cow", "mooshroom" -> net.minecraft.item.Items.LEATHER;
+            case "pig" -> net.minecraft.item.Items.PORKCHOP;
+            case "sheep" -> net.minecraft.item.Items.WHITE_WOOL;
+            case "chicken" -> net.minecraft.item.Items.FEATHER;
+            case "rabbit" -> net.minecraft.item.Items.RABBIT_FOOT;
+            case "guardian" -> net.minecraft.item.Items.PRISMARINE_CRYSTALS;
+            case "ghast" -> net.minecraft.item.Items.GHAST_TEAR;
+            case "phantom" -> net.minecraft.item.Items.PHANTOM_MEMBRANE;
+            case "horse", "donkey", "mule", "llama", "trader_llama" -> net.minecraft.item.Items.LEATHER;
+            case "fox", "wolf", "cat", "ocelot" -> net.minecraft.item.Items.BONE;
+            case "parrot" -> net.minecraft.item.Items.FEATHER;
+            case "turtle" -> net.minecraft.item.Items.SCUTE;
+            case "dolphin" -> net.minecraft.item.Items.COD;
+            case "squid", "glow_squid" -> net.minecraft.item.Items.INK_SAC;
+            case "pufferfish", "tropical_fish", "salmon", "cod" -> net.minecraft.item.Items.COD;
+            case "bee" -> net.minecraft.item.Items.HONEYCOMB;
+            case "axolotl" -> net.minecraft.item.Items.AXOLOTL_BUCKET;
+            case "goat", "panda", "polar_bear" -> net.minecraft.item.Items.LEATHER;
+            case "frog", "tadpole" -> net.minecraft.item.Items.SLIME_BALL;
+            case "allay" -> net.minecraft.item.Items.AMETHYST_SHARD;
+            case "villager", "wandering_trader" -> net.minecraft.item.Items.EMERALD;
+            case "iron_golem" -> net.minecraft.item.Items.IRON_INGOT;
+            case "snow_golem" -> net.minecraft.item.Items.SNOWBALL;
+            case "dream_speedrunner" -> net.minecraft.item.Items.ENDER_PEARL;
+            case "technoblade_pig" -> net.minecraft.item.Items.GOLDEN_APPLE;
+            case "grian_minecraft" -> net.minecraft.item.Items.FEATHER;
+            case "mumbo_jumbo" -> net.minecraft.item.Items.REDSTONE;
+            default -> net.minecraft.item.Items.TOTEM_OF_UNDYING;
         };
     }
     
@@ -156,17 +137,16 @@ public class AbilityDropItem extends Item {
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
         ItemStack stack = user.getStackInHand(hand);
         
-        if (!isAbilityDrop(stack)) {
-            return TypedActionResult.pass(stack);
-        }
-        
         String abilityId = getAbilityId(stack);
-        if (abilityId == null) {
-            return TypedActionResult.pass(stack);
+        
+        // Fallback: if no NBT, use a default ability for testing
+        if (!isAbilityDrop(stack) || abilityId == null) {
+            abilityId = "zombie"; // Default ability for testing
         }
         
         if (!world.isClient) {
             MobAbility ability = MobAbility.getAbility(abilityId);
+            
             if (ability != null) {
                 // Add ability to player's unlocked abilities
                 if (user instanceof ServerPlayerEntity serverPlayer) {
@@ -193,7 +173,7 @@ public class AbilityDropItem extends Item {
                 }
                 
                 // Apply ability bonuses to the player
-                applyAbilityToPlayer(user, ability);
+                applyAbilityToPlayerStatic(user, ability);
                 
                 // Consume the item
                 stack.decrement(1);
@@ -208,10 +188,10 @@ public class AbilityDropItem extends Item {
             }
         }
         
-        return TypedActionResult.pass(stack);
+        return TypedActionResult.success(stack);
     }
     
-    private void applyAbilityToPlayer(PlayerEntity player, MobAbility ability) {
+    public static void applyAbilityToPlayerStatic(PlayerEntity player, MobAbility ability) {
         // Apply temporary or permanent ability effects to player
         // For now, we'll apply temporary effects
         int duration = 600; // 30 seconds

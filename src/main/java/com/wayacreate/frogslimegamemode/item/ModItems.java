@@ -122,7 +122,7 @@ public class ModItems {
         
         // Ability drop item
         ABILITY_DROP = registerItem("ability_drop",
-            new AbilityDropItem(new FabricItemSettings().maxCount(64)));
+            new AbilityDropItem(new FabricItemSettings().maxCount(64).maxDamage(0)));
         
         // Register item group
         FROG_SLIME_ITEM_GROUP = Registry.register(Registries.ITEM_GROUP,
