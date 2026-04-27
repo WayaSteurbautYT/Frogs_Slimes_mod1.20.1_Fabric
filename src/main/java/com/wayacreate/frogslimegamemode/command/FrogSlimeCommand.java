@@ -3,7 +3,10 @@ package com.wayacreate.frogslimegamemode.command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import com.wayacreate.frogslimegamemode.achievements.AchievementManager;
 import com.wayacreate.frogslimegamemode.dimension.TransformedEndTeleporter;
+import com.wayacreate.frogslimegamemode.gamemode.ContractManager;
+import com.wayacreate.frogslimegamemode.gamemode.EconomyManager;
 import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
 import com.wayacreate.frogslimegamemode.gamemode.ManhuntManager;
 import com.wayacreate.frogslimegamemode.gamemode.RankManager;
@@ -31,6 +34,10 @@ public class FrogSlimeCommand {
             .then(CommandManager.literal("manhunt")
                 .then(CommandManager.literal("auto")
                     .executes(FrogSlimeCommand::startAutoManhunt))
+                .then(CommandManager.literal("team")
+                    .then(CommandManager.argument("speedrunner_team", StringArgumentType.string())
+                        .then(CommandManager.argument("hunter_team", StringArgumentType.string())
+                            .executes(FrogSlimeCommand::startTeamManhunt))))
                 .then(CommandManager.literal("speedrunner")
                     .executes(FrogSlimeCommand::setSpeedrunner))
                 .then(CommandManager.literal("solo")
@@ -66,6 +73,24 @@ public class FrogSlimeCommand {
                 .then(CommandManager.argument("player", StringArgumentType.string())
                     .then(CommandManager.argument("rank", StringArgumentType.string())
                         .executes(FrogSlimeCommand::setPlayerRank))))
+            .then(CommandManager.literal("contract")
+                .then(CommandManager.literal("list")
+                    .executes(FrogSlimeCommand::listAvailableContracts))
+                .then(CommandManager.literal("accept")
+                    .then(CommandManager.argument("type", StringArgumentType.string())
+                        .executes(FrogSlimeCommand::acceptContract)))
+                .then(CommandManager.literal("my")
+                    .executes(FrogSlimeCommand::listMyContracts)))
+            .then(CommandManager.literal("balance")
+                .executes(FrogSlimeCommand::checkBalance))
+            .then(CommandManager.literal("pay")
+                .then(CommandManager.argument("player", StringArgumentType.string())
+                    .then(CommandManager.argument("amount", StringArgumentType.string())
+                        .executes(FrogSlimeCommand::payPlayer))))
+            .then(CommandManager.literal("test")
+                .then(CommandManager.literal("achievement")
+                    .then(CommandManager.argument("id", StringArgumentType.string())
+                        .executes(FrogSlimeCommand::testAchievement))))
         );
     }
     
@@ -151,6 +176,19 @@ public class FrogSlimeCommand {
         ServerPlayerEntity player = context.getSource().getPlayer();
         if (player != null) {
             ManhuntManager.startAutoManhunt(player);
+            return 1;
+        }
+        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        return 0;
+    }
+    
+    private static int startTeamManhunt(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        String speedrunnerTeam = StringArgumentType.getString(context, "speedrunner_team");
+        String hunterTeam = StringArgumentType.getString(context, "hunter_team");
+        
+        if (player != null) {
+            ManhuntManager.startTeamManhunt(player, speedrunnerTeam, hunterTeam);
             return 1;
         }
         context.getSource().sendError(Text.literal("Only players can use this command!"));
@@ -330,6 +368,108 @@ public class FrogSlimeCommand {
                 return 1;
             }
             return 0;
+        }
+        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        return 0;
+    }
+    
+    private static int listAvailableContracts(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        if (player != null) {
+            ContractManager.listAvailableContracts(player);
+            return 1;
+        }
+        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        return 0;
+    }
+    
+    private static int acceptContract(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        String contractType = StringArgumentType.getString(context, "type");
+        
+        if (player != null) {
+            ContractManager.acceptContract(player, contractType);
+            return 1;
+        }
+        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        return 0;
+    }
+    
+    private static int listMyContracts(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        if (player != null) {
+            ContractManager.listContracts(player);
+            return 1;
+        }
+        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        return 0;
+    }
+    
+    private static int checkBalance(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        if (player != null) {
+            EconomyManager.checkBalance(player);
+            return 1;
+        }
+        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        return 0;
+    }
+    
+    private static int payPlayer(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        String targetName = StringArgumentType.getString(context, "player");
+        String amountStr = StringArgumentType.getString(context, "amount");
+        
+        if (player != null) {
+            try {
+                int amount = Integer.parseInt(amountStr);
+                if (amount <= 0) {
+                    player.sendMessage(Text.literal("Amount must be positive!")
+                        .formatted(Formatting.RED), false);
+                    return 0;
+                }
+                
+                ServerPlayerEntity target = player.getServer().getPlayerManager().getPlayer(targetName);
+                if (target == null) {
+                    player.sendMessage(Text.literal("Player not found!")
+                        .formatted(Formatting.RED), false);
+                    return 0;
+                }
+                
+                EconomyManager.sendCoins(player, target, amount);
+                
+                // Unlock trading achievements
+                int totalTrades = EconomyManager.getTotalTrades(player.getUuid());
+                if (totalTrades == 1) {
+                    AchievementManager.unlockAchievement(player, "first_trade");
+                }
+                if (totalTrades >= 25) {
+                    AchievementManager.unlockAchievement(player, "merchant");
+                }
+                if (totalTrades >= 100) {
+                    AchievementManager.unlockAchievement(player, "trade_tycoon");
+                }
+                
+                return 1;
+            } catch (NumberFormatException e) {
+                player.sendMessage(Text.literal("Invalid amount!")
+                    .formatted(Formatting.RED), false);
+                return 0;
+            }
+        }
+        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        return 0;
+    }
+    
+    private static int testAchievement(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        String achievementId = StringArgumentType.getString(context, "id");
+        
+        if (player != null) {
+            AchievementManager.unlockAchievement(player, achievementId);
+            player.sendMessage(Text.literal("Testing achievement: " + achievementId)
+                .formatted(Formatting.YELLOW), false);
+            return 1;
         }
         context.getSource().sendError(Text.literal("Only players can use this command!"));
         return 0;

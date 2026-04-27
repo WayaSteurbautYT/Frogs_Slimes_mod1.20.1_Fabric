@@ -20,6 +20,7 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +48,25 @@ public class FrogSlimeGamemode implements ModInitializer {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             FrogSlimeCommand.register(dispatcher);
             HelperCommand.register(dispatcher, registryAccess, environment);
+        });
+
+        // Register chat message event for rank and team display
+        ServerMessageEvents.ALLOW_CHAT_MESSAGE.register((message, player, params) -> {
+            if (player != null) {
+                // Send a custom message with rank/team prefix to all players
+                net.minecraft.text.Text displayName = RankManager.getPlayerDisplayName(player);
+                net.minecraft.text.Text formattedMessage = net.minecraft.text.Text.literal("")
+                    .append(displayName)
+                    .append(net.minecraft.text.Text.literal(": "))
+                    .append(net.minecraft.text.Text.literal(message.getContent().getString()));
+                
+                // Send to all players
+                player.getServer().getPlayerManager().broadcast(formattedMessage, false);
+                
+                // Return false to prevent the original message from being sent
+                return false;
+            }
+            return true;
         });
 
         ServerTickEvents.END_SERVER_TICK.register(server -> {

@@ -83,6 +83,7 @@ public class AbilityDropItem extends Item {
             case "dream_speedrunner" -> net.minecraft.item.Items.ENDER_PEARL;
             case "technoblade_pig" -> net.minecraft.item.Items.GOLDEN_APPLE;
             case "grian_minecraft" -> net.minecraft.item.Items.FEATHER;
+            case "king_kong" -> net.minecraft.item.Items.GOLDEN_CARROT;
             case "mumbo_jumbo" -> net.minecraft.item.Items.REDSTONE;
             case "derpy" -> net.minecraft.item.Items.DIRT;
             case "basalt_giant" -> net.minecraft.item.Items.BASALT;
@@ -108,7 +109,6 @@ public class AbilityDropItem extends Item {
             case "predator" -> net.minecraft.item.Items.SPYGLASS;
             case "alien_queen" -> net.minecraft.item.Items.FERMENTED_SPIDER_EYE;
             case "godzilla" -> net.minecraft.item.Items.TNT;
-            case "king_kong" -> net.minecraft.item.Items.GOLDEN_APPLE;
             case "dovahkiin" -> net.minecraft.item.Items.DRAGON_HEAD;
             case "witcher" -> net.minecraft.item.Items.NETHERITE_SWORD;
             case "geralt" -> net.minecraft.item.Items.DIAMOND_SWORD;

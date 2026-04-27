@@ -92,15 +92,16 @@ public class SlimeEndermanEntity extends EndermanEntity {
     private void performSlimeSplit() {
         ServerWorld world = (ServerWorld) this.getWorld();
         
-        // Spawn 2 smaller slime endermen
+        // Spawn 2 smaller slime endermen using the entity type directly
         for (int i = 0; i < 2; i++) {
             double offsetX = (world.random.nextDouble() - 0.5) * 3;
             double offsetZ = (world.random.nextDouble() - 0.5) * 3;
             
-            SlimeEndermanEntity miniSlime = ModEntities.SLIME_ENDERMAN.create(world);
+            SlimeEndermanEntity miniSlime = (SlimeEndermanEntity) this.getType().create(world);
             if (miniSlime != null) {
                 miniSlime.setPosition(this.getX() + offsetX, this.getY(), this.getZ() + offsetZ);
                 miniSlime.setHealth(10.0f);
+                miniSlime.setSlimeSize(1);
                 world.spawnEntity(miniSlime);
             }
         }
