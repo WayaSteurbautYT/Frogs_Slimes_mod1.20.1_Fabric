@@ -2,7 +2,9 @@ package com.wayacreate.frogslimegamemode.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
+import com.wayacreate.frogslimegamemode.dimension.TransformedEndTeleporter;
 import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
+import com.wayacreate.frogslimegamemode.gamemode.ManhuntManager;
 import com.wayacreate.frogslimegamemode.network.ModNetworking;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
@@ -23,6 +25,20 @@ public class FrogSlimeCommand {
                 .executes(FrogSlimeCommand::openTasks))
             .then(CommandManager.literal("reset")
                 .executes(FrogSlimeCommand::resetData))
+            .then(CommandManager.literal("manhunt")
+                .then(CommandManager.literal("speedrunner")
+                    .executes(FrogSlimeCommand::setSpeedrunner))
+                .then(CommandManager.literal("solo")
+                    .executes(FrogSlimeCommand::setSoloSpeedrunner))
+                .then(CommandManager.literal("hunter")
+                    .executes(FrogSlimeCommand::setHunter))
+                .then(CommandManager.literal("end")
+                    .executes(FrogSlimeCommand::endManhunt)))
+            .then(CommandManager.literal("dimension")
+                .then(CommandManager.literal("transformed_end")
+                    .executes(FrogSlimeCommand::teleportToTransformedEnd))
+                .then(CommandManager.literal("return")
+                    .executes(FrogSlimeCommand::returnFromDimension)))
         );
     }
     
@@ -98,6 +114,87 @@ public class FrogSlimeCommand {
             player.sendMessage(Text.literal("Use /frogslime enable to start a new game.")
                 .formatted(Formatting.YELLOW), false);
             
+            return 1;
+        }
+        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        return 0;
+    }
+    
+    private static int setSpeedrunner(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        if (player != null) {
+            ManhuntManager.setSpeedrunner(player);
+            return 1;
+        }
+        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        return 0;
+    }
+    
+    private static int setSoloSpeedrunner(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        if (player != null) {
+            ManhuntManager.setSoloSpeedrunner(player);
+            return 1;
+        }
+        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        return 0;
+    }
+    
+    private static int setHunter(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        if (player != null) {
+            // Default to nearest player as target
+            ServerPlayerEntity nearest = null;
+            double nearestDist = Double.MAX_VALUE;
+            
+            for (ServerPlayerEntity other : player.getServer().getPlayerManager().getPlayerList()) {
+                if (other != player) {
+                    double dist = player.squaredDistanceTo(other);
+                    if (dist < nearestDist) {
+                        nearestDist = dist;
+                        nearest = other;
+                    }
+                }
+            }
+            
+            if (nearest != null) {
+                ManhuntManager.setHunter(player, nearest);
+            } else {
+                player.sendMessage(Text.literal("No other players found to hunt!")
+                    .formatted(Formatting.RED), false);
+            }
+            return 1;
+        }
+        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        return 0;
+    }
+    
+    private static int endManhunt(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        if (player != null) {
+            ManhuntManager.endGame(player);
+            return 1;
+        }
+        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        return 0;
+    }
+    
+    private static int teleportToTransformedEnd(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        if (player != null) {
+            TransformedEndTeleporter.teleportToTransformedEnd(player);
+            player.sendMessage(Text.literal("Use /frogslime dimension return to go back!")
+                .formatted(Formatting.YELLOW), true);
+            return 1;
+        }
+        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        return 0;
+    }
+    
+    private static int returnFromDimension(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        if (player != null) {
+            TransformedEndTeleporter.teleportFromTransformedEnd(player);
             return 1;
         }
         context.getSource().sendError(Text.literal("Only players can use this command!"));

@@ -1,7 +1,7 @@
 package com.wayacreate.frogslimegamemode.item;
 
+import com.wayacreate.frogslimegamemode.gamemode.ManhuntManager;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -40,37 +40,26 @@ public class ManhuntCompassItem extends Item {
     public void inventoryTick(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
         if (!isManhuntCompass(stack)) return;
         
-        if (!(entity instanceof PlayerEntity player)) return;
+        if (!(entity instanceof ServerPlayerEntity player)) return;
         
-        if (!world.isClient && world instanceof ServerWorld serverWorld) {
+        if (!world.isClient && world instanceof ServerWorld) {
             // Only update every 20 ticks (1 second) to reduce server load
             if (world.getTime() % 20 == 0) {
-                // Find nearest player (excluding the holder)
-                ServerPlayerEntity nearestPlayer = null;
-                double nearestDistance = Double.MAX_VALUE;
-                
-                for (ServerPlayerEntity otherPlayer : serverWorld.getPlayers()) {
-                    if (otherPlayer != player && otherPlayer.isAlive()) {
-                        double distance = player.squaredDistanceTo(otherPlayer);
-                        if (distance < nearestDistance) {
-                            nearestDistance = distance;
-                            nearestPlayer = otherPlayer;
-                        }
-                    }
-                }
+                // Use ManhuntManager to get target
+                ServerPlayerEntity target = ManhuntManager.getTarget(player);
                 
                 NbtCompound nbt = stack.getOrCreateNbt();
                 
-                if (nearestPlayer != null) {
+                if (target != null && target.isAlive()) {
                     // Update tooltip with target info
-                    stack.setCustomName(Text.literal("Tracking: " + nearestPlayer.getName().getString())
+                    stack.setCustomName(Text.literal("Tracking: " + target.getName().getString())
                         .formatted(Formatting.RED, Formatting.BOLD));
                     
-                    // Store target position in NBT for compass tracking (vanilla compass uses this)
+                    // Store target position in NBT for compass tracking
                     BlockPos targetPos = new BlockPos(
-                        (int) nearestPlayer.getX(),
-                        (int) nearestPlayer.getY(),
-                        (int) nearestPlayer.getZ()
+                        (int) target.getX(),
+                        (int) target.getY(),
+                        (int) target.getZ()
                     );
                     nbt.putInt("TargetX", targetPos.getX());
                     nbt.putInt("TargetY", targetPos.getY());
@@ -78,12 +67,13 @@ public class ManhuntCompassItem extends Item {
                     
                     // Send direction message only when selected
                     if (selected) {
-                        int distanceBlocks = (int) Math.sqrt(nearestDistance);
+                        double distance = player.squaredDistanceTo(target);
+                        int distanceBlocks = (int) Math.sqrt(distance);
                         player.sendMessage(Text.literal("Target is " + distanceBlocks + " blocks away")
                             .formatted(Formatting.YELLOW), true);
                     }
                 } else {
-                    stack.setCustomName(Text.literal("No target found")
+                    stack.setCustomName(Text.literal("No target")
                         .formatted(Formatting.GRAY));
                     nbt.remove("TargetX");
                     nbt.remove("TargetY");
@@ -92,6 +82,6 @@ public class ManhuntCompassItem extends Item {
             }
         }
         
-        super.inventoryTick(stack, world, player, slot, selected);
+        super.inventoryTick(stack, world, entity, slot, selected);
     }
 }

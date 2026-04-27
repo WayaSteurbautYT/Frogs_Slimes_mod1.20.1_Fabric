@@ -201,6 +201,10 @@ public class MobAbility {
         register(new MobAbility("technoblade_pig", "Piglin King", "Techno never dies", 15.0, 0.3, 50.0, 0.8, AbilityType.LIGHTNING_STRIKE, 500));
         register(new MobAbility("grian_minecraft", "Prankster", "Building chaos", 3.0, 0.2, 5.0, 0.1, AbilityType.LEAP_ATTACK, 100));
         register(new MobAbility("mumbo_jumbo", "Redstone Genius", "Engineering prowess", 2.0, 0.1, 8.0, 0.2, AbilityType.NONE, 0));
+        
+        // Special player kill rewards
+        register(new MobAbility("wayacreate", "WayaCreate Power", "Creator's blessing - All stats boosted", 5.0, 0.3, 15.0, 0.3, AbilityType.REGENERATION, 200));
+        register(new MobAbility("derpy_derp", "Derpy Derp", "Hah you suck! - Really you got the worse ability", -2.0, -0.1, -5.0, 0.0, AbilityType.NONE, 0));
     }
     
     private static void register(MobAbility ability) {

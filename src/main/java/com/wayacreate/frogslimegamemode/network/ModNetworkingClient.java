@@ -1,12 +1,16 @@
 package com.wayacreate.frogslimegamemode.network;
 
+import com.wayacreate.frogslimegamemode.achievements.AchievementToast;
 import com.wayacreate.frogslimegamemode.client.hud.GamemodeHud;
+import com.wayacreate.frogslimegamemode.client.hud.ManhuntHud;
 import com.wayacreate.frogslimegamemode.client.gui.TasksScreen;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.toast.SystemToast;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.Vec3d;
+
+import java.util.UUID;
 
 public final class ModNetworkingClient {
     private ModNetworkingClient() {
@@ -51,6 +55,14 @@ public final class ModNetworkingClient {
                     Text titleText = Text.literal(name).formatted(Formatting.byColorIndex(color), Formatting.BOLD);
                     Text descriptionText = Text.literal(description);
                     client.getToastManager().add(SystemToast.create(client, SystemToast.Type.TUTORIAL_HINT, titleText, descriptionText));
+                    
+                    // Also show custom achievement toast
+                    AchievementToast.show(titleText, descriptionText);
+                    
+                    // Play achievement sound
+                    if (client.player != null) {
+                        client.player.playSound(net.minecraft.sound.SoundEvents.ENTITY_PLAYER_LEVELUP, 0.5f, 1.0f);
+                    }
                 }
             });
         });
@@ -113,6 +125,35 @@ public final class ModNetworkingClient {
                         spawnTongueParticles(client, target);
                         // Play frog eat sound
                         client.player.playSound(net.minecraft.sound.SoundEvents.ENTITY_FROG_EAT, 1.0f, 1.0f);
+                    }
+                }
+            });
+        });
+
+        ClientPlayNetworking.registerGlobalReceiver(ModNetworking.MANHUNT_HUD_UPDATE, (client, handler, buf, responseSender) -> {
+            String elapsedTime = buf.readString();
+            int deathCount = buf.readInt();
+            String targetName = buf.readString();
+            int hunterTrackCd = buf.readInt();
+            int hunterBlockCd = buf.readInt();
+            int hunterSlowCd = buf.readInt();
+            int speedrunnerEscapeCd = buf.readInt();
+            int speedrunnerSpeedCd = buf.readInt();
+            int speedrunnerInvisCd = buf.readInt();
+
+            client.execute(() -> {
+                if (client.player != null) {
+                    UUID uuid = client.player.getUuid();
+                    ManhuntHud.updateClientElapsedTime(uuid, elapsedTime);
+                    ManhuntHud.updateClientDeathCount(uuid, deathCount);
+                    ManhuntHud.updateClientTargetName(uuid, targetName);
+                    
+                    // Update cooldowns based on role
+                    boolean isHunter = com.wayacreate.frogslimegamemode.gamemode.ManhuntManager.isHunter(client.player);
+                    if (isHunter) {
+                        ManhuntHud.updateClientHunterCooldowns(uuid, hunterTrackCd, hunterBlockCd, hunterSlowCd);
+                    } else {
+                        ManhuntHud.updateClientSpeedrunnerCooldowns(uuid, speedrunnerEscapeCd, speedrunnerSpeedCd, speedrunnerInvisCd);
                     }
                 }
             });

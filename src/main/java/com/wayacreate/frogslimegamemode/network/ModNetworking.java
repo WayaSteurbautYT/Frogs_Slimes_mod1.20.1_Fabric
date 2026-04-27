@@ -18,6 +18,15 @@ public final class ModNetworking {
     public static final Identifier USE_ABILITY = new Identifier(FrogSlimeGamemode.MOD_ID, "use_ability");
     public static final Identifier PLAYER_TONGUE_ANIMATION = new Identifier(FrogSlimeGamemode.MOD_ID, "player_tongue_animation");
     public static final Identifier SWITCH_ABILITY = new Identifier(FrogSlimeGamemode.MOD_ID, "switch_ability");
+    
+    // Manhunt ability packets
+    public static final Identifier HUNTER_TRACK = new Identifier(FrogSlimeGamemode.MOD_ID, "hunter_track");
+    public static final Identifier HUNTER_BLOCK = new Identifier(FrogSlimeGamemode.MOD_ID, "hunter_block");
+    public static final Identifier HUNTER_SLOW = new Identifier(FrogSlimeGamemode.MOD_ID, "hunter_slow");
+    public static final Identifier SPEEDRUNNER_ESCAPE = new Identifier(FrogSlimeGamemode.MOD_ID, "speedrunner_escape");
+    public static final Identifier SPEEDRUNNER_SPEED = new Identifier(FrogSlimeGamemode.MOD_ID, "speedrunner_speed");
+    public static final Identifier SPEEDRUNNER_INVIS = new Identifier(FrogSlimeGamemode.MOD_ID, "speedrunner_invis");
+    public static final Identifier MANHUNT_HUD_UPDATE = new Identifier(FrogSlimeGamemode.MOD_ID, "manhunt_hud_update");
 
     private ModNetworking() {
     }
@@ -36,6 +45,43 @@ public final class ModNetworking {
             server.execute(() -> {
                 // Handle ability switching
                 com.wayacreate.frogslimegamemode.abilities.PlayerAbilityManager.switchToNextAbility(player);
+            });
+        });
+        
+        // Manhunt ability packets
+        ServerPlayNetworking.registerGlobalReceiver(HUNTER_TRACK, (server, player, handler, buf, responseSender) -> {
+            server.execute(() -> {
+                com.wayacreate.frogslimegamemode.gamemode.ManhuntManager.useHunterTrackAbility(player);
+            });
+        });
+        
+        ServerPlayNetworking.registerGlobalReceiver(HUNTER_BLOCK, (server, player, handler, buf, responseSender) -> {
+            server.execute(() -> {
+                com.wayacreate.frogslimegamemode.gamemode.ManhuntManager.useHunterBlockAbility(player);
+            });
+        });
+        
+        ServerPlayNetworking.registerGlobalReceiver(HUNTER_SLOW, (server, player, handler, buf, responseSender) -> {
+            server.execute(() -> {
+                com.wayacreate.frogslimegamemode.gamemode.ManhuntManager.useHunterSlowAbility(player);
+            });
+        });
+        
+        ServerPlayNetworking.registerGlobalReceiver(SPEEDRUNNER_ESCAPE, (server, player, handler, buf, responseSender) -> {
+            server.execute(() -> {
+                com.wayacreate.frogslimegamemode.gamemode.ManhuntManager.useSpeedrunnerEscapeAbility(player);
+            });
+        });
+        
+        ServerPlayNetworking.registerGlobalReceiver(SPEEDRUNNER_SPEED, (server, player, handler, buf, responseSender) -> {
+            server.execute(() -> {
+                com.wayacreate.frogslimegamemode.gamemode.ManhuntManager.useSpeedrunnerSpeedAbility(player);
+            });
+        });
+        
+        ServerPlayNetworking.registerGlobalReceiver(SPEEDRUNNER_INVIS, (server, player, handler, buf, responseSender) -> {
+            server.execute(() -> {
+                com.wayacreate.frogslimegamemode.gamemode.ManhuntManager.useSpeedrunnerInvisAbility(player);
             });
         });
     }
@@ -96,5 +142,25 @@ public final class ModNetworking {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeInt(targetEntityId);
         ServerPlayNetworking.send(player, PLAYER_TONGUE_ANIMATION, buf);
+    }
+    
+    public static void sendManhuntHudUpdate(ServerPlayerEntity player, String elapsedTime, int deathCount) {
+        sendManhuntHudUpdate(player, elapsedTime, deathCount, "", 0, 0, 0, 0, 0, 0);
+    }
+    
+    public static void sendManhuntHudUpdate(ServerPlayerEntity player, String elapsedTime, int deathCount, 
+            String targetName, int hunterTrackCd, int hunterBlockCd, int hunterSlowCd, 
+            int speedrunnerEscapeCd, int speedrunnerSpeedCd, int speedrunnerInvisCd) {
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeString(elapsedTime);
+        buf.writeInt(deathCount);
+        buf.writeString(targetName);
+        buf.writeInt(hunterTrackCd);
+        buf.writeInt(hunterBlockCd);
+        buf.writeInt(hunterSlowCd);
+        buf.writeInt(speedrunnerEscapeCd);
+        buf.writeInt(speedrunnerSpeedCd);
+        buf.writeInt(speedrunnerInvisCd);
+        ServerPlayNetworking.send(player, MANHUNT_HUD_UPDATE, buf);
     }
 }

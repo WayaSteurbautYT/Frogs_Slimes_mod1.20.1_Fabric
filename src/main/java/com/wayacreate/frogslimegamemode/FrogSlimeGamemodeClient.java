@@ -1,6 +1,7 @@
 package com.wayacreate.frogslimegamemode;
 
 import com.wayacreate.frogslimegamemode.client.hud.GamemodeHud;
+import com.wayacreate.frogslimegamemode.client.hud.ManhuntHud;
 import com.wayacreate.frogslimegamemode.client.keybind.ModKeybinds;
 import com.wayacreate.frogslimegamemode.entity.ModEntities;
 import com.wayacreate.frogslimegamemode.entity.client.FrogHelperRenderer;
@@ -15,6 +16,7 @@ public class FrogSlimeGamemodeClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         GamemodeHud.onInitializeClient();
+        ManhuntHud.onInitializeClient();
         
         ModNetworkingClient.registerClient();
         ModKeybinds.register();

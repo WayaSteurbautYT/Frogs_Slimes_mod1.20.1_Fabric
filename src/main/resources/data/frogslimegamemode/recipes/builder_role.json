@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "BIB",
+    "S S",
+    "B B"
+  ],
+  "key": {
+    "B": {
+      "item": "minecraft:bricks"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "item": "frogslimegamemode:builder_role",
+    "count": 1
+  }
+}

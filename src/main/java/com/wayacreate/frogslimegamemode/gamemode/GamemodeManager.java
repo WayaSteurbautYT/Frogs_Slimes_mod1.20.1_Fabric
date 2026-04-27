@@ -20,14 +20,30 @@ public class GamemodeManager {
     public static void enableGamemode(ServerPlayerEntity player) {
         UUID uuid = player.getUuid();
         if (!players.containsKey(uuid)) {
+            // Load from persistent state if exists
+            GamemodeState state = GamemodeState.get(player.getServer());
+            GamemodeState.PlayerData persistentData = state.getPlayerData(uuid);
+            
+            if (persistentData.isGamemodeEnabled()) {
+                player.sendMessage(Text.literal("Frog & Slime Gamemode already enabled!")
+                    .formatted(Formatting.YELLOW), false);
+                players.put(uuid, new GamemodeData(uuid));
+                restorePlayerData(player, persistentData);
+                return;
+            }
+            
             players.put(uuid, new GamemodeData(uuid));
             
-            // Give starter items
+            // Give starter items only for new games
             giveStarterItems(player);
             
             // Add frog ability as starting ability
             GamemodeData data = players.get(uuid);
             data.addAbility("frog");
+            
+            // Mark as enabled in persistent state
+            persistentData.setGamemodeEnabled(true);
+            state.markDirty();
             
             player.sendMessage(Text.literal("Frog & Slime Gamemode ACTIVATED!")
                 .formatted(Formatting.GREEN, Formatting.BOLD), false);
@@ -48,6 +64,25 @@ public class GamemodeManager {
             player.sendMessage(Text.literal("You're already in Frog & Slime Gamemode!")
                 .formatted(Formatting.RED), false);
         }
+    }
+    
+    private static void restorePlayerData(ServerPlayerEntity player, GamemodeState.PlayerData persistentData) {
+        GamemodeData data = players.get(player.getUuid());
+        
+        // Restore abilities
+        for (String abilityId : persistentData.getPlayerAbilities()) {
+            data.addAbility(abilityId);
+        }
+        
+        // Restore other stats
+        // Note: We don't restore items on rejoin to prevent duplication
+        
+        player.sendMessage(Text.literal("Frog & Slime Gamemode restored!")
+            .formatted(Formatting.GREEN, Formatting.BOLD), false);
+        player.sendMessage(Text.literal("Your abilities have been preserved.")
+                .formatted(Formatting.YELLOW), false);
+        
+        ModNetworking.syncGamemodeStatus(player, true);
     }
     
     private static void giveStarterItems(ServerPlayerEntity player) {
@@ -87,9 +122,28 @@ public class GamemodeManager {
         }
     }
     
+    public static void addAbility(ServerPlayerEntity player, String abilityId) {
+        GamemodeData data = getData(player);
+        if (data != null) {
+            data.addAbility(abilityId);
+            
+            // Also save to persistent state
+            GamemodeState state = GamemodeState.get(player.getServer());
+            GamemodeState.PlayerData persistentData = state.getPlayerData(player.getUuid());
+            persistentData.addAbility(abilityId);
+            state.markDirty();
+        }
+    }
+    
     public static void disableGamemode(ServerPlayerEntity player) {
         UUID uuid = player.getUuid();
         if (players.remove(uuid) != null) {
+            // Update persistent state
+            GamemodeState state = GamemodeState.get(player.getServer());
+            GamemodeState.PlayerData persistentData = state.getPlayerData(uuid);
+            persistentData.setGamemodeEnabled(false);
+            state.markDirty();
+            
             player.sendMessage(Text.literal("Frog & Slime Gamemode deactivated.")
                 .formatted(Formatting.GRAY), false);
             
@@ -112,6 +166,21 @@ public class GamemodeManager {
         for (GamemodeData data : players.values()) {
             data.tick();
         }
+        
+        // Periodically save to persistent state
+        GamemodeState state = GamemodeState.get(server);
+        for (UUID uuid : players.keySet()) {
+            GamemodeData data = players.get(uuid);
+            GamemodeState.PlayerData persistentData = state.getPlayerData(uuid);
+            
+            // Sync abilities
+            for (String abilityId : data.getPlayerAbilities()) {
+                persistentData.addAbility(abilityId);
+            }
+            
+            persistentData.setGamemodeEnabled(true);
+        }
+        state.markDirty();
     }
     
     public static void triggerEnding(ServerPlayerEntity player, boolean dragonKilled) {

@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "PIP",
+    "S S",
+    "P P"
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:iron_pickaxe"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "item": "frogslimegamemode:miner_role",
+    "count": 1
+  }
+}

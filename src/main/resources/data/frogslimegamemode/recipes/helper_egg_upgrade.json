@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ESE",
+    "SDS",
+    "ESE"
+  ],
+  "key": {
+    "E": {
+      "tag": "frogslimegamemode:helper_spawn_eggs"
+    },
+    "S": {
+      "item": "minecraft:slime_ball"
+    },
+    "D": {
+      "item": "minecraft:diamond"
+    }
+  },
+  "result": {
+    "item": "frogslimegamemode:evolution_stone",
+    "count": 3
+  }
+}

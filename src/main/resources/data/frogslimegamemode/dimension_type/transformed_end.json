@@ -1,0 +1,13 @@
+{
+  "piglin_safe": false,
+  "natural": false,
+  "ambient_light": 0,
+  "fixed_time": 6000,
+  "infiniburn": "minecraft:end",
+  "respawn_anchor_works": false,
+  "has_raids": false,
+  "ultrawarm": false,
+  "bed_works": false,
+  "has_skylight": true,
+  "has_ceiling": false
+}

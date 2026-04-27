@@ -1,12 +1,14 @@
 package com.wayacreate.frogslimegamemode.entity;
 
 import com.wayacreate.frogslimegamemode.eating.MobAbility;
+import com.wayacreate.frogslimegamemode.entity.ai.BuilderGoal;
+import com.wayacreate.frogslimegamemode.entity.ai.FarmerGoal;
+import com.wayacreate.frogslimegamemode.entity.ai.LumberjackGoal;
+import com.wayacreate.frogslimegamemode.entity.ai.MiningGoal;
 import com.wayacreate.frogslimegamemode.evolution.EvolutionStage;
 import com.wayacreate.frogslimegamemode.evolution.MobTransformation;
 import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
 import com.wayacreate.frogslimegamemode.gamemode.PlayerLevel;
-import com.wayacreate.frogslimegamemode.entity.ai.MiningGoal;
-import com.wayacreate.frogslimegamemode.entity.ai.LumberjackGoal;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ai.goal.*;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
@@ -360,6 +362,10 @@ public class FrogHelperEntity extends TameableEntity {
                     this.goalSelector.add(8, new MiningGoal(this));
                 } else if (Objects.equals(role, "Lumberjack")) {
                     this.goalSelector.add(8, new LumberjackGoal(this));
+                } else if (Objects.equals(role, "Builder")) {
+                    this.goalSelector.add(8, new BuilderGoal(this));
+                } else if (Objects.equals(role, "Farmer")) {
+                    this.goalSelector.add(8, new FarmerGoal(this));
                 } else if (Objects.equals(role, "Combat Specialist")) {
                     // Combat role gets enhanced attack damage
                     this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(8.0);

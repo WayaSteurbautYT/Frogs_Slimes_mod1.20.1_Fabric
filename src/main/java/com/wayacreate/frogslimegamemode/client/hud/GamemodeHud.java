@@ -45,6 +45,12 @@ public class GamemodeHud {
                         drawContext.drawText(textRenderer, levelText, levelX, levelY, 0xFFFFFF, true);
                     }
                 }
+                
+                // Render progress bar
+                ProgressBarHud.render(drawContext, client);
+                
+                // Render achievement toast
+                com.wayacreate.frogslimegamemode.achievements.AchievementToast.render(drawContext, client);
             }
         });
         

@@ -73,7 +73,7 @@ public class AchievementManager {
         // Mark as unlocked
         PLAYER_ACHIEVEMENTS.computeIfAbsent(player.getUuid(), k -> new HashMap<>()).put(achievementId, true);
         
-        // Send toast notification to client
+        // Send toast notification to client via networking
         ModNetworking.sendAchievementToast(player, achievement);
         
         // Send chat message

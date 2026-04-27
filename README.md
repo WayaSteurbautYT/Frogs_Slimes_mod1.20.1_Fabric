@@ -22,17 +22,21 @@ A custom gamemode where you tame frog and slime helpers that fight mobs and evol
 ## Features
 
 ### 🎮 Core Gameplay
-- **Custom Gamemode System**: Activate with `/frogslime start` or in the game menu
+- **Custom Gamemode System**: Activate with `/frogslime enable` or in the game menu
 - **Helper Mobs**: Tame frog and slime helpers that fight for you
 - **Evolution System**: Helpers evolve through 5 stages by defeating mobs
   - Basic → Advanced → Elite → Master → *FINAL FORM*
 - **Automatic Collection**: Helpers collect drops from killed mobs
+- **Persistent Saving**: Gamemode state and abilities persist across server restarts
+- **Player Kill Rewards**: Kill other players to gain special abilities (WayaCreate, Derpy Derp, stolen abilities)
 
 ### ✨ Visual Effects
 - **Custom Particles**: Helpers spawn particles when evolving, being pet, and during idle
 - **Dynamic Name Tags**: Helpers display their evolution stage with color-coded names
 - **Animated Entities**: Smooth animations and visual effects
 - **Custom Titles**: Dramatic on-screen titles during key moments
+- **Progress Bar HUD**: Visual progress bar showing gamemode completion percentage
+- **Achievement Toasts**: Custom popup notifications for achievements with sound effects
 
 ### 🎯 Challenges & Progression
 - **Task & Challenge System**: Complete 10 insane challenges with rewards
@@ -44,13 +48,21 @@ A custom gamemode where you tame frog and slime helpers that fight mobs and evol
 - **Giant Slime Boss**: The Ender Dragon has been replaced... with a GIANT SLIME?!
 - **Unexpected Ending**: Defeat the boss to trigger the final evolution... but something goes wrong
 
-### 🎁 Custom Items
-- **Evolution Stones**: Instantly evolve your helpers
+### 🌌 Custom Dimension
+- **Transformed End**: A custom dimension variant of the End using datapack configuration
+- **Teleportation Commands**: Easy access to dimension via `/frogslime dimension transformed_end`
+- **Configurable**: JSON-based dimension settings for easy customization
+- **Fallback System**: Automatically falls back to regular End if custom dimension unavailable
+
+### � Custom Items
+- **Evolution Stones**: Instantly evolve your helpers (craftable and upgradeable)
 - **Special Foods**: Feed your helpers to strengthen them
 - **YouTuber Swords**: Dream, Technoblade, Grian, and Mumbo Jumbo themed weapons
 - **Funny Armor**: Mustard Helmet, Orphan Shield, Prankster Chestplate
 - **Task Book**: View and track your challenges
 - **Final Evolution Crystal**: Unlock the ultimate slime form
+- **Custom Potions**: Frog Power, Slime Resilience, WayaCreate Blessing, Derpy Curse, Manhunt Tracker
+- **Manhunt Compass**: Tracks assigned manhunt targets
 
 ## 🎮 Interactive GUI
 
@@ -107,6 +119,8 @@ Experience the mod's items, crafting, and collections with an authentic Minecraf
 | Item | Texture | Function |
 |------|---------|----------|
 | **Miner Role** | <img src="src/main/resources/assets/frogslimegamemode/textures/item/miner_role.png" width="32"> | Assigns mining AI to helper |
+| **Builder Role** | <img src="src/main/resources/assets/frogslimegamemode/textures/item/builder_role.png" width="32"> | Assigns building AI to helper |
+| **Farmer Role** | <img src="src/main/resources/assets/frogslimegamemode/textures/item/farmer_role.png" width="32"> | Assigns farming AI to helper |
 | **Lumberjack Role** | <img src="src/main/resources/assets/frogslimegamemode/textures/item/lumberjack_role.png" width="32"> | Assigns woodcutting AI to helper |
 | **Combat Role** | <img src="src/main/resources/assets/frogslimegamemode/textures/item/combat_role.png" width="32"> | Assigns combat AI to helper |
 
@@ -183,15 +197,18 @@ Experience the mod's items, crafting, and collections with an authentic Minecraf
 
 ## How to Play
 
-1. **Start the gamemode**: `/frogslime start` or open the game menu
-2. **Spawn helpers** using spawn eggs (creative mode or craft them)
+1. **Start the gamemode**: `/frogslime enable` or open the game menu
+2. **Spawn helpers** using spawn eggs (craftable with vanilla materials)
 3. **Right-click** to tame frogs and slimes in the wild
-4. **Let them fight** mobs and evolve automatically
-5. **Use Evolution Stones** to speed up evolution
-6. **Open Task Book** with right-click to see challenges
-7. **Complete tasks** to unlock rewards
-8. **Journey to The End** to face the GIANT SLIME BOSS
-9. **Beat the boss** for the shocking finale... or will you?
+4. **Let them fight** mobs and evolve automatically (40% drop chance for abilities)
+5. **Use Evolution Stones** to speed up evolution (craftable and upgradeable)
+6. **Assign roles** to helpers with `/helper <role>` for specialized AI
+7. **Open Task Book** with right-click to see challenges
+8. **Complete tasks** to unlock rewards
+9. **Brew custom potions** for special effects
+10. **Kill other players** for special abilities (PvP mode)
+11. **Journey to The End** to face the GIANT SLIME BOSS
+12. **Beat the boss** for the shocking finale... or will you?
 
 ### Evolution System
 
@@ -210,6 +227,37 @@ Each evolution increases:
 - Attack Damage (+2 for frogs, +3 for slimes per stage)
 - New visual effects at higher stages
 
+### Helper Roles
+Assign roles to your helpers with `/helper <role>`:
+- **Miner**: Automatically mines nearby ores
+- **Lumberjack**: Automatically chops nearby trees
+- **Combat**: Enhanced attack damage
+- **Builder**: Places blocks to build structures
+- **Farmer**: Harvests and bone meals crops
+
+### Custom Potions
+Brew special potions in the brewing stand:
+- **Frog Power Potion**: Jump Boost II + Speed I (brew with slime ball)
+- **Slime Resilience Potion**: Resistance I + Regeneration I (brew with golden carrot)
+- **WayaCreate Blessing Potion**: Strength II + Speed II + Regeneration I (brew with golden apple)
+- **Derpy Curse Potion**: Slowness I + Weakness (brew with fermented spider eye)
+- **Manhunt Tracker Potion**: Night Vision + Speed I (brew with glowstone)
+
+### Manhunt Mode
+Play speedrun manhunt with friends:
+1. `/frogslime manhunt speedrunner` - Set the target player
+2. `/frogslime manhunt hunter` - Become a hunter
+3. Use Manhunt Compass to track the speedrunner
+4. Compass shows distance and direction to target
+
+### Transformed End Dimension
+Access the custom dimension:
+1. `/frogslime dimension transformed_end` - Teleport to the dimension
+2. `/frogslime dimension return` - Return to Overworld spawn
+- Uses datapack-based configuration for easy customization
+- Configured with End biome and generation settings
+- Can be modified in `data/frogslimegamemode/dimension/` JSON files
+
 ### Final Evolution (Slime Only)
 After defeating the Giant Slime Boss, use the **Final Evolution Crystal** on your slime helper to unlock its ultimate form:
 - 200 Health
@@ -220,10 +268,17 @@ After defeating the Giant Slime Boss, use the **Final Evolution Crystal** on you
 
 | Command | Description |
 |---------|-------------|
-| `/frogslime start` | Begin the gamemode |
-| `/frogslime stop` | Stop the gamemode |
+| `/frogslime enable` | Begin the gamemode |
+| `/frogslime disable` | Stop the gamemode |
 | `/frogslime info` | Show help information |
 | `/frogslime tasks` | Open tasks & challenges menu |
+| `/frogslime reset` | Reset all gamemode data (use with caution) |
+| `/frogslime manhunt speedrunner` | Set yourself as the speedrunner |
+| `/frogslime manhunt hunter` | Set yourself as a hunter (targets nearest player) |
+| `/frogslime manhunt end` | End the manhunt game |
+| `/frogslime dimension transformed_end` | Teleport to the Transformed End dimension |
+| `/frogslime dimension return` | Return from the dimension to spawn |
+| `/helper <role>` | Assign a role to your helper (Miner, Lumberjack, Combat, Builder, Farmer) |
 
 ## Tasks & Challenges
 
@@ -251,6 +306,38 @@ But be warned... your slime may become too powerful. What have you created?
 ## Why This Exists
 
 This mod feels like it was made by a modded YouTuber with too much free time (and it kind of was). Inspired by the chaotic energy of Craftee, xxNestorio, DonnieBobes, Skeppy, and the unexpected plot twists of Groxs videos.
+
+## Recent Updates
+
+### v1.5.0 - Dimension Implementation
+- ✅ Implemented datapack-based custom dimension system
+- ✅ Configured dimension JSON files for proper generation
+- ✅ Updated teleporter with RegistryKey-based dimension access
+- ✅ Added fallback system to regular End if custom dimension unavailable
+- ✅ Made dimension fully customizable via JSON configuration
+
+### v1.4.0 - UI & Polish Update
+- ✅ Added progress bar HUD showing gamemode completion
+- ✅ Implemented custom achievement toast notifications
+- ✅ Added achievement sound effects (level-up sound)
+- ✅ Improved task tracking with visual progress indicators
+- ✅ Enhanced HUD rendering system
+
+### v1.3.0 - Dimension Update
+- ✅ Added custom dimension system foundation
+- ✅ Implemented dimension teleportation commands
+- ✅ Created Transformed End dimension configuration
+- ✅ Added return command for dimension travel
+
+### v1.2.0 - Final Polish
+- ✅ Added Builder and Farmer AI roles
+- ✅ Integrated ManhuntCompass with ManhuntManager
+- ✅ Changed potion recipes from crafting to brewing
+- ✅ Added helper egg upgrade system
+- ✅ Implemented persistent saving system
+- ✅ Added player kill reward system
+- ✅ Adjusted drop chances for balanced progression (40% for players, 50% for helpers)
+- ✅ Fixed compilation errors and cleaned up code
 
 ## Contributing
 

@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "XIX",
+    "S S",
+    "X X"
+  ],
+  "key": {
+    "X": {
+      "item": "minecraft:iron_axe"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "item": "frogslimegamemode:lumberjack_role",
+    "count": 1
+  }
+}

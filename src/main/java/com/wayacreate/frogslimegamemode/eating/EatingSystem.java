@@ -81,13 +81,15 @@ public class EatingSystem {
                 MobAbility ability = MobAbility.getAbilityFromEntity(mob.getType());
                 
                 if (ability != null) {
-                    ItemStack abilityDrop = AbilityDropItem.createAbilityDrop(ability.getId());
-                    if (!abilityDrop.isEmpty()) {
-                        // Try to add to hotbar first, then main inventory
-                        if (!player.getInventory().insertStack(abilityDrop)) {
-                            // Drop on ground if inventory full
-                            world.spawnEntity(new ItemEntity(world, player.getX(), player.getY(), player.getZ(), abilityDrop));
-                        }
+                    // 40% chance to drop ability (slower progression)
+                    if (world.random.nextFloat() < 0.4f) {
+                        ItemStack abilityDrop = AbilityDropItem.createAbilityDrop(ability.getId());
+                        if (!abilityDrop.isEmpty()) {
+                            // Try to add to hotbar first, then main inventory
+                            if (!player.getInventory().insertStack(abilityDrop)) {
+                                // Drop on ground if inventory full
+                                world.spawnEntity(new ItemEntity(world, player.getX(), player.getY(), player.getZ(), abilityDrop));
+                            }
                         
                         player.sendMessage(Text.literal("You ate a ")
                             .formatted(Formatting.GREEN)
@@ -97,6 +99,14 @@ public class EatingSystem {
                                 .formatted(Formatting.GREEN))
                             .append(ability.getFormattedName())
                             .append(Text.literal("!").formatted(Formatting.GREEN)), false);
+                        }
+                    } else {
+                        player.sendMessage(Text.literal("The ")
+                            .formatted(Formatting.GRAY)
+                            .append(Text.literal(mob.getName().getString())
+                                .formatted(Formatting.YELLOW))
+                            .append(Text.literal(" was too slippery to catch!")
+                                .formatted(Formatting.GRAY)), false);
                     }
                 }
                 
@@ -171,10 +181,10 @@ public class EatingSystem {
                 // Kill the mob to drop items naturally
                 mob.damage(world.getDamageSources().generic(), Float.MAX_VALUE);
                 
-                // Eat the mob (give ability)
+                // Eat the mob (give ability) - 50% chance for helpers
                 MobAbility ability = MobAbility.getAbilityFromEntity(mob.getType());
                 
-                if (ability != null) {
+                if (ability != null && world.random.nextFloat() < 0.5f) {
                     if (helper instanceof FrogHelperEntity frog) {
                         frog.addAbility(ability);
                         if (owner != null) {
@@ -199,6 +209,14 @@ public class EatingSystem {
                                 .append(ability.getFormattedName())
                                 .append(Text.literal("!").formatted(Formatting.GREEN)), false);
                         }
+                    }
+                } else if (ability != null) {
+                    if (owner != null) {
+                        owner.sendMessage(Text.literal("Your helper missed the ")
+                            .formatted(Formatting.GRAY)
+                            .append(Text.literal(mob.getName().getString())
+                                .formatted(Formatting.YELLOW))
+                            .append(Text.literal("!").formatted(Formatting.GRAY)), false);
                     }
                 }
                 

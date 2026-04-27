@@ -41,9 +41,15 @@ public class ModItems {
     public static Item MINER_ROLE;
     public static Item LUMBERJACK_ROLE;
     public static Item COMBAT_ROLE;
+    public static Item BUILDER_ROLE;
+    public static Item FARMER_ROLE;
     
-    // Manhunt compass
+    // Manhunt items
     public static Item MANHUNT_COMPASS;
+    public static Item HUNTER_TRACKER;
+    public static Item SPEEDRUNNER_BOOTS;
+    public static Item HUNTER_NET;
+    public static Item ESCAPE_PEARL;
     
     // Ability drop item
     public static Item ABILITY_DROP;
@@ -116,9 +122,27 @@ public class ModItems {
         COMBAT_ROLE = registerItem("combat_role",
             new RoleItem(new FabricItemSettings().maxCount(1), "Combat Specialist"));
         
-        // Manhunt compass - using vanilla compass with NBT
+        BUILDER_ROLE = registerItem("builder_role",
+            new RoleItem(new FabricItemSettings().maxCount(1), "Builder"));
+        
+        FARMER_ROLE = registerItem("farmer_role",
+            new RoleItem(new FabricItemSettings().maxCount(1), "Farmer"));
+        
+        // Manhunt items
         MANHUNT_COMPASS = registerItem("manhunt_compass",
             new ManhuntCompassItem(new FabricItemSettings().maxCount(1)));
+        
+        HUNTER_TRACKER = registerItem("hunter_tracker",
+            new HunterTrackerItem(new FabricItemSettings().maxCount(1)));
+        
+        SPEEDRUNNER_BOOTS = registerItem("speedrunner_boots",
+            new SpeedrunnerBootsItem(new FabricItemSettings().maxCount(1)));
+        
+        HUNTER_NET = registerItem("hunter_net",
+            new HunterNetItem(new FabricItemSettings().maxCount(16)));
+        
+        ESCAPE_PEARL = registerItem("escape_pearl",
+            new EscapePearlItem(new FabricItemSettings().maxCount(16)));
         
         // Ability drop item
         ABILITY_DROP = registerItem("ability_drop",
@@ -151,8 +175,14 @@ public class ModItems {
                     entries.add(MINER_ROLE);
                     entries.add(LUMBERJACK_ROLE);
                     entries.add(COMBAT_ROLE);
+                    entries.add(BUILDER_ROLE);
+                    entries.add(FARMER_ROLE);
                     // Manhunt
                     entries.add(MANHUNT_COMPASS);
+                    entries.add(HUNTER_TRACKER);
+                    entries.add(SPEEDRUNNER_BOOTS);
+                    entries.add(HUNTER_NET);
+                    entries.add(ESCAPE_PEARL);
                     // Ability drops
                     entries.add(ABILITY_DROP);
                 })

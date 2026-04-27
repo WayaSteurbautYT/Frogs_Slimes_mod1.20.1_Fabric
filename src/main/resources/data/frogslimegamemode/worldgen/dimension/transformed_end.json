@@ -1,0 +1,12 @@
+{
+  "type": "frogslimegamemode:transformed_end",
+  "generator": {
+    "type": "minecraft:noise",
+    "seed": 0,
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "minecraft:the_end"
+    },
+    "settings": "minecraft:end"
+  }
+}

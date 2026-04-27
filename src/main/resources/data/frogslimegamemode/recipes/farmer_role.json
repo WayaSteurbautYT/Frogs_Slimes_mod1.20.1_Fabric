@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "HIH",
+    "S S",
+    "H H"
+  ],
+  "key": {
+    "H": {
+      "item": "minecraft:iron_hoe"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "item": "frogslimegamemode:farmer_role",
+    "count": 1
+  }
+}
