@@ -19,90 +19,90 @@ import com.wayacreate.frogslimegamemode.network.ModNetworking;
 import com.wayacreate.frogslimegamemode.progression.ProgressionUnlock;
 import com.wayacreate.frogslimegamemode.tasks.TaskManager;
 import com.wayacreate.frogslimegamemode.tasks.TaskType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class FrogSlimeCommand {
-    public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
-        dispatcher.register(CommandManager.literal("frogslime")
-            .then(CommandManager.literal("enable")
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        dispatcher.register(Commands.literal("frogslime")
+            .then(Commands.literal("enable")
                 .executes(FrogSlimeCommand::startGamemode))
-            .then(CommandManager.literal("disable")
+            .then(Commands.literal("disable")
                 .executes(FrogSlimeCommand::stopGamemode))
-            .then(CommandManager.literal("help")
+            .then(Commands.literal("help")
                 .executes(FrogSlimeCommand::showHelp))
-            .then(CommandManager.literal("info")
+            .then(Commands.literal("info")
                 .executes(FrogSlimeCommand::showHelp))
-            .then(CommandManager.literal("guide")
+            .then(Commands.literal("guide")
                 .executes(FrogSlimeCommand::giveGuide))
-            .then(CommandManager.literal("progress")
+            .then(Commands.literal("progress")
                 .executes(FrogSlimeCommand::showProgress))
-            .then(CommandManager.literal("abilities")
+            .then(Commands.literal("abilities")
                 .executes(FrogSlimeCommand::showAbilities))
-            .then(CommandManager.literal("recipes")
+            .then(Commands.literal("recipes")
                 .executes(FrogSlimeCommand::showRecipes))
-            .then(CommandManager.literal("tasks")
+            .then(Commands.literal("tasks")
                 .executes(FrogSlimeCommand::openTasks))
-            .then(CommandManager.literal("reset")
+            .then(Commands.literal("reset")
                 .executes(FrogSlimeCommand::resetData))
-            .then(CommandManager.literal("manhunt")
-                .then(CommandManager.literal("auto")
+            .then(Commands.literal("manhunt")
+                .then(Commands.literal("auto")
                     .executes(FrogSlimeCommand::startAutoManhunt))
-                .then(CommandManager.literal("team")
-                    .then(CommandManager.argument("speedrunner_team", StringArgumentType.string())
-                        .then(CommandManager.argument("hunter_team", StringArgumentType.string())
+                .then(Commands.literal("team")
+                    .then(Commands.argument("speedrunner_team", StringArgumentType.string())
+                        .then(Commands.argument("hunter_team", StringArgumentType.string())
                             .executes(FrogSlimeCommand::startTeamManhunt))))
-                .then(CommandManager.literal("speedrunner")
+                .then(Commands.literal("speedrunner")
                     .executes(FrogSlimeCommand::setSpeedrunner))
-                .then(CommandManager.literal("solo")
+                .then(Commands.literal("solo")
                     .executes(FrogSlimeCommand::setSoloSpeedrunner))
-                .then(CommandManager.literal("hunter")
+                .then(Commands.literal("hunter")
                     .executes(FrogSlimeCommand::setHunter))
-                .then(CommandManager.literal("status")
+                .then(Commands.literal("status")
                     .executes(FrogSlimeCommand::showManhuntStatus))
-                .then(CommandManager.literal("end")
+                .then(Commands.literal("end")
                     .executes(FrogSlimeCommand::endManhunt)))
-            .then(CommandManager.literal("dimension")
-                .then(CommandManager.literal("transformed_end")
+            .then(Commands.literal("dimension")
+                .then(Commands.literal("transformed_end")
                     .executes(FrogSlimeCommand::teleportToTransformedEnd))
-                .then(CommandManager.literal("return")
+                .then(Commands.literal("return")
                     .executes(FrogSlimeCommand::returnFromDimension)))
-            .then(CommandManager.literal("role")
-                .then(CommandManager.literal("giverole")
+            .then(Commands.literal("role")
+                .then(Commands.literal("giverole")
                     .executes(FrogSlimeCommand::giveRoleItem)))
-            .then(CommandManager.literal("team")
-                .then(CommandManager.literal("create")
-                    .then(CommandManager.argument("name", StringArgumentType.string())
-                        .then(CommandManager.argument("color", StringArgumentType.string())
+            .then(Commands.literal("team")
+                .then(Commands.literal("create")
+                    .then(Commands.argument("name", StringArgumentType.string())
+                        .then(Commands.argument("color", StringArgumentType.string())
                             .executes(FrogSlimeCommand::createTeam))))
-                .then(CommandManager.literal("join")
-                    .then(CommandManager.argument("name", StringArgumentType.string())
+                .then(Commands.literal("join")
+                    .then(Commands.argument("name", StringArgumentType.string())
                         .executes(FrogSlimeCommand::joinTeam)))
-                .then(CommandManager.literal("leave")
+                .then(Commands.literal("leave")
                     .executes(FrogSlimeCommand::leaveTeam))
-                .then(CommandManager.literal("list")
+                .then(Commands.literal("list")
                     .executes(FrogSlimeCommand::listTeams))
-                .then(CommandManager.literal("tp")
-                    .then(CommandManager.argument("player", StringArgumentType.string())
+                .then(Commands.literal("tp")
+                    .then(Commands.argument("player", StringArgumentType.string())
                         .executes(FrogSlimeCommand::teleportToTeamMember))))
-            .then(CommandManager.literal("rank")
-                .then(CommandManager.argument("player", StringArgumentType.string())
-                    .then(CommandManager.argument("rank", StringArgumentType.string())
+            .then(Commands.literal("rank")
+                .then(Commands.argument("player", StringArgumentType.string())
+                    .then(Commands.argument("rank", StringArgumentType.string())
                         .executes(FrogSlimeCommand::setPlayerRank))))
-            .then(CommandManager.literal("contract")
-                .then(CommandManager.literal("list")
+            .then(Commands.literal("contract")
+                .then(Commands.literal("list")
                     .executes(FrogSlimeCommand::listAvailableContracts))
-                .then(CommandManager.literal("accept")
-                    .then(CommandManager.argument("type", StringArgumentType.string())
+                .then(Commands.literal("accept")
+                    .then(Commands.argument("type", StringArgumentType.string())
                         .executes(FrogSlimeCommand::acceptContract)))
-                .then(CommandManager.literal("my")
+                .then(Commands.literal("my")
                     .executes(FrogSlimeCommand::listMyContracts)))
             .then(EconomyCommands.buildShopSubcommand())
             .then(EconomyCommands.buildTradeSubcommand())
@@ -110,76 +110,76 @@ public class FrogSlimeCommand {
             .then(EconomyCommands.buildPaySubcommand())
             .then(EconomyCommands.buildMessageSubcommand())
             .then(GuildCommand.buildGuildSubcommand("guild"))
-            .then(CommandManager.literal("test")
-                .then(CommandManager.literal("achievement")
-                    .then(CommandManager.argument("id", StringArgumentType.string())
+            .then(Commands.literal("test")
+                .then(Commands.literal("achievement")
+                    .then(Commands.argument("id", StringArgumentType.string())
                         .executes(FrogSlimeCommand::testAchievement))))
         );
     }
     
-    private static int startGamemode(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int startGamemode(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         if (player != null) {
             GamemodeManager.enableGamemode(player);
             return 1;
         }
-        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        context.getSource().sendError(Component.literal("Only players can use this command!"));
         return 0;
     }
     
-    private static int stopGamemode(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int stopGamemode(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         if (player != null) {
             GamemodeManager.disableGamemode(player);
             return 1;
         }
-        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        context.getSource().sendError(Component.literal("Only players can use this command!"));
         return 0;
     }
     
-    private static int showHelp(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int showHelp(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         if (player != null) {
-            player.sendMessage(Text.literal("=== Frog & Slime Command Board ===")
-                .formatted(Formatting.GOLD, Formatting.BOLD), false);
-            player.sendMessage(Text.literal("Core route").formatted(Formatting.YELLOW), false);
-            player.sendMessage(Text.literal("  /frogslime enable - Start the route for online players")
-                .formatted(Formatting.WHITE), false);
-            player.sendMessage(Text.literal("  /frogslime progress - Show live tasks and next unlocks")
-                .formatted(Formatting.WHITE), false);
-            player.sendMessage(Text.literal("  /frogslime abilities - List unlocked abilities and the selected slot")
-                .formatted(Formatting.WHITE), false);
-            player.sendMessage(Text.literal("  /frogslime recipes - Explain the main crafting route")
-                .formatted(Formatting.WHITE), false);
-            player.sendMessage(Text.literal("  /frogslime guide - Reclaim the guide book and task book")
-                .formatted(Formatting.WHITE), false);
-            player.sendMessage(Text.literal("  /frogslime tasks - Open the progression board")
-                .formatted(Formatting.WHITE), false);
-            player.sendMessage(Text.literal("Contracts and SMP").formatted(Formatting.YELLOW), false);
-            player.sendMessage(Text.literal("  /frogslime contract list - View available contracts")
-                .formatted(Formatting.WHITE), false);
-            player.sendMessage(Text.literal("  /frogslime contract accept <id> - Start a contract")
-                .formatted(Formatting.WHITE), false);
-            player.sendMessage(Text.literal("  /frogslime contract my - Track accepted contracts")
-                .formatted(Formatting.WHITE), false);
-            player.sendMessage(Text.literal("Manhunt").formatted(Formatting.YELLOW), false);
-            player.sendMessage(Text.literal("  /frogslime manhunt speedrunner | hunter | auto | status | end")
-                .formatted(Formatting.WHITE), false);
-            player.sendMessage(Text.literal("Hunter controls: hold tracker or compass, TAB cycles, R uses.")
-                .formatted(Formatting.RED), false);
-            player.sendMessage(Text.literal("Speedrunner controls: hold a clock, TAB cycles, R uses.")
-                .formatted(Formatting.AQUA), false);
+            player.sendMessage(Component.literal("=== Frog & Slime Command Board ===")
+                .formatted(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
+            player.sendMessage(Component.literal("Core route").formatted(ChatFormatting.YELLOW), false);
+            player.sendMessage(Component.literal("  /frogslime enable - Start the route for online players")
+                .formatted(ChatFormatting.WHITE), false);
+            player.sendMessage(Component.literal("  /frogslime progress - Show live tasks and next unlocks")
+                .formatted(ChatFormatting.WHITE), false);
+            player.sendMessage(Component.literal("  /frogslime abilities - List unlocked abilities and the selected slot")
+                .formatted(ChatFormatting.WHITE), false);
+            player.sendMessage(Component.literal("  /frogslime recipes - Explain the main crafting route")
+                .formatted(ChatFormatting.WHITE), false);
+            player.sendMessage(Component.literal("  /frogslime guide - Reclaim the guide book and task book")
+                .formatted(ChatFormatting.WHITE), false);
+            player.sendMessage(Component.literal("  /frogslime tasks - Open the progression board")
+                .formatted(ChatFormatting.WHITE), false);
+            player.sendMessage(Component.literal("Contracts and SMP").formatted(ChatFormatting.YELLOW), false);
+            player.sendMessage(Component.literal("  /frogslime contract list - View available contracts")
+                .formatted(ChatFormatting.WHITE), false);
+            player.sendMessage(Component.literal("  /frogslime contract accept <id> - Start a contract")
+                .formatted(ChatFormatting.WHITE), false);
+            player.sendMessage(Component.literal("  /frogslime contract my - Track accepted contracts")
+                .formatted(ChatFormatting.WHITE), false);
+            player.sendMessage(Component.literal("Manhunt").formatted(ChatFormatting.YELLOW), false);
+            player.sendMessage(Component.literal("  /frogslime manhunt speedrunner | hunter | auto | status | end")
+                .formatted(ChatFormatting.WHITE), false);
+            player.sendMessage(Component.literal("Hunter controls: hold tracker or compass, TAB cycles, R uses.")
+                .formatted(ChatFormatting.RED), false);
+            player.sendMessage(Component.literal("Speedrunner controls: hold a clock, TAB cycles, R uses.")
+                .formatted(ChatFormatting.AQUA), false);
             return 1;
         }
         return 0;
     }
 
-    private static int showInfo(CommandContext<ServerCommandSource> context) {
+    private static int showInfo(CommandContext<CommandSourceStack> context) {
         return showHelp(context);
     }
     
-    private static int openTasks(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int openTasks(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         if (player != null) {
             ModNetworking.openTasksScreen(player);
             return 1;
@@ -187,8 +187,8 @@ public class FrogSlimeCommand {
         return 0;
     }
     
-    private static int resetData(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int resetData(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         if (player != null) {
             // Disable gamemode first
             if (GamemodeManager.isInGamemode(player)) {
@@ -198,29 +198,29 @@ public class FrogSlimeCommand {
             // Reset ability manager data for this player
             com.wayacreate.frogslimegamemode.abilities.PlayerAbilityManager.resetPlayer(player.getUuid());
             
-            player.sendMessage(Text.literal("All Frog & Slime Gamemode data has been reset!")
-                .formatted(Formatting.GREEN, Formatting.BOLD), false);
-            player.sendMessage(Text.literal("Use /frogslime enable to start a new game.")
-                .formatted(Formatting.YELLOW), false);
+            player.sendMessage(Component.literal("All Frog & Slime Gamemode data has been reset!")
+                .formatted(ChatFormatting.GREEN, ChatFormatting.BOLD), false);
+            player.sendMessage(Component.literal("Use /frogslime enable to start a new game.")
+                .formatted(ChatFormatting.YELLOW), false);
             
             return 1;
         }
-        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        context.getSource().sendError(Component.literal("Only players can use this command!"));
         return 0;
     }
     
-    private static int startAutoManhunt(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int startAutoManhunt(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         if (player != null) {
             ManhuntManager.startAutoManhunt(player);
             return 1;
         }
-        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        context.getSource().sendError(Component.literal("Only players can use this command!"));
         return 0;
     }
     
-    private static int startTeamManhunt(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int startTeamManhunt(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         String speedrunnerTeam = StringArgumentType.getString(context, "speedrunner_team");
         String hunterTeam = StringArgumentType.getString(context, "hunter_team");
         
@@ -228,39 +228,39 @@ public class FrogSlimeCommand {
             ManhuntManager.startTeamManhunt(player, speedrunnerTeam, hunterTeam);
             return 1;
         }
-        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        context.getSource().sendError(Component.literal("Only players can use this command!"));
         return 0;
     }
     
-    private static int setSpeedrunner(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int setSpeedrunner(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         if (player != null) {
             ManhuntManager.setSpeedrunner(player);
             return 1;
         }
-        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        context.getSource().sendError(Component.literal("Only players can use this command!"));
         return 0;
     }
     
-    private static int setSoloSpeedrunner(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int setSoloSpeedrunner(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         if (player != null) {
             ManhuntManager.setSoloSpeedrunner(player);
             return 1;
         }
-        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        context.getSource().sendError(Component.literal("Only players can use this command!"));
         return 0;
     }
     
-    private static int setHunter(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int setHunter(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         if (player != null) {
-            ServerPlayerEntity target = ManhuntManager.getPrimarySpeedrunner(player.getServer());
+            ServerPlayer target = ManhuntManager.getPrimarySpeedrunner(player.getServer());
             if (target == player) {
                 target = null;
             }
             
-            for (ServerPlayerEntity other : player.getServer().getPlayerManager().getPlayerList()) {
+            for (ServerPlayer other : player.getServer().getPlayerManager().getPlayerList()) {
                 if (target != null) {
                     break;
                 }
@@ -272,108 +272,108 @@ public class FrogSlimeCommand {
             if (target != null) {
                 ManhuntManager.setHunter(player, target);
             } else {
-                player.sendMessage(Text.literal("No valid speedrunner target found.")
-                    .formatted(Formatting.RED), false);
+                player.sendMessage(Component.literal("No valid speedrunner target found.")
+                    .formatted(ChatFormatting.RED), false);
             }
             return 1;
         }
-        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        context.getSource().sendError(Component.literal("Only players can use this command!"));
         return 0;
     }
     
-    private static int endManhunt(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int endManhunt(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         if (player != null) {
             ManhuntManager.endAllGames(player.getServer());
             return 1;
         }
-        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        context.getSource().sendError(Component.literal("Only players can use this command!"));
         return 0;
     }
 
-    private static int showManhuntStatus(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int showManhuntStatus(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         if (player == null) {
-            context.getSource().sendError(Text.literal("Only players can use this command!"));
+            context.getSource().sendError(Component.literal("Only players can use this command!"));
             return 0;
         }
 
-        player.sendMessage(Text.literal("=== Manhunt Status ===")
-            .formatted(Formatting.GOLD, Formatting.BOLD), false);
+        player.sendMessage(Component.literal("=== Manhunt Status ===")
+            .formatted(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
 
         if (ManhuntManager.isCountdownActive()) {
-            player.sendMessage(Text.literal("Countdown: " + ManhuntManager.getCountdownSeconds() + "s")
-                .formatted(Formatting.YELLOW), false);
+            player.sendMessage(Component.literal("Countdown: " + ManhuntManager.getCountdownSeconds() + "s")
+                .formatted(ChatFormatting.YELLOW), false);
         }
 
-        player.sendMessage(Text.literal("Hunters: " + ManhuntManager.getActiveHunterCount()
+        player.sendMessage(Component.literal("Hunters: " + ManhuntManager.getActiveHunterCount()
             + " | Active speedrunners: " + ManhuntManager.getActiveSpeedrunnerCount()
             + " | Ghost speedrunners: " + ManhuntManager.getGhostSpeedrunnerCount())
-            .formatted(Formatting.WHITE), false);
+            .formatted(ChatFormatting.WHITE), false);
 
         if (ManhuntManager.isHunter(player)) {
-            ServerPlayerEntity target = ManhuntManager.getTarget(player);
-            player.sendMessage(Text.literal("You are a hunter.")
-                .formatted(Formatting.RED, Formatting.BOLD), false);
-            player.sendMessage(Text.literal("Target: " + (target != null ? target.getName().getString() : "None"))
-                .formatted(Formatting.YELLOW), false);
+            ServerPlayer target = ManhuntManager.getTarget(player);
+            player.sendMessage(Component.literal("You are a hunter.")
+                .formatted(ChatFormatting.RED, ChatFormatting.BOLD), false);
+            player.sendMessage(Component.literal("Target: " + (target != null ? target.getName().getString() : "None"))
+                .formatted(ChatFormatting.YELLOW), false);
         } else if (ManhuntManager.isSpeedrunner(player)) {
-            player.sendMessage(Text.literal("You are the speedrunner.")
-                .formatted(Formatting.GREEN, Formatting.BOLD), false);
-            player.sendMessage(Text.literal("Elapsed: " + ManhuntManager.getElapsedTime(player)
+            player.sendMessage(Component.literal("You are the speedrunner.")
+                .formatted(ChatFormatting.GREEN, ChatFormatting.BOLD), false);
+            player.sendMessage(Component.literal("Elapsed: " + ManhuntManager.getElapsedTime(player)
                 + " | Deaths: " + ManhuntManager.getDeathCount(player))
-                .formatted(Formatting.WHITE), false);
+                .formatted(ChatFormatting.WHITE), false);
         } else {
-            ServerPlayerEntity activeTarget = ManhuntManager.getPrimarySpeedrunner(player.getServer());
+            ServerPlayer activeTarget = ManhuntManager.getPrimarySpeedrunner(player.getServer());
             if (activeTarget != null) {
-                player.sendMessage(Text.literal("Current lead speedrunner: " + activeTarget.getName().getString())
-                    .formatted(Formatting.AQUA), false);
+                player.sendMessage(Component.literal("Current lead speedrunner: " + activeTarget.getName().getString())
+                    .formatted(ChatFormatting.AQUA), false);
             }
         }
 
         return 1;
     }
     
-    private static int teleportToTransformedEnd(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int teleportToTransformedEnd(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         if (player != null) {
             TransformedEndTeleporter.teleportToTransformedEnd(player);
-            player.sendMessage(Text.literal("Use /frogslime dimension return to go back!")
-                .formatted(Formatting.YELLOW), true);
+            player.sendMessage(Component.literal("Use /frogslime dimension return to go back!")
+                .formatted(ChatFormatting.YELLOW), true);
             return 1;
         }
-        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        context.getSource().sendError(Component.literal("Only players can use this command!"));
         return 0;
     }
     
-    private static int returnFromDimension(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int returnFromDimension(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         if (player != null) {
             TransformedEndTeleporter.teleportFromTransformedEnd(player);
             return 1;
         }
-        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        context.getSource().sendError(Component.literal("Only players can use this command!"));
         return 0;
     }
     
-    private static int giveRoleItem(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int giveRoleItem(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         if (player != null) {
-            player.getInventory().insertStack(new net.minecraft.item.ItemStack(ModItems.MINER_ROLE));
-            player.getInventory().insertStack(new net.minecraft.item.ItemStack(ModItems.LUMBERJACK_ROLE));
-            player.getInventory().insertStack(new net.minecraft.item.ItemStack(ModItems.COMBAT_ROLE));
-            player.getInventory().insertStack(new net.minecraft.item.ItemStack(ModItems.BUILDER_ROLE));
-            player.getInventory().insertStack(new net.minecraft.item.ItemStack(ModItems.FARMER_ROLE));
-            player.sendMessage(Text.literal("Gave you the full helper role kit.")
-                .formatted(Formatting.GREEN), false);
+            player.getInventory().insertStack(new net.minecraft.world.item.ItemStack(ModItems.MINER_ROLE));
+            player.getInventory().insertStack(new net.minecraft.world.item.ItemStack(ModItems.LUMBERJACK_ROLE));
+            player.getInventory().insertStack(new net.minecraft.world.item.ItemStack(ModItems.COMBAT_ROLE));
+            player.getInventory().insertStack(new net.minecraft.world.item.ItemStack(ModItems.BUILDER_ROLE));
+            player.getInventory().insertStack(new net.minecraft.world.item.ItemStack(ModItems.FARMER_ROLE));
+            player.sendMessage(Component.literal("Gave you the full helper role kit.")
+                .formatted(ChatFormatting.GREEN), false);
             return 1;
         }
-        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        context.getSource().sendError(Component.literal("Only players can use this command!"));
         return 0;
     }
     
-    private static int createTeam(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int createTeam(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         String name = StringArgumentType.getString(context, "name");
         String color = StringArgumentType.getString(context, "color");
         
@@ -381,16 +381,16 @@ public class FrogSlimeCommand {
             if (TeamManager.createTeam(name, color, player)) {
                 return 1;
             } else {
-                context.getSource().sendError(Text.literal("Team already exists!"));
+                context.getSource().sendError(Component.literal("Team already exists!"));
                 return 0;
             }
         }
-        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        context.getSource().sendError(Component.literal("Only players can use this command!"));
         return 0;
     }
     
-    private static int joinTeam(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int joinTeam(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         String name = StringArgumentType.getString(context, "name");
         
         if (player != null) {
@@ -399,12 +399,12 @@ public class FrogSlimeCommand {
             }
             return 0;
         }
-        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        context.getSource().sendError(Component.literal("Only players can use this command!"));
         return 0;
     }
     
-    private static int leaveTeam(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int leaveTeam(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         
         if (player != null) {
             if (TeamManager.leaveTeam(player)) {
@@ -412,35 +412,35 @@ public class FrogSlimeCommand {
             }
             return 0;
         }
-        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        context.getSource().sendError(Component.literal("Only players can use this command!"));
         return 0;
     }
     
-    private static int listTeams(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int listTeams(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         
         if (player != null) {
             TeamManager.listTeams(player);
             return 1;
         }
-        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        context.getSource().sendError(Component.literal("Only players can use this command!"));
         return 0;
     }
     
-    private static int teleportToTeamMember(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int teleportToTeamMember(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         String targetName = StringArgumentType.getString(context, "player");
         
         if (player != null) {
             TeamManager.teleportToTeamMember(player, targetName);
             return 1;
         }
-        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        context.getSource().sendError(Component.literal("Only players can use this command!"));
         return 0;
     }
     
-    private static int setPlayerRank(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int setPlayerRank(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         String targetName = StringArgumentType.getString(context, "player");
         String rankName = StringArgumentType.getString(context, "rank");
         
@@ -450,46 +450,46 @@ public class FrogSlimeCommand {
             }
             return 0;
         }
-        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        context.getSource().sendError(Component.literal("Only players can use this command!"));
         return 0;
     }
     
-    private static int listAvailableContracts(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int listAvailableContracts(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         if (player != null) {
             ContractManager.listAvailableContracts(player);
             return 1;
         }
-        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        context.getSource().sendError(Component.literal("Only players can use this command!"));
         return 0;
     }
     
-    private static int acceptContract(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int acceptContract(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         String contractType = StringArgumentType.getString(context, "type");
         
         if (player != null) {
             ContractManager.acceptContract(player, contractType);
             return 1;
         }
-        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        context.getSource().sendError(Component.literal("Only players can use this command!"));
         return 0;
     }
     
-    private static int listMyContracts(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int listMyContracts(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         if (player != null) {
             ContractManager.listContracts(player);
             return 1;
         }
-        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        context.getSource().sendError(Component.literal("Only players can use this command!"));
         return 0;
     }
 
-    private static int giveGuide(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int giveGuide(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         if (player == null) {
-            context.getSource().sendError(Text.literal("Only players can use this command!"));
+            context.getSource().sendError(Component.literal("Only players can use this command!"));
             return 0;
         }
 
@@ -498,120 +498,120 @@ public class FrogSlimeCommand {
             player.getInventory().insertStack(new ItemStack(ModItems.TASK_BOOK));
         }
 
-        player.sendMessage(Text.literal("Guide book restored. Use /frogslime tasks for the live board.")
-            .formatted(Formatting.GREEN), false);
+        player.sendMessage(Component.literal("Guide book restored. Use /frogslime tasks for the live board.")
+            .formatted(ChatFormatting.GREEN), false);
         if (GamemodeManager.isInGamemode(player)) {
             ModNetworking.openTasksScreen(player);
         }
         return 1;
     }
 
-    private static int showProgress(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int showProgress(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         if (player == null) {
-            context.getSource().sendError(Text.literal("Only players can use this command!"));
+            context.getSource().sendError(Component.literal("Only players can use this command!"));
             return 0;
         }
 
         if (!GamemodeManager.isInGamemode(player)) {
-            player.sendMessage(Text.literal("Enable the route first with /frogslime enable.")
-                .formatted(Formatting.RED), false);
+            player.sendMessage(Component.literal("Enable the route first with /frogslime enable.")
+                .formatted(ChatFormatting.RED), false);
             return 0;
         }
 
         TaskManager.syncDerivedTasks(player);
         ModNetworking.sendProgressSnapshot(player);
 
-        player.sendMessage(Text.literal("=== Route Progress ===")
-            .formatted(Formatting.GOLD, Formatting.BOLD), false);
-        player.sendMessage(Text.literal("Level " + PlayerLevel.getLevel(player)
+        player.sendMessage(Component.literal("=== Route Progress ===")
+            .formatted(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
+        player.sendMessage(Component.literal("Level " + PlayerLevel.getLevel(player)
             + " | Completion " + (int) (TaskManager.getOverallProgress(player) * 100)
             + "% | Tasks " + TaskManager.getCompletedTaskCount(player) + "/" + TaskType.values().length)
-            .formatted(Formatting.YELLOW), false);
+            .formatted(ChatFormatting.YELLOW), false);
 
         for (TaskType task : TaskManager.getActiveObjectives(player, 3)) {
             int progress = GamemodeManager.getData(player).getTaskProgress(task);
-            player.sendMessage(Text.literal("- " + task.getDisplayName() + " [" + progress + "/" + task.getRequiredAmount() + "]")
+            player.sendMessage(Component.literal("- " + task.getDisplayName() + " [" + progress + "/" + task.getRequiredAmount() + "]")
                 .formatted(task.getColor()), false);
-            player.sendMessage(Text.literal("  " + task.getDescription() + " -> " + task.getRewardText())
-                .formatted(Formatting.GRAY), false);
+            player.sendMessage(Component.literal("  " + task.getDescription() + " -> " + task.getRewardText())
+                .formatted(ChatFormatting.GRAY), false);
         }
 
         List<String> unlocks = getUpcomingUnlocks(player, 3);
         if (!unlocks.isEmpty()) {
-            player.sendMessage(Text.literal("Next unlocks").formatted(Formatting.AQUA), false);
+            player.sendMessage(Component.literal("Next unlocks").formatted(ChatFormatting.AQUA), false);
             for (String unlock : unlocks) {
-                player.sendMessage(Text.literal("  " + unlock).formatted(Formatting.WHITE), false);
+                player.sendMessage(Component.literal("  " + unlock).formatted(ChatFormatting.WHITE), false);
             }
         }
         return 1;
     }
 
-    private static int showAbilities(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int showAbilities(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         if (player == null) {
-            context.getSource().sendError(Text.literal("Only players can use this command!"));
+            context.getSource().sendError(Component.literal("Only players can use this command!"));
             return 0;
         }
 
         if (!GamemodeManager.isInGamemode(player)) {
-            player.sendMessage(Text.literal("Enable the route first with /frogslime enable.")
-                .formatted(Formatting.RED), false);
+            player.sendMessage(Component.literal("Enable the route first with /frogslime enable.")
+                .formatted(ChatFormatting.RED), false);
             return 0;
         }
 
         List<String> abilities = GamemodeManager.getData(player).getPlayerAbilities();
         MobAbility selected = PlayerAbilityManager.getCurrentAbility(player);
 
-        player.sendMessage(Text.literal("=== Player Abilities ===")
-            .formatted(Formatting.GOLD, Formatting.BOLD), false);
-        player.sendMessage(Text.literal("Unlocked: " + abilities.size())
-            .formatted(Formatting.YELLOW), false);
+        player.sendMessage(Component.literal("=== Player Abilities ===")
+            .formatted(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
+        player.sendMessage(Component.literal("Unlocked: " + abilities.size())
+            .formatted(ChatFormatting.YELLOW), false);
         if (selected != null) {
-            player.sendMessage(Text.literal("Selected: " + selected.getName() + " - " + selected.getDescription())
-                .formatted(Formatting.AQUA), false);
+            player.sendMessage(Component.literal("Selected: " + selected.getName() + " - " + selected.getDescription())
+                .formatted(ChatFormatting.AQUA), false);
         }
-        player.sendMessage(Text.literal("TAB cycles, R uses the selected active ability.")
-            .formatted(Formatting.GRAY), false);
+        player.sendMessage(Component.literal("TAB cycles, R uses the selected active ability.")
+            .formatted(ChatFormatting.GRAY), false);
 
         for (String abilityId : abilities) {
             MobAbility ability = MobAbility.getAbility(abilityId);
             if (ability != null) {
-                player.sendMessage(Text.literal("- " + ability.getName() + ": " + ability.getDescription())
-                    .formatted(Formatting.WHITE), false);
+                player.sendMessage(Component.literal("- " + ability.getName() + ": " + ability.getDescription())
+                    .formatted(ChatFormatting.WHITE), false);
             } else {
-                player.sendMessage(Text.literal("- " + abilityId)
-                    .formatted(Formatting.WHITE), false);
+                player.sendMessage(Component.literal("- " + abilityId)
+                    .formatted(ChatFormatting.WHITE), false);
             }
         }
         return 1;
     }
 
-    private static int showRecipes(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int showRecipes(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         if (player == null) {
-            context.getSource().sendError(Text.literal("Only players can use this command!"));
+            context.getSource().sendError(Component.literal("Only players can use this command!"));
             return 0;
         }
 
-        player.sendMessage(Text.literal("=== Route Recipes ===")
-            .formatted(Formatting.GOLD, Formatting.BOLD), false);
-        player.sendMessage(Text.literal("Ability Forge: crafting table + emeralds + slime balls.")
-            .formatted(Formatting.WHITE), false);
-        player.sendMessage(Text.literal("Frog Crafting Table: crafting tables + slime balls.")
-            .formatted(Formatting.WHITE), false);
-        player.sendMessage(Text.literal("Ability Stick: stick + stone + dirt + sand.")
-            .formatted(Formatting.WHITE), false);
-        player.sendMessage(Text.literal("Main crafting loop: use mob drops at the Ability Forge for final mob ability items.")
-            .formatted(Formatting.AQUA), false);
-        player.sendMessage(Text.literal("Legacy loop: combine a matching drop with an Ability Stick in an anvil.")
-            .formatted(Formatting.GRAY), false);
-        player.sendMessage(Text.literal("Contracts: /frogslime contract list, then /frogslime contract accept <id>.")
-            .formatted(Formatting.YELLOW), false);
+        player.sendMessage(Component.literal("=== Route Recipes ===")
+            .formatted(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
+        player.sendMessage(Component.literal("Ability Forge: crafting table + emeralds + slime balls.")
+            .formatted(ChatFormatting.WHITE), false);
+        player.sendMessage(Component.literal("Frog Crafting Table: crafting tables + slime balls.")
+            .formatted(ChatFormatting.WHITE), false);
+        player.sendMessage(Component.literal("Ability Stick: stick + stone + dirt + sand.")
+            .formatted(ChatFormatting.WHITE), false);
+        player.sendMessage(Component.literal("Main crafting loop: use mob drops at the Ability Forge for final mob ability items.")
+            .formatted(ChatFormatting.AQUA), false);
+        player.sendMessage(Component.literal("Legacy loop: combine a matching drop with an Ability Stick in an anvil.")
+            .formatted(ChatFormatting.GRAY), false);
+        player.sendMessage(Component.literal("Contracts: /frogslime contract list, then /frogslime contract accept <id>.")
+            .formatted(ChatFormatting.YELLOW), false);
         return 1;
     }
 
-    private static List<String> getUpcomingUnlocks(ServerPlayerEntity player, int limit) {
+    private static List<String> getUpcomingUnlocks(ServerPlayer player, int limit) {
         List<String> upcoming = new ArrayList<>();
         int level = PlayerLevel.getLevel(player);
         int evolutionStage = TaskManager.getHighestHelperEvolution(player);
@@ -629,17 +629,17 @@ public class FrogSlimeCommand {
         return upcoming;
     }
     
-    private static int testAchievement(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = context.getSource().getPlayer();
+    private static int testAchievement(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
         String achievementId = StringArgumentType.getString(context, "id");
         
         if (player != null) {
             AchievementManager.unlockAchievement(player, achievementId);
-            player.sendMessage(Text.literal("Testing achievement: " + achievementId)
-                .formatted(Formatting.YELLOW), false);
+            player.sendMessage(Component.literal("Testing achievement: " + achievementId)
+                .formatted(ChatFormatting.YELLOW), false);
             return 1;
         }
-        context.getSource().sendError(Text.literal("Only players can use this command!"));
+        context.getSource().sendError(Component.literal("Only players can use this command!"));
         return 0;
     }
 }

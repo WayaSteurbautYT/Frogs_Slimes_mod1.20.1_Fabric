@@ -1,6 +1,6 @@
 package com.wayacreate.frogslimegamemode.gamemode;
 
-import net.minecraft.world.GameMode;
+import net.minecraft.world.level.GameType;
 
 /**
  * Custom gamemode for Frog & Slime Gamemode
@@ -21,7 +21,7 @@ public class FrogSlimeGameMode {
      * Get the underlying Minecraft gamemode for our custom gamemode
      * We use SURVIVAL as the base since our gamemode is survival-based
      */
-    public static GameMode getBaseGameMode() {
-        return GameMode.SURVIVAL;
+    public static GameType getBaseGameMode() {
+        return GameType.SURVIVAL;
     }
 }

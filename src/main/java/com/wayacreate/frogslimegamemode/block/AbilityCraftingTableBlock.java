@@ -5,26 +5,26 @@ import com.wayacreate.frogslimegamemode.item.MobAbilityItem;
 import com.wayacreate.frogslimegamemode.tasks.TaskManager;
 import com.wayacreate.frogslimegamemode.tasks.TaskType;
 import com.wayacreate.frogslimegamemode.item.AbilityDropItem;
-import net.minecraft.block.AnvilBlock;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.NamedScreenHandlerFactory;
-import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.AnvilBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 public class AbilityCraftingTableBlock extends AnvilBlock {
-    public AbilityCraftingTableBlock(Settings settings) {
+    public AbilityCraftingTableBlock(Properties settings) {
         super(settings);
     }
 
     @Override
-    public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+    public InteractionResult onUse(BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         ItemStack stack = player.getStackInHand(hand);
         
         if (!world.isClient && !stack.isEmpty()) {
@@ -38,34 +38,34 @@ public class AbilityCraftingTableBlock extends AnvilBlock {
                 }
 
                 TaskManager.completeTask(player, TaskType.CRAFT_ABILITY);
-                if (player instanceof net.minecraft.server.network.ServerPlayerEntity serverPlayer) {
+                if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
                     AchievementManager.unlockAchievement(serverPlayer, "mob_smith");
                 }
 
-                player.sendMessage(Text.literal("Forged " + mobAbility.getName().getString() + " from " + stack.getItem().getName().getString() + ".")
-                    .formatted(net.minecraft.util.Formatting.GREEN), true);
-                return ActionResult.SUCCESS;
+                player.sendMessage(Component.literal("Forged " + mobAbility.getName().getString() + " from " + stack.getItem().getName().getString() + ".")
+                    .formatted(net.minecraft.ChatFormatting.GREEN), true);
+                return InteractionResult.SUCCESS;
             }
         }
         
         // Open anvil GUI with custom title
         if (!world.isClient) {
-            NamedScreenHandlerFactory factory = new SimpleNamedScreenHandlerFactory(
+            MenuProvider factory = new SimpleMenuProvider(
                 (syncId, playerInventory, playerEntity) -> 
                     new com.wayacreate.frogslimegamemode.screen.AbilityCraftingScreenHandler(syncId, playerInventory),
-                Text.literal("Ability Forge")
+                Component.literal("Ability Forge")
             );
             player.openHandledScreen(factory);
-            player.sendMessage(Text.literal("Tip: right-click this table with a mob drop to forge the matching ability item.")
-                .formatted(net.minecraft.util.Formatting.YELLOW), true);
-            return ActionResult.SUCCESS;
+            player.sendMessage(Component.literal("Tip: right-click this table with a mob drop to forge the matching ability item.")
+                .formatted(net.minecraft.ChatFormatting.YELLOW), true);
+            return InteractionResult.SUCCESS;
         }
         
-        return ActionResult.CONSUME;
+        return InteractionResult.CONSUME;
     }
     
     private String getAbilityIdFromItem(ItemStack stack) {
-        String itemId = net.minecraft.registry.Registries.ITEM.getId(stack.getItem()).getPath();
+        String itemId = net.minecraft.core.registries.BuiltInRegistries.ITEM.getId(stack.getItem()).getPath();
         return switch (itemId) {
             case "rotten_flesh" -> "zombie";
             case "bone" -> "skeleton";

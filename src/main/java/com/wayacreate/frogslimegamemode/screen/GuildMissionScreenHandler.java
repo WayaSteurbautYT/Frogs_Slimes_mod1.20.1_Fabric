@@ -3,44 +3,44 @@ package com.wayacreate.frogslimegamemode.screen;
 import com.wayacreate.frogslimegamemode.guild.Guild;
 import com.wayacreate.frogslimegamemode.guild.GuildManager;
 import com.wayacreate.frogslimegamemode.guild.GuildMission;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.SimpleInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.ScreenHandlerType;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class GuildMissionScreenHandler extends ScreenHandler {
+public class GuildMissionScreenHandler extends AbstractContainerMenu {
     private static final int ROWS = 6;
     private static final int TOP_SIZE = ROWS * 9;
 
-    private final ServerPlayerEntity player;
-    private final SimpleInventory inventory;
+    private final ServerPlayer player;
+    private final SimpleContainer inventory;
     private final Map<Integer, GuildMission> displayedMissions = new HashMap<>();
 
-    public GuildMissionScreenHandler(int syncId, PlayerInventory playerInventory, ServerPlayerEntity player) {
-        super(ScreenHandlerType.GENERIC_9X6, syncId);
+    public GuildMissionScreenHandler(int syncId, Inventory playerInventory, ServerPlayer player) {
+        super(MenuType.GENERIC_9X6, syncId);
         this.player = player;
-        this.inventory = new SimpleInventory(TOP_SIZE);
+        this.inventory = new SimpleContainer(TOP_SIZE);
 
         buildSlots(playerInventory);
         refreshMissions();
     }
 
     @Override
-    public void onSlotClick(int slotIndex, int button, SlotActionType actionType, PlayerEntity player) {
+    public void onSlotClick(int slotIndex, int button, ClickType actionType, Player player) {
         if (slotIndex >= 0 && slotIndex < TOP_SIZE) {
-            if (player instanceof ServerPlayerEntity serverPlayer) {
+            if (player instanceof ServerPlayer serverPlayer) {
                 GuildMission mission = displayedMissions.get(slotIndex);
                 if (mission != null) {
                     GuildManager.contributeToMissionFromInventory(serverPlayer, mission.getId());
@@ -55,16 +55,16 @@ public class GuildMissionScreenHandler extends ScreenHandler {
     }
 
     @Override
-    public ItemStack quickMove(PlayerEntity player, int slot) {
+    public ItemStack quickMove(Player player, int slot) {
         return ItemStack.EMPTY;
     }
 
     @Override
-    public boolean canUse(PlayerEntity player) {
+    public boolean canUse(Player player) {
         return true;
     }
 
-    private void buildSlots(PlayerInventory playerInventory) {
+    private void buildSlots(Inventory playerInventory) {
         for (int row = 0; row < ROWS; row++) {
             for (int column = 0; column < 9; column++) {
                 int slotIndex = column + row * 9;
@@ -106,10 +106,10 @@ public class GuildMissionScreenHandler extends ScreenHandler {
                 ? new ItemStack(Items.PAPER)
                 : mission.getRequiredItems().get(0);
 
-            Formatting color = mission.isCompletedBy(player.getUuid()) ? Formatting.GREEN : Formatting.GOLD;
+            ChatFormatting color = mission.isCompletedBy(player.getUuid()) ? ChatFormatting.GREEN : ChatFormatting.GOLD;
             String rewardText = mission.getCoinReward() > 0 ? " - " + mission.getCoinReward() + "c" : "";
-            icon.setCustomName(Text.literal(mission.getName() + rewardText)
-                .formatted(color, Formatting.BOLD));
+            icon.setCustomName(Component.literal(mission.getName() + rewardText)
+                .formatted(color, ChatFormatting.BOLD));
 
             inventory.setStack(i, icon);
             displayedMissions.put(i, mission);
@@ -117,7 +117,7 @@ public class GuildMissionScreenHandler extends ScreenHandler {
     }
 
     private static final class DisplaySlot extends Slot {
-        private DisplaySlot(SimpleInventory inventory, int index, int x, int y) {
+        private DisplaySlot(SimpleContainer inventory, int index, int x, int y) {
             super(inventory, index, x, y);
         }
 
@@ -127,7 +127,7 @@ public class GuildMissionScreenHandler extends ScreenHandler {
         }
 
         @Override
-        public boolean canTakeItems(PlayerEntity playerEntity) {
+        public boolean canTakeItems(Player playerEntity) {
             return false;
         }
     }

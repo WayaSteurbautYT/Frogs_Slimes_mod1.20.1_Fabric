@@ -1,52 +1,52 @@
 package com.wayacreate.frogslimegamemode.entity;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.goal.*;
-import net.minecraft.entity.attribute.DefaultAttributeContainer;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.boss.BossBar;
-import net.minecraft.entity.boss.ServerBossBar;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.data.DataTracker;
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.data.TrackedDataHandlerRegistry;
-import net.minecraft.entity.mob.HostileEntity;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.goal.*;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.BossEvent;
+import net.minecraft.server.level.ServerBossEvent;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.Level;
 
-public class FrogKingEntity extends HostileEntity {
-    private static final TrackedData<Integer> ROYAL_GUARDS = DataTracker.registerData(FrogKingEntity.class, TrackedDataHandlerRegistry.INTEGER);
-    private static final TrackedData<Integer> PHASE = DataTracker.registerData(FrogKingEntity.class, TrackedDataHandlerRegistry.INTEGER);
+public class FrogKingEntity extends Monster {
+    private static final EntityDataAccessor<Integer> ROYAL_GUARDS = SynchedEntityData.registerData(FrogKingEntity.class, EntityDataSerializers.INTEGER);
+    private static final EntityDataAccessor<Integer> PHASE = SynchedEntityData.registerData(FrogKingEntity.class, EntityDataSerializers.INTEGER);
     
-    private final ServerBossBar bossBar;
+    private final ServerBossEvent bossBar;
     private int jumpCooldown = 0;
     private int breathCooldown = 0;
     private int roarCooldown = 0;
     
-    public FrogKingEntity(EntityType<? extends HostileEntity> entityType, World world) {
+    public FrogKingEntity(EntityType<? extends Monster> entityType, Level world) {
         super(entityType, world);
         this.experiencePoints = 500;
-        this.bossBar = (ServerBossBar) new ServerBossBar(
-            Text.literal("Giant Frog King").formatted(Formatting.GOLD, Formatting.BOLD),
-            BossBar.Color.GREEN,
-            BossBar.Style.PROGRESS
+        this.bossBar = (ServerBossEvent) new ServerBossEvent(
+            Component.literal("Giant Frog King").formatted(ChatFormatting.GOLD, ChatFormatting.BOLD),
+            BossEvent.Color.GREEN,
+            BossEvent.Style.PROGRESS
         ).setDarkenSky(true);
     }
     
-    public static DefaultAttributeContainer.Builder createAttributes() {
-        return MobEntity.createMobAttributes()
-            .add(EntityAttributes.GENERIC_MAX_HEALTH, 300.0)
-            .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 15.0)
-            .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.5)
-            .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 64.0)
-            .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 1.0);
+    public static AttributeSupplier.Builder createAttributes() {
+        return Mob.createMobAttributes()
+            .add(Attributes.GENERIC_MAX_HEALTH, 300.0)
+            .add(Attributes.GENERIC_ATTACK_DAMAGE, 15.0)
+            .add(Attributes.GENERIC_MOVEMENT_SPEED, 0.5)
+            .add(Attributes.GENERIC_FOLLOW_RANGE, 64.0)
+            .add(Attributes.GENERIC_KNOCKBACK_RESISTANCE, 1.0);
     }
     
     @Override
@@ -61,10 +61,10 @@ public class FrogKingEntity extends HostileEntity {
         this.goalSelector.add(1, new SwimGoal(this));
         this.goalSelector.add(2, new MeleeAttackGoal(this, 2.0, true));
         this.goalSelector.add(3, new WanderAroundFarGoal(this, 1.5));
-        this.goalSelector.add(4, new LookAtEntityGoal(this, PlayerEntity.class, 16.0f));
+        this.goalSelector.add(4, new LookAtEntityGoal(this, Player.class, 16.0f));
         this.goalSelector.add(5, new LookAroundGoal(this));
         
-        this.targetSelector.add(1, new ActiveTargetGoal<>(this, PlayerEntity.class, true));
+        this.targetSelector.add(1, new ActiveTargetGoal<>(this, Player.class, true));
         this.targetSelector.add(2, new ActiveTargetGoal<>(this, SlimeHelperEntity.class, true));
         this.targetSelector.add(3, new ActiveTargetGoal<>(this, FrogHelperEntity.class, true));
     }
@@ -73,7 +73,7 @@ public class FrogKingEntity extends HostileEntity {
     public void onDeath(DamageSource damageSource) {
         super.onDeath(damageSource);
         if (!this.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) this.getWorld();
+            ServerLevel world = (ServerLevel) this.getWorld();
             
             // Spawn death particles
             for (int i = 0; i < 100; i++) {
@@ -81,7 +81,7 @@ public class FrogKingEntity extends HostileEntity {
                 double offsetY = world.random.nextDouble() * 6;
                 double offsetZ = (world.random.nextDouble() - 0.5) * 6;
                 
-                world.spawnParticles(net.minecraft.particle.ParticleTypes.TOTEM_OF_UNDYING,
+                world.spawnParticles(net.minecraft.core.particles.ParticleTypes.TOTEM_OF_UNDYING,
                     this.getX() + offsetX,
                     this.getY() + offsetY,
                     this.getZ() + offsetZ,
@@ -92,12 +92,12 @@ public class FrogKingEntity extends HostileEntity {
             this.dropItem(com.wayacreate.frogslimegamemode.item.ModItems.FINAL_EVOLUTION_CRYSTAL);
             
             // Broadcast death message
-            if (damageSource.getAttacker() instanceof PlayerEntity player) {
+            if (damageSource.getAttacker() instanceof Player player) {
                 this.getWorld().getPlayers().forEach(p -> 
-                    p.sendMessage(Text.literal("THE GIANT FROG KING has been defeated by ")
-                        .formatted(Formatting.GOLD)
-                        .append(Text.literal(player.getName().getString()).formatted(Formatting.YELLOW, Formatting.BOLD))
-                        .append(Text.literal("!").formatted(Formatting.GOLD)), false)
+                    p.sendMessage(Component.literal("THE GIANT FROG KING has been defeated by ")
+                        .formatted(ChatFormatting.GOLD)
+                        .append(Component.literal(player.getName().getString()).formatted(ChatFormatting.YELLOW, ChatFormatting.BOLD))
+                        .append(Component.literal("!").formatted(ChatFormatting.GOLD)), false)
                 );
             }
             
@@ -157,8 +157,8 @@ public class FrogKingEntity extends HostileEntity {
             
             // Royal crown particles
             if (this.age % 10 == 0) {
-                ServerWorld world = (ServerWorld) this.getWorld();
-                world.spawnParticles(net.minecraft.particle.ParticleTypes.GLOW,
+                ServerLevel world = (ServerLevel) this.getWorld();
+                world.spawnParticles(net.minecraft.core.particles.ParticleTypes.GLOW,
                     this.getX(),
                     this.getY() + 2.0,
                     this.getZ(),
@@ -183,15 +183,15 @@ public class FrogKingEntity extends HostileEntity {
         if (newPhase != currentPhase) {
             setPhase(newPhase);
             this.getWorld().getPlayers().forEach(p -> 
-                p.sendMessage(Text.literal("The Giant Frog King enters PHASE " + newPhase + "!")
-                    .formatted(Formatting.RED, Formatting.BOLD), true)
+                p.sendMessage(Component.literal("The Giant Frog King enters PHASE " + newPhase + "!")
+                    .formatted(ChatFormatting.RED, ChatFormatting.BOLD), true)
             );
         }
     }
     
     private void performTongueBreath() {
         if (this.getTarget() != null) {
-            ServerWorld world = (ServerWorld) this.getWorld();
+            ServerLevel world = (ServerLevel) this.getWorld();
             
             // Shoot tongue projectiles
             for (int i = 0; i < 5; i++) {
@@ -199,7 +199,7 @@ public class FrogKingEntity extends HostileEntity {
                 double dx = Math.cos(angle) * 3;
                 double dz = Math.sin(angle) * 3;
                 
-                world.spawnParticles(net.minecraft.particle.ParticleTypes.SPLASH,
+                world.spawnParticles(net.minecraft.core.particles.ParticleTypes.SPLASH,
                     this.getX() + dx,
                     this.getY() + 1.5,
                     this.getZ() + dz,
@@ -207,7 +207,7 @@ public class FrogKingEntity extends HostileEntity {
                 
                 // Damage nearby entities
                 world.getOtherEntities(this, this.getBoundingBox().expand(6)).forEach(entity -> {
-                    if (entity.distanceTo(this) < 6 && entity instanceof net.minecraft.entity.LivingEntity living) {
+                    if (entity.distanceTo(this) < 6 && entity instanceof net.minecraft.world.entity.LivingEntity living) {
                         living.damage(world.getDamageSources().mobAttack(this), 8.0f);
                         living.addVelocity(0, 0.5, 0);
                     }
@@ -217,23 +217,23 @@ public class FrogKingEntity extends HostileEntity {
     }
     
     private void performRoyalRoar() {
-        ServerWorld world = (ServerWorld) this.getWorld();
+        ServerLevel world = (ServerLevel) this.getWorld();
         
         // Knockback all nearby entities
         world.getOtherEntities(this, this.getBoundingBox().expand(15)).forEach(entity -> {
             if (entity.distanceTo(this) < 15) {
-                Vec3d direction = entity.getPos().subtract(this.getPos()).normalize();
+                Vec3 direction = entity.getPos().subtract(this.getPos()).normalize();
                 entity.addVelocity(direction.x * 4.0, 1.0, direction.z * 4.0);
                 entity.velocityModified = true;
                 
-                if (entity instanceof net.minecraft.entity.LivingEntity living) {
+                if (entity instanceof net.minecraft.world.entity.LivingEntity living) {
                     living.damage(world.getDamageSources().mobAttack(this), 12.0f);
                 }
             }
         });
         
         // Screen shake effect
-        world.spawnParticles(net.minecraft.particle.ParticleTypes.SONIC_BOOM,
+        world.spawnParticles(net.minecraft.core.particles.ParticleTypes.SONIC_BOOM,
             this.getX(), this.getY() + 1, this.getZ(),
             30, 0.5, 0.5, 0.5, 0.1);
     }
@@ -247,8 +247,8 @@ public class FrogKingEntity extends HostileEntity {
             if (distance < 12.0) {
                 this.addVelocity(dx / distance * 2.0, 1.2, dz / distance * 2.0);
                 
-                ServerWorld world = (ServerWorld) this.getWorld();
-                world.spawnParticles(net.minecraft.particle.ParticleTypes.EXPLOSION,
+                ServerLevel world = (ServerLevel) this.getWorld();
+                world.spawnParticles(net.minecraft.core.particles.ParticleTypes.EXPLOSION,
                     this.getX(), this.getY(), this.getZ(),
                     8, 0.4, 0.4, 0.4, 0.15);
             }
@@ -272,13 +272,13 @@ public class FrogKingEntity extends HostileEntity {
     }
     
     @Override
-    public void writeCustomDataToNbt(NbtCompound nbt) {
+    public void writeCustomDataToNbt(CompoundTag nbt) {
         super.writeCustomDataToNbt(nbt);
         nbt.putInt("RoyalGuards", getRoyalGuards());
     }
     
     @Override
-    public void readCustomDataFromNbt(NbtCompound nbt) {
+    public void readCustomDataFromNbt(CompoundTag nbt) {
         super.readCustomDataFromNbt(nbt);
         setRoyalGuards(nbt.getInt("RoyalGuards"));
     }
@@ -289,13 +289,13 @@ public class FrogKingEntity extends HostileEntity {
     }
     
     @Override
-    public void onStartedTrackingBy(ServerPlayerEntity player) {
+    public void onStartedTrackingBy(ServerPlayer player) {
         super.onStartedTrackingBy(player);
         this.bossBar.addPlayer(player);
     }
     
     @Override
-    public void onStoppedTrackingBy(ServerPlayerEntity player) {
+    public void onStoppedTrackingBy(ServerPlayer player) {
         super.onStoppedTrackingBy(player);
         this.bossBar.removePlayer(player);
     }

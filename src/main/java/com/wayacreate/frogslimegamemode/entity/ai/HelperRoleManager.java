@@ -1,8 +1,8 @@
 package com.wayacreate.frogslimegamemode.entity.ai;
 
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.passive.TameableEntity;
-import net.minecraft.util.Formatting;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.ChatFormatting;
 
 public final class HelperRoleManager {
     public static final String MINER = "Miner";
@@ -34,18 +34,18 @@ public final class HelperRoleManager {
         };
     }
 
-    public static Formatting getRoleColor(String role) {
+    public static ChatFormatting getRoleColor(String role) {
         return switch (normalizeRole(role)) {
-            case MINER -> Formatting.DARK_GRAY;
-            case LUMBERJACK -> Formatting.DARK_GREEN;
-            case COMBAT_SPECIALIST -> Formatting.RED;
-            case BUILDER -> Formatting.GOLD;
-            case FARMER -> Formatting.GREEN;
-            default -> Formatting.WHITE;
+            case MINER -> ChatFormatting.DARK_GRAY;
+            case LUMBERJACK -> ChatFormatting.DARK_GREEN;
+            case COMBAT_SPECIALIST -> ChatFormatting.RED;
+            case BUILDER -> ChatFormatting.GOLD;
+            case FARMER -> ChatFormatting.GREEN;
+            default -> ChatFormatting.WHITE;
         };
     }
 
-    public static Goal createRoleGoal(String role, TameableEntity entity) {
+    public static Goal createRoleGoal(String role, TamableAnimal entity) {
         return switch (normalizeRole(role)) {
             case MINER -> new MiningGoal(entity);
             case LUMBERJACK -> new LumberjackGoal(entity);

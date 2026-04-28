@@ -1,20 +1,20 @@
 package com.wayacreate.frogslimegamemode.item;
 
-import net.minecraft.item.ArmorItem;
-import net.minecraft.item.ArmorMaterials;
-import net.minecraft.item.ItemStack;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.ArmorMaterials;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 public class MustardHelmetItem extends ArmorItem {
-    public MustardHelmetItem(Settings settings) {
+    public MustardHelmetItem(Properties settings) {
         super(ArmorMaterials.GOLD, Type.HELMET, settings);
     }
     
     @Override
-    public Text getName(ItemStack stack) {
-        return Text.literal("Mustard Helmet")
-            .formatted(Formatting.YELLOW, Formatting.BOLD);
+    public Component getName(ItemStack stack) {
+        return Component.literal("Mustard Helmet")
+            .formatted(ChatFormatting.YELLOW, ChatFormatting.BOLD);
     }
     
     @Override

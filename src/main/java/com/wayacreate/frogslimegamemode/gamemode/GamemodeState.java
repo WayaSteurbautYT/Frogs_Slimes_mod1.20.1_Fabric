@@ -1,11 +1,11 @@
 package com.wayacreate.frogslimegamemode.gamemode;
 
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.PersistentState;
-import net.minecraft.world.World;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class GamemodeState extends PersistentState {
+public class GamemodeState extends SavedData {
     private static final String KEY = "frogslime_gamemode_data";
     
     private final Map<UUID, PlayerData> playerDataMap = new HashMap<>();
@@ -27,9 +27,9 @@ public class GamemodeState extends PersistentState {
     }
     
     public static GamemodeState get(MinecraftServer server) {
-        return server.getWorld(World.OVERWORLD)
-            .getPersistentStateManager()
-            .getOrCreate(GamemodeState::fromNbt, GamemodeState::new, KEY);
+        return server.overworld()
+            .getDataStorage()
+            .computeIfAbsent(GamemodeState::fromNbt, GamemodeState::new, KEY);
     }
     
     public PlayerData getPlayerData(UUID uuid) {
@@ -46,15 +46,15 @@ public class GamemodeState extends PersistentState {
     
     public void removePlayerData(UUID uuid) {
         playerDataMap.remove(uuid);
-        markDirty();
+        setDirty();
     }
     
     @Override
-    public NbtCompound writeNbt(NbtCompound nbt) {
-        NbtCompound playersNbt = new NbtCompound();
+    public CompoundTag writeNbt(CompoundTag nbt) {
+        CompoundTag playersNbt = new CompoundTag();
         
         for (Map.Entry<UUID, PlayerData> entry : playerDataMap.entrySet()) {
-            NbtCompound playerNbt = entry.getValue().toNbt();
+            CompoundTag playerNbt = entry.getValue().toNbt();
             playersNbt.put(entry.getKey().toString(), playerNbt);
         }
         
@@ -62,16 +62,16 @@ public class GamemodeState extends PersistentState {
         return nbt;
     }
     
-    public static GamemodeState fromNbt(NbtCompound nbt) {
+    public static GamemodeState fromNbt(CompoundTag nbt) {
         GamemodeState state = new GamemodeState();
         
-        if (nbt.contains("players", NbtElement.COMPOUND_TYPE)) {
-            NbtCompound playersNbt = nbt.getCompound("players");
+        if (nbt.contains("players", Tag.COMPOUND_TYPE)) {
+            CompoundTag playersNbt = nbt.getCompound("players");
             
             for (String uuidStr : playersNbt.getKeys()) {
                 try {
                     UUID uuid = UUID.fromString(uuidStr);
-                    NbtCompound playerNbt = playersNbt.getCompound(uuidStr);
+                    CompoundTag playerNbt = playersNbt.getCompound(uuidStr);
                     PlayerData playerData = PlayerData.fromNbt(playerNbt);
                     state.playerDataMap.put(uuid, playerData);
                 } catch (Exception e) {
@@ -114,8 +114,8 @@ public class GamemodeState extends PersistentState {
             this.abilityCooldown = 0;
         }
         
-        public NbtCompound toNbt() {
-            NbtCompound nbt = new NbtCompound();
+        public CompoundTag toNbt() {
+            CompoundTag nbt = new CompoundTag();
             nbt.putUuid("uuid", uuid);
             nbt.putBoolean("gamemodeEnabled", gamemodeEnabled);
             nbt.putInt("helpersSpawned", helpersSpawned);
@@ -128,22 +128,22 @@ public class GamemodeState extends PersistentState {
             nbt.putInt("currentAbilityIndex", currentAbilityIndex);
             nbt.putInt("abilityCooldown", abilityCooldown);
             
-            NbtCompound tasksNbt = new NbtCompound();
+            CompoundTag tasksNbt = new CompoundTag();
             for (Map.Entry<String, Integer> entry : taskProgress.entrySet()) {
                 tasksNbt.putInt(entry.getKey(), entry.getValue());
             }
             nbt.put("taskProgress", tasksNbt);
             
-            NbtList abilitiesNbt = new NbtList();
+            ListTag abilitiesNbt = new ListTag();
             for (String ability : playerAbilities) {
-                abilitiesNbt.add(net.minecraft.nbt.NbtString.of(ability));
+                abilitiesNbt.add(net.minecraft.nbt.StringTag.valueOf(ability));
             }
             nbt.put("playerAbilities", abilitiesNbt);
             
             return nbt;
         }
         
-        public static PlayerData fromNbt(NbtCompound nbt) {
+        public static PlayerData fromNbt(CompoundTag nbt) {
             UUID uuid = nbt.getUuid("uuid");
             PlayerData data = new PlayerData(uuid);
             
@@ -158,15 +158,15 @@ public class GamemodeState extends PersistentState {
             data.currentAbilityIndex = nbt.getInt("currentAbilityIndex");
             data.abilityCooldown = nbt.getInt("abilityCooldown");
             
-            if (nbt.contains("taskProgress", NbtElement.COMPOUND_TYPE)) {
-                NbtCompound tasksNbt = nbt.getCompound("taskProgress");
+            if (nbt.contains("taskProgress", Tag.COMPOUND_TYPE)) {
+                CompoundTag tasksNbt = nbt.getCompound("taskProgress");
                 for (String key : tasksNbt.getKeys()) {
                     data.taskProgress.put(key, tasksNbt.getInt(key));
                 }
             }
             
-            if (nbt.contains("playerAbilities", NbtElement.LIST_TYPE)) {
-                NbtList abilitiesNbt = nbt.getList("playerAbilities", NbtElement.STRING_TYPE);
+            if (nbt.contains("playerAbilities", Tag.LIST_TYPE)) {
+                ListTag abilitiesNbt = nbt.getList("playerAbilities", Tag.STRING_TYPE);
                 for (int i = 0; i < abilitiesNbt.size(); i++) {
                     data.playerAbilities.add(abilitiesNbt.getString(i));
                 }

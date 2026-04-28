@@ -1,11 +1,11 @@
 package com.wayacreate.frogslimegamemode.guild;
 
 import com.wayacreate.frogslimegamemode.economy.EconomyManager;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,23 +15,23 @@ public class GuildManager {
     private static final Map<UUID, UUID> playerGuilds = new ConcurrentHashMap<>(); // playerUuid -> guildId
     private static final Map<UUID, Set<UUID>> guildInvites = new ConcurrentHashMap<>(); // playerUuid -> set of guilds
     
-    public static Guild createGuild(String name, ServerPlayerEntity owner) {
+    public static Guild createGuild(String name, ServerPlayer owner) {
         // Check if player is already in a guild
         if (playerGuilds.containsKey(owner.getUuid())) {
-            owner.sendMessage(Text.literal("You are already in a guild! Leave it first.").formatted(Formatting.RED), false);
+            owner.sendMessage(Component.literal("You are already in a guild! Leave it first.").formatted(ChatFormatting.RED), false);
             return null;
         }
         
         // Check name length
         if (name.length() < 3 || name.length() > 20) {
-            owner.sendMessage(Text.literal("Guild name must be 3-20 characters!").formatted(Formatting.RED), false);
+            owner.sendMessage(Component.literal("Guild name must be 3-20 characters!").formatted(ChatFormatting.RED), false);
             return null;
         }
         
         // Check if name is taken
         for (Guild guild : guildsById.values()) {
             if (guild.getName().equalsIgnoreCase(name)) {
-                owner.sendMessage(Text.literal("A guild with that name already exists!").formatted(Formatting.RED), false);
+                owner.sendMessage(Component.literal("A guild with that name already exists!").formatted(ChatFormatting.RED), false);
                 return null;
             }
         }
@@ -40,22 +40,22 @@ public class GuildManager {
         guildsById.put(guild.getId(), guild);
         playerGuilds.put(owner.getUuid(), guild.getId());
         
-        owner.sendMessage(Text.literal("Created guild: ").formatted(Formatting.GREEN)
-            .append(Text.literal(name).formatted(Formatting.GOLD)), false);
+        owner.sendMessage(Component.literal("Created guild: ").formatted(ChatFormatting.GREEN)
+            .append(Component.literal(name).formatted(ChatFormatting.GOLD)), false);
         
         return guild;
     }
     
-    public static boolean disbandGuild(ServerPlayerEntity player) {
+    public static boolean disbandGuild(ServerPlayer player) {
         Guild guild = getPlayerGuild(player);
         
         if (guild == null) {
-            player.sendMessage(Text.literal("You are not in a guild!").formatted(Formatting.RED), false);
+            player.sendMessage(Component.literal("You are not in a guild!").formatted(ChatFormatting.RED), false);
             return false;
         }
         
         if (!guild.getOwnerUuid().equals(player.getUuid())) {
-            player.sendMessage(Text.literal("Only the guild owner can disband!").formatted(Formatting.RED), false);
+            player.sendMessage(Component.literal("Only the guild owner can disband!").formatted(ChatFormatting.RED), false);
             return false;
         }
         
@@ -66,43 +66,43 @@ public class GuildManager {
         
         guildsById.remove(guild.getId());
         
-        player.sendMessage(Text.literal("Disbanded guild: ").formatted(Formatting.RED)
-            .append(Text.literal(guild.getName()).formatted(Formatting.GOLD)), false);
+        player.sendMessage(Component.literal("Disbanded guild: ").formatted(ChatFormatting.RED)
+            .append(Component.literal(guild.getName()).formatted(ChatFormatting.GOLD)), false);
         
         return true;
     }
     
-    public static boolean invitePlayer(ServerPlayerEntity inviter, ServerPlayerEntity target) {
+    public static boolean invitePlayer(ServerPlayer inviter, ServerPlayer target) {
         Guild guild = getPlayerGuild(inviter);
         
         if (guild == null) {
-            inviter.sendMessage(Text.literal("You are not in a guild!").formatted(Formatting.RED), false);
+            inviter.sendMessage(Component.literal("You are not in a guild!").formatted(ChatFormatting.RED), false);
             return false;
         }
         
         if (!guild.hasPermission(inviter.getUuid(), Guild.GuildRank.OFFICER)) {
-            inviter.sendMessage(Text.literal("Only officers and above can invite!").formatted(Formatting.RED), false);
+            inviter.sendMessage(Component.literal("Only officers and above can invite!").formatted(ChatFormatting.RED), false);
             return false;
         }
         
         if (playerGuilds.containsKey(target.getUuid())) {
-            inviter.sendMessage(Text.literal("That player is already in a guild!").formatted(Formatting.RED), false);
+            inviter.sendMessage(Component.literal("That player is already in a guild!").formatted(ChatFormatting.RED), false);
             return false;
         }
         
         // Add invite
         guildInvites.computeIfAbsent(target.getUuid(), k -> ConcurrentHashMap.newKeySet()).add(guild.getId());
         
-        inviter.sendMessage(Text.literal("Invited ").formatted(Formatting.GREEN)
+        inviter.sendMessage(Component.literal("Invited ").formatted(ChatFormatting.GREEN)
             .append(target.getName().getString())
-            .append(Text.literal(" to your guild!")), false);
+            .append(Component.literal(" to your guild!")), false);
         
-        target.sendMessage(Text.literal("").formatted(Formatting.YELLOW)
+        target.sendMessage(Component.literal("").formatted(ChatFormatting.YELLOW)
             .append(inviter.getName().getString())
-            .append(Text.literal(" invited you to join "))
-            .append(Text.literal(guild.getName()).formatted(Formatting.GOLD))
-            .append(Text.literal("! "))
-            .append(Text.literal("[Accept]").formatted(Formatting.GREEN)
+            .append(Component.literal(" invited you to join "))
+            .append(Component.literal(guild.getName()).formatted(ChatFormatting.GOLD))
+            .append(Component.literal("! "))
+            .append(Component.literal("[Accept]").formatted(ChatFormatting.GREEN)
                 .styled(s -> s.withClickEvent(
                     new net.minecraft.text.ClickEvent(net.minecraft.text.ClickEvent.Action.RUN_COMMAND, 
                         "/frogslime guild join " + guild.getName())))),
@@ -111,7 +111,7 @@ public class GuildManager {
         return true;
     }
     
-    public static boolean joinGuild(ServerPlayerEntity player, String guildName) {
+    public static boolean joinGuild(ServerPlayer player, String guildName) {
         // Find guild
         Guild guild = null;
         for (Guild g : guildsById.values()) {
@@ -122,20 +122,20 @@ public class GuildManager {
         }
         
         if (guild == null) {
-            player.sendMessage(Text.literal("Guild not found!").formatted(Formatting.RED), false);
+            player.sendMessage(Component.literal("Guild not found!").formatted(ChatFormatting.RED), false);
             return false;
         }
         
         // Check if invited
         Set<UUID> invites = guildInvites.getOrDefault(player.getUuid(), new HashSet<>());
         if (!invites.contains(guild.getId())) {
-            player.sendMessage(Text.literal("You have not been invited to this guild!").formatted(Formatting.RED), false);
+            player.sendMessage(Component.literal("You have not been invited to this guild!").formatted(ChatFormatting.RED), false);
             return false;
         }
         
         // Check if already in guild
         if (playerGuilds.containsKey(player.getUuid())) {
-            player.sendMessage(Text.literal("You are already in a guild!").formatted(Formatting.RED), false);
+            player.sendMessage(Component.literal("You are already in a guild!").formatted(ChatFormatting.RED), false);
             return false;
         }
         
@@ -144,17 +144,17 @@ public class GuildManager {
         playerGuilds.put(player.getUuid(), guild.getId());
         invites.remove(guild.getId());
         
-        player.sendMessage(Text.literal("Joined guild: ").formatted(Formatting.GREEN)
-            .append(Text.literal(guild.getName()).formatted(Formatting.GOLD)), false);
+        player.sendMessage(Component.literal("Joined guild: ").formatted(ChatFormatting.GREEN)
+            .append(Component.literal(guild.getName()).formatted(ChatFormatting.GOLD)), false);
         
         // Notify members
         for (UUID memberId : guild.getMembers()) {
             if (!memberId.equals(player.getUuid())) {
-                ServerPlayerEntity member = player.getServer().getPlayerManager().getPlayer(memberId);
+                ServerPlayer member = player.getServer().getPlayerManager().getPlayer(memberId);
                 if (member != null) {
-                    member.sendMessage(Text.literal("").formatted(Formatting.YELLOW)
+                    member.sendMessage(Component.literal("").formatted(ChatFormatting.YELLOW)
                         .append(player.getName().getString())
-                        .append(Text.literal(" joined the guild!")), false);
+                        .append(Component.literal(" joined the guild!")), false);
                 }
             }
         }
@@ -162,29 +162,29 @@ public class GuildManager {
         return true;
     }
     
-    public static boolean leaveGuild(ServerPlayerEntity player) {
+    public static boolean leaveGuild(ServerPlayer player) {
         Guild guild = getPlayerGuild(player);
         
         if (guild == null) {
-            player.sendMessage(Text.literal("You are not in a guild!").formatted(Formatting.RED), false);
+            player.sendMessage(Component.literal("You are not in a guild!").formatted(ChatFormatting.RED), false);
             return false;
         }
         
         if (guild.getOwnerUuid().equals(player.getUuid())) {
-            player.sendMessage(Text.literal("You must disband the guild or transfer ownership first!").formatted(Formatting.RED), false);
+            player.sendMessage(Component.literal("You must disband the guild or transfer ownership first!").formatted(ChatFormatting.RED), false);
             return false;
         }
         
         guild.removeMember(player.getUuid());
         playerGuilds.remove(player.getUuid());
         
-        player.sendMessage(Text.literal("Left guild: ").formatted(Formatting.RED)
-            .append(Text.literal(guild.getName()).formatted(Formatting.GOLD)), false);
+        player.sendMessage(Component.literal("Left guild: ").formatted(ChatFormatting.RED)
+            .append(Component.literal(guild.getName()).formatted(ChatFormatting.GOLD)), false);
         
         return true;
     }
     
-    public static Guild getPlayerGuild(ServerPlayerEntity player) {
+    public static Guild getPlayerGuild(ServerPlayer player) {
         return getPlayerGuild(player.getUuid());
     }
 
@@ -201,17 +201,17 @@ public class GuildManager {
         return guild != null ? guild.getRank(playerUuid) : null;
     }
 
-    public static Formatting getGuildRankColor(UUID playerUuid) {
+    public static ChatFormatting getGuildRankColor(UUID playerUuid) {
         Guild.GuildRank rank = getPlayerRank(playerUuid);
         if (rank == null) {
-            return Formatting.WHITE;
+            return ChatFormatting.WHITE;
         }
 
         return switch (rank) {
-            case OWNER -> Formatting.GOLD;
-            case OFFICER -> Formatting.RED;
-            case VETERAN -> Formatting.GREEN;
-            case MEMBER -> Formatting.AQUA;
+            case OWNER -> ChatFormatting.GOLD;
+            case OFFICER -> ChatFormatting.RED;
+            case VETERAN -> ChatFormatting.GREEN;
+            case MEMBER -> ChatFormatting.AQUA;
         };
     }
 
@@ -228,11 +228,11 @@ public class GuildManager {
         return new ArrayList<>(guildsById.values());
     }
     
-    public static boolean contributeToMission(ServerPlayerEntity player, UUID missionId, List<net.minecraft.item.ItemStack> items) {
+    public static boolean contributeToMission(ServerPlayer player, UUID missionId, List<net.minecraft.world.item.ItemStack> items) {
         Guild guild = getPlayerGuild(player);
         
         if (guild == null) {
-            player.sendMessage(Text.literal("You are not in a guild!").formatted(Formatting.RED), false);
+            player.sendMessage(Component.literal("You are not in a guild!").formatted(ChatFormatting.RED), false);
             return false;
         }
         
@@ -245,17 +245,17 @@ public class GuildManager {
         }
         
         if (mission == null) {
-            player.sendMessage(Text.literal("Mission not found!").formatted(Formatting.RED), false);
+            player.sendMessage(Component.literal("Mission not found!").formatted(ChatFormatting.RED), false);
             return false;
         }
         
         if (!mission.isActive()) {
-            player.sendMessage(Text.literal("This mission has expired!").formatted(Formatting.RED), false);
+            player.sendMessage(Component.literal("This mission has expired!").formatted(ChatFormatting.RED), false);
             return false;
         }
         
         if (mission.isCompletedBy(player.getUuid())) {
-            player.sendMessage(Text.literal("You have already completed this mission!").formatted(Formatting.YELLOW), false);
+            player.sendMessage(Component.literal("You have already completed this mission!").formatted(ChatFormatting.YELLOW), false);
             return false;
         }
         
@@ -265,7 +265,7 @@ public class GuildManager {
             mission.markCompleted(player.getUuid());
             
             // Give rewards
-            for (net.minecraft.item.ItemStack reward : mission.getItemRewards()) {
+            for (net.minecraft.world.item.ItemStack reward : mission.getItemRewards()) {
                 player.getInventory().offerOrDrop(reward);
             }
             
@@ -273,21 +273,21 @@ public class GuildManager {
                 EconomyManager.addBalance(player, mission.getCoinReward());
             }
             
-            player.sendMessage(Text.literal("Mission completed! ").formatted(Formatting.GREEN)
-                .append(Text.literal("Rewards received!").formatted(Formatting.GOLD)), false);
+            player.sendMessage(Component.literal("Mission completed! ").formatted(ChatFormatting.GREEN)
+                .append(Component.literal("Rewards received!").formatted(ChatFormatting.GOLD)), false);
             
             return true;
         } else {
-            player.sendMessage(Text.literal("You haven't contributed all required items!").formatted(Formatting.RED), false);
+            player.sendMessage(Component.literal("You haven't contributed all required items!").formatted(ChatFormatting.RED), false);
             return false;
         }
     }
 
-    public static boolean contributeToMissionFromInventory(ServerPlayerEntity player, UUID missionId) {
+    public static boolean contributeToMissionFromInventory(ServerPlayer player, UUID missionId) {
         Guild guild = getPlayerGuild(player);
 
         if (guild == null) {
-            player.sendMessage(Text.literal("You are not in a guild!").formatted(Formatting.RED), false);
+            player.sendMessage(Component.literal("You are not in a guild!").formatted(ChatFormatting.RED), false);
             return false;
         }
 
@@ -300,23 +300,23 @@ public class GuildManager {
         }
 
         if (mission == null) {
-            player.sendMessage(Text.literal("Mission not found!").formatted(Formatting.RED), false);
+            player.sendMessage(Component.literal("Mission not found!").formatted(ChatFormatting.RED), false);
             return false;
         }
 
         if (!mission.isActive()) {
-            player.sendMessage(Text.literal("This mission has expired!").formatted(Formatting.RED), false);
+            player.sendMessage(Component.literal("This mission has expired!").formatted(ChatFormatting.RED), false);
             return false;
         }
 
         if (mission.isCompletedBy(player.getUuid())) {
-            player.sendMessage(Text.literal("You already completed this mission.").formatted(Formatting.YELLOW), false);
+            player.sendMessage(Component.literal("You already completed this mission.").formatted(ChatFormatting.YELLOW), false);
             return false;
         }
 
         if (!hasRequiredItems(player.getInventory(), mission.getRequiredItems())) {
-            player.sendMessage(Text.literal("You do not have the required items for this mission!")
-                .formatted(Formatting.RED), false);
+            player.sendMessage(Component.literal("You do not have the required items for this mission!")
+                .formatted(ChatFormatting.RED), false);
             return false;
         }
 
@@ -331,40 +331,40 @@ public class GuildManager {
             EconomyManager.addBalance(player, mission.getCoinReward());
         }
 
-        player.sendMessage(Text.literal("Mission completed! Rewards delivered.")
-            .formatted(Formatting.GREEN), false);
+        player.sendMessage(Component.literal("Mission completed! Rewards delivered.")
+            .formatted(ChatFormatting.GREEN), false);
         return true;
     }
     
-    public static boolean createMission(ServerPlayerEntity player, GuildMission mission) {
+    public static boolean createMission(ServerPlayer player, GuildMission mission) {
         Guild guild = getPlayerGuild(player);
         
         if (guild == null) {
-            player.sendMessage(Text.literal("You are not in a guild!").formatted(Formatting.RED), false);
+            player.sendMessage(Component.literal("You are not in a guild!").formatted(ChatFormatting.RED), false);
             return false;
         }
         
         if (!guild.hasPermission(player.getUuid(), Guild.GuildRank.OFFICER)) {
-            player.sendMessage(Text.literal("Only officers and above can create missions!").formatted(Formatting.RED), false);
+            player.sendMessage(Component.literal("Only officers and above can create missions!").formatted(ChatFormatting.RED), false);
             return false;
         }
         
         // Cost to create mission (from guild coins)
         int cost = 100;
         if (!guild.removeCoins(cost)) {
-            player.sendMessage(Text.literal("Guild doesn't have enough coins! (Need " + cost + ")").formatted(Formatting.RED), false);
+            player.sendMessage(Component.literal("Guild doesn't have enough coins! (Need " + cost + ")").formatted(ChatFormatting.RED), false);
             return false;
         }
         
         guild.addMission(mission);
         
-        player.sendMessage(Text.literal("Created mission: ").formatted(Formatting.GREEN)
-            .append(Text.literal(mission.getName()).formatted(Formatting.GOLD)), false);
+        player.sendMessage(Component.literal("Created mission: ").formatted(ChatFormatting.GREEN)
+            .append(Component.literal(mission.getName()).formatted(ChatFormatting.GOLD)), false);
         
         return true;
     }
 
-    private static boolean hasRequiredItems(PlayerInventory inventory, List<ItemStack> requiredItems) {
+    private static boolean hasRequiredItems(Inventory inventory, List<ItemStack> requiredItems) {
         for (ItemStack requiredItem : requiredItems) {
             int collected = 0;
             for (int slot = 0; slot < inventory.size(); slot++) {
@@ -382,7 +382,7 @@ public class GuildManager {
         return true;
     }
 
-    private static void removeRequiredItems(PlayerInventory inventory, List<ItemStack> requiredItems) {
+    private static void removeRequiredItems(Inventory inventory, List<ItemStack> requiredItems) {
         for (ItemStack requiredItem : requiredItems) {
             int remaining = requiredItem.getCount();
             for (int slot = 0; slot < inventory.size() && remaining > 0; slot++) {

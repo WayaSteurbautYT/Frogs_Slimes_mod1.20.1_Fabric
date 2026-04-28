@@ -5,23 +5,23 @@ import com.wayacreate.frogslimegamemode.entity.SlimeHelperEntity;
 import com.wayacreate.frogslimegamemode.eating.MobAbility;
 import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
 import com.wayacreate.frogslimegamemode.network.ModNetworking;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(PlayerEntity.class)
+@Mixin(Player.class)
 public abstract class PlayerEntityMixin {
     @Inject(method = "attack", at = @At("HEAD"))
     private void onAttack(Entity target, CallbackInfo ci) {
-        PlayerEntity player = (PlayerEntity) (Object) this;
+        Player player = (Player) (Object) this;
         
         if (!player.getWorld().isClient) {
             // Check if player is holding a mob ability item and left-clicking air
@@ -48,37 +48,37 @@ public abstract class PlayerEntityMixin {
                 ).forEach(SlimeHelperEntity::onKilledMob);
                 
                 // Player eating mobs for abilities
-                if (GamemodeManager.isInGamemode(player) && target instanceof MobEntity mob) {
+                if (GamemodeManager.isInGamemode(player) && target instanceof Mob mob) {
                     MobAbility ability = MobAbility.getAbilityFromEntity(mob.getType());
                     if (ability != null) {
                         GamemodeManager.getData(player).addAbility(ability.getId());
-                        player.sendMessage(Text.literal("You consumed ")
-                            .formatted(Formatting.GREEN)
-                            .append(Text.literal(mob.getName().getString())
-                                .formatted(Formatting.YELLOW))
-                            .append(Text.literal(" and gained ")
-                                .formatted(Formatting.GREEN))
+                        player.sendMessage(Component.literal("You consumed ")
+                            .formatted(ChatFormatting.GREEN)
+                            .append(Component.literal(mob.getName().getString())
+                                .formatted(ChatFormatting.YELLOW))
+                            .append(Component.literal(" and gained ")
+                                .formatted(ChatFormatting.GREEN))
                             .append(ability.getFormattedName())
-                            .append(Text.literal("!").formatted(Formatting.GREEN)), false);
+                            .append(Component.literal("!").formatted(ChatFormatting.GREEN)), false);
                     }
                 }
                 
                 // Player kill rewards - grant 3 abilities when killing a player
-                if (GamemodeManager.isInGamemode(player) && target instanceof PlayerEntity killedPlayer) {
+                if (GamemodeManager.isInGamemode(player) && target instanceof Player killedPlayer) {
                     grantPlayerKillRewards(player, killedPlayer);
                     
                     // Broadcast notification
                     player.getServer().getPlayerManager().broadcast(
-                        Text.literal("[KILL] ")
-                            .formatted(Formatting.RED, Formatting.BOLD)
-                            .append(Text.literal(player.getName().getString())
-                                .formatted(Formatting.YELLOW))
-                            .append(Text.literal(" killed ")
-                                .formatted(Formatting.GRAY))
-                            .append(Text.literal(killedPlayer.getName().getString())
-                                .formatted(Formatting.YELLOW))
-                            .append(Text.literal(" and stole their abilities!")
-                                .formatted(Formatting.RED)),
+                        Component.literal("[KILL] ")
+                            .formatted(ChatFormatting.RED, ChatFormatting.BOLD)
+                            .append(Component.literal(player.getName().getString())
+                                .formatted(ChatFormatting.YELLOW))
+                            .append(Component.literal(" killed ")
+                                .formatted(ChatFormatting.GRAY))
+                            .append(Component.literal(killedPlayer.getName().getString())
+                                .formatted(ChatFormatting.YELLOW))
+                            .append(Component.literal(" and stole their abilities!")
+                                .formatted(ChatFormatting.RED)),
                         false
                     );
                     
@@ -91,8 +91,8 @@ public abstract class PlayerEntityMixin {
                             String randomAbility = abilities.get((int) (Math.random() * abilities.size()));
                             ItemStack abilityDrop = com.wayacreate.frogslimegamemode.item.AbilityDropItem.createAbilityDrop(randomAbility);
                             player.dropItem(abilityDrop, false);
-                            player.sendMessage(Text.literal("Hunter dropped an ability!")
-                                .formatted(Formatting.GREEN, Formatting.BOLD), false);
+                            player.sendMessage(Component.literal("Hunter dropped an ability!")
+                                .formatted(ChatFormatting.GREEN, ChatFormatting.BOLD), false);
                         }
                     }
                 }
@@ -100,7 +100,7 @@ public abstract class PlayerEntityMixin {
         }
     }
     
-    private void consumeMobAbility(PlayerEntity player, ItemStack stack) {
+    private void consumeMobAbility(Player player, ItemStack stack) {
         String abilityId = com.wayacreate.frogslimegamemode.item.MobAbilityItem.getAbilityId(stack);
         
         if (abilityId != null && !abilityId.isEmpty()) {
@@ -110,9 +110,9 @@ public abstract class PlayerEntityMixin {
                 // Check if player is sneaking to add to helper, otherwise add to player
                 boolean addToHelper = player.isSneaking();
                 
-                if (player instanceof net.minecraft.server.network.ServerPlayerEntity serverPlayer) {
+                if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
                     // Get the item to display in the animation
-                    net.minecraft.item.Item displayItem = com.wayacreate.frogslimegamemode.item.AbilityDropItem.getDropItemForAbility(abilityId);
+                    net.minecraft.world.item.Item displayItem = com.wayacreate.frogslimegamemode.item.AbilityDropItem.getDropItemForAbility(abilityId);
                     
                     if (addToHelper) {
                         // Add to helper abilities
@@ -133,39 +133,39 @@ public abstract class PlayerEntityMixin {
                             ModNetworking.sendTotemAnimation(serverPlayer, 
                                 "Helper Ability Added!", 
                                 ability.getName() + " - " + ability.getDescription(), 
-                                Formatting.GREEN,
+                                ChatFormatting.GREEN,
                                 displayItem);
-                            serverPlayer.playSound(net.minecraft.sound.SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
-                            player.sendMessage(Text.literal("Your frog gained ")
-                                .formatted(Formatting.GREEN)
+                            serverPlayer.playSound(net.minecraft.sounds.SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+                            player.sendMessage(Component.literal("Your frog gained ")
+                                .formatted(ChatFormatting.GREEN)
                                 .append(ability.getFormattedName())
-                                .append(Text.literal("!").formatted(Formatting.GREEN)), false);
+                                .append(Component.literal("!").formatted(ChatFormatting.GREEN)), false);
                         } else if (!slimes.isEmpty()) {
                             slimes.get(0).addAbility(ability);
                             ModNetworking.sendTotemAnimation(serverPlayer, 
                                 "Helper Ability Added!", 
                                 ability.getName() + " - " + ability.getDescription(), 
-                                Formatting.GREEN,
+                                ChatFormatting.GREEN,
                                 displayItem);
-                            serverPlayer.playSound(net.minecraft.sound.SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
-                            player.sendMessage(Text.literal("Your slime gained ")
-                                .formatted(Formatting.GREEN)
+                            serverPlayer.playSound(net.minecraft.sounds.SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+                            player.sendMessage(Component.literal("Your slime gained ")
+                                .formatted(ChatFormatting.GREEN)
                                 .append(ability.getFormattedName())
-                                .append(Text.literal("!").formatted(Formatting.GREEN)), false);
+                                .append(Component.literal("!").formatted(ChatFormatting.GREEN)), false);
                         } else {
-                            player.sendMessage(Text.literal("No helper nearby! Ability added to you instead.")
-                                .formatted(Formatting.YELLOW), false);
+                            player.sendMessage(Component.literal("No helper nearby! Ability added to you instead.")
+                                .formatted(ChatFormatting.YELLOW), false);
                             com.wayacreate.frogslimegamemode.gamemode.GamemodeManager.getData(serverPlayer).addAbility(abilityId);
                             ModNetworking.sendTotemAnimation(serverPlayer, 
                                 "Ability Unlocked!", 
                                 ability.getName() + " - " + ability.getDescription(), 
-                                Formatting.LIGHT_PURPLE,
+                                ChatFormatting.LIGHT_PURPLE,
                                 displayItem);
-                            serverPlayer.playSound(net.minecraft.sound.SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
-                            player.sendMessage(Text.literal("You unlocked the ")
-                                .formatted(Formatting.LIGHT_PURPLE)
+                            serverPlayer.playSound(net.minecraft.sounds.SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+                            player.sendMessage(Component.literal("You unlocked the ")
+                                .formatted(ChatFormatting.LIGHT_PURPLE)
                                 .append(ability.getFormattedName())
-                                .append(Text.literal("! Press [TAB] to switch abilities.").formatted(Formatting.YELLOW)), false);
+                                .append(Component.literal("! Press [TAB] to switch abilities.").formatted(ChatFormatting.YELLOW)), false);
                         }
                     } else {
                         // Add to player's unlocked abilities
@@ -175,26 +175,26 @@ public abstract class PlayerEntityMixin {
                         ModNetworking.sendTotemAnimation(serverPlayer, 
                             "Ability Unlocked!", 
                             ability.getName() + " - " + ability.getDescription(), 
-                            Formatting.LIGHT_PURPLE,
+                            ChatFormatting.LIGHT_PURPLE,
                             displayItem);
                         
                         // Send title animation
                         ModNetworking.showTitle(serverPlayer, 
                             "Ability Unlocked!", 
                             ability.getName() + " - " + ability.getDescription(), 
-                            Formatting.LIGHT_PURPLE);
+                            ChatFormatting.LIGHT_PURPLE);
                         
                         // Play level-up sound directly on server (client will hear it)
-                        serverPlayer.playSound(net.minecraft.sound.SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+                        serverPlayer.playSound(net.minecraft.sounds.SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
                         
                         // Apply ability bonuses to the player
                         com.wayacreate.frogslimegamemode.item.AbilityDropItem.applyAbilityToPlayerStatic(player, ability);
                         
                         // Send message
-                        player.sendMessage(Text.literal("You unlocked the ")
-                            .formatted(Formatting.LIGHT_PURPLE)
+                        player.sendMessage(Component.literal("You unlocked the ")
+                            .formatted(ChatFormatting.LIGHT_PURPLE)
                             .append(ability.getFormattedName())
-                            .append(Text.literal("! Press [TAB] to switch abilities.").formatted(Formatting.YELLOW)), false);
+                            .append(Component.literal("! Press [TAB] to switch abilities.").formatted(ChatFormatting.YELLOW)), false);
                     }
                 }
                 
@@ -206,7 +206,7 @@ public abstract class PlayerEntityMixin {
     
     @Inject(method = "jump", at = @At("TAIL"))
     private void onJump(CallbackInfo ci) {
-        PlayerEntity player = (PlayerEntity) (Object) this;
+        Player player = (Player) (Object) this;
         if (!player.getWorld().isClient && GamemodeManager.isInGamemode(player)) {
             GamemodeManager.getData(player).incrementJumpCount();
         }
@@ -214,11 +214,11 @@ public abstract class PlayerEntityMixin {
     
     @Inject(method = "onDeath", at = @At("HEAD"))
     private void onDeath(DamageSource damageSource, CallbackInfo ci) {
-        PlayerEntity player = (PlayerEntity) (Object) this;
+        Player player = (Player) (Object) this;
         if (!player.getWorld().isClient && GamemodeManager.isInGamemode(player)) {
             GamemodeManager.getData(player).incrementDeathCount();
 
-            if (player instanceof net.minecraft.server.network.ServerPlayerEntity serverPlayer
+            if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer
                 && com.wayacreate.frogslimegamemode.gamemode.ManhuntManager.isInGame(serverPlayer)
                 && com.wayacreate.frogslimegamemode.gamemode.ManhuntManager.isSpeedrunner(serverPlayer)) {
                 com.wayacreate.frogslimegamemode.gamemode.ManhuntManager.onSpeedrunnerDeath(serverPlayer);
@@ -235,14 +235,14 @@ public abstract class PlayerEntityMixin {
     
     @Inject(method = "tick", at = @At("TAIL"))
     private void onTick(CallbackInfo ci) {
-        PlayerEntity player = (PlayerEntity) (Object) this;
+        Player player = (Player) (Object) this;
         if (!player.getWorld().isClient && GamemodeManager.isInGamemode(player)) {
             // Apply active abilities to player
             applyPlayerAbilities(player);
         }
     }
     
-    private void applyPlayerAbilities(PlayerEntity player) {
+    private void applyPlayerAbilities(Player player) {
         var data = GamemodeManager.getData(player);
         var abilities = data.getPlayerAbilities();
         
@@ -254,16 +254,16 @@ public abstract class PlayerEntityMixin {
         }
     }
     
-    private void grantPlayerKillRewards(PlayerEntity killer, PlayerEntity victim) {
+    private void grantPlayerKillRewards(Player killer, Player victim) {
         // Grant WayaCreate ability
         GamemodeManager.getData(killer).addAbility("wayacreate");
-        killer.sendMessage(Text.literal("You killed ")
-            .formatted(Formatting.RED)
-            .append(Text.literal(victim.getName().getString())
-                .formatted(Formatting.YELLOW))
-            .append(Text.literal(" and gained ")
-                .formatted(Formatting.GREEN))
-            .append(Text.literal("WayaCreate Power!").formatted(Formatting.LIGHT_PURPLE, Formatting.BOLD)), false);
+        killer.sendMessage(Component.literal("You killed ")
+            .formatted(ChatFormatting.RED)
+            .append(Component.literal(victim.getName().getString())
+                .formatted(ChatFormatting.YELLOW))
+            .append(Component.literal(" and gained ")
+                .formatted(ChatFormatting.GREEN))
+            .append(Component.literal("WayaCreate Power!").formatted(ChatFormatting.LIGHT_PURPLE, ChatFormatting.BOLD)), false);
         
         // Grant Derpy Derp ability with funny message
         GamemodeManager.getData(killer).addAbility("derpy_derp");
@@ -274,8 +274,8 @@ public abstract class PlayerEntityMixin {
             "Derpy Derp! The ability that makes you question your life choices!"
         };
         String randomMessage = derpyMessages[(int) (Math.random() * derpyMessages.length)];
-        killer.sendMessage(Text.literal(randomMessage)
-            .formatted(Formatting.RED, Formatting.ITALIC), false);
+        killer.sendMessage(Component.literal(randomMessage)
+            .formatted(ChatFormatting.RED, ChatFormatting.ITALIC), false);
         
         // Grant a random player ability from the victim
         var victimAbilities = GamemodeManager.getData(victim).getPlayerAbilities();
@@ -284,8 +284,8 @@ public abstract class PlayerEntityMixin {
             GamemodeManager.getData(killer).addAbility(randomAbility);
             MobAbility ability = MobAbility.getAbilityById(randomAbility);
             if (ability != null) {
-                killer.sendMessage(Text.literal("Stolen ability: ")
-                    .formatted(Formatting.DARK_PURPLE)
+                killer.sendMessage(Component.literal("Stolen ability: ")
+                    .formatted(ChatFormatting.DARK_PURPLE)
                     .append(ability.getFormattedName()), false);
             }
         } else {
@@ -295,8 +295,8 @@ public abstract class PlayerEntityMixin {
             GamemodeManager.getData(killer).addAbility(randomCommon);
             MobAbility ability = MobAbility.getAbilityById(randomCommon);
             if (ability != null) {
-                killer.sendMessage(Text.literal("Bonus ability: ")
-                    .formatted(Formatting.DARK_PURPLE)
+                killer.sendMessage(Component.literal("Bonus ability: ")
+                    .formatted(ChatFormatting.DARK_PURPLE)
                     .append(ability.getFormattedName()), false);
             }
         }

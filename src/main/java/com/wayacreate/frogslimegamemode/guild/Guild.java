@@ -1,8 +1,8 @@
 package com.wayacreate.frogslimegamemode.guild;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 
 import java.util.*;
 
@@ -158,15 +158,15 @@ public class Guild {
         storage.clear();
     }
     
-    public NbtCompound toNbt() {
-        NbtCompound nbt = new NbtCompound();
+    public CompoundTag toNbt() {
+        CompoundTag nbt = new CompoundTag();
         nbt.putUuid("id", id);
         nbt.putString("name", name);
         nbt.putUuid("owner", ownerUuid);
         
-        NbtList membersList = new NbtList();
+        ListTag membersList = new ListTag();
         for (UUID member : members) {
-            NbtCompound memberNbt = new NbtCompound();
+            CompoundTag memberNbt = new CompoundTag();
             memberNbt.putUuid("uuid", member);
             memberNbt.putString("rank", memberRanks.get(member).name());
             membersList.add(memberNbt);
@@ -175,7 +175,7 @@ public class Guild {
         
         nbt.putInt("coins", coins);
         
-        NbtList missionsList = new NbtList();
+        ListTag missionsList = new ListTag();
         for (GuildMission mission : missions) {
             missionsList.add(mission.toNbt());
         }
@@ -184,7 +184,7 @@ public class Guild {
         return nbt;
     }
     
-    public static Guild fromNbt(NbtCompound nbt) {
+    public static Guild fromNbt(CompoundTag nbt) {
         UUID guildId = nbt.getUuid("id");
         String name = nbt.getString("name");
         UUID owner = nbt.getUuid("owner");
@@ -193,12 +193,12 @@ public class Guild {
         // Store the loaded ID for reference
         guild.id = guildId;
         
-        NbtList membersList = nbt.getList("members", 10);
+        ListTag membersList = nbt.getList("members", 10);
         guild.members.clear();
         guild.memberRanks.clear();
         
         for (int i = 0; i < membersList.size(); i++) {
-            NbtCompound memberNbt = membersList.getCompound(i);
+            CompoundTag memberNbt = membersList.getCompound(i);
             UUID memberId = memberNbt.getUuid("uuid");
             GuildRank rank = GuildRank.valueOf(memberNbt.getString("rank"));
             guild.members.add(memberId);
@@ -207,7 +207,7 @@ public class Guild {
         
         guild.coins = nbt.getInt("coins");
         
-        NbtList missionsList = nbt.getList("missions", 10);
+        ListTag missionsList = nbt.getList("missions", 10);
         for (int i = 0; i < missionsList.size(); i++) {
             guild.missions.add(GuildMission.fromNbt(missionsList.getCompound(i)));
         }

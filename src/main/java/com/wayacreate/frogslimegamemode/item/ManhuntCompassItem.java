@@ -1,74 +1,74 @@
 package com.wayacreate.frogslimegamemode.item;
 
 import com.wayacreate.frogslimegamemode.gamemode.ManhuntManager;
-import net.minecraft.entity.Entity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
-import net.minecraft.util.TypedActionResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 public class ManhuntCompassItem extends Item {
     public static final String MANHUNT_COMPASS_NBT = "ManhuntCompass";
     
-    public ManhuntCompassItem(Settings settings) {
+    public ManhuntCompassItem(Properties settings) {
         super(settings);
     }
     
     @Override
     public ItemStack getDefaultStack() {
         ItemStack compass = new ItemStack(Items.COMPASS);
-        NbtCompound nbt = compass.getOrCreateNbt();
+        CompoundTag nbt = compass.getOrCreateNbt();
         nbt.putBoolean(MANHUNT_COMPASS_NBT, true);
-        compass.setCustomName(Text.literal("Manhunt Compass").formatted(Formatting.RED, Formatting.BOLD));
+        compass.setCustomName(Component.literal("Manhunt Compass").formatted(ChatFormatting.RED, ChatFormatting.BOLD));
         return compass;
     }
     
     public static boolean isManhuntCompass(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return false;
         if (!(stack.isOf(Items.COMPASS) || (ModItems.MANHUNT_COMPASS != null && stack.isOf(ModItems.MANHUNT_COMPASS)))) return false;
-        NbtCompound nbt = stack.getNbt();
+        CompoundTag nbt = stack.getNbt();
         return stack.isOf(ModItems.MANHUNT_COMPASS) || (nbt != null && nbt.getBoolean(MANHUNT_COMPASS_NBT));
     }
 
     @Override
-    public TypedActionResult<ItemStack> use(World world, net.minecraft.entity.player.PlayerEntity user, Hand hand) {
-        if (!world.isClient && user instanceof ServerPlayerEntity serverPlayer) {
+    public InteractionResultHolder<ItemStack> use(Level world, net.minecraft.world.entity.player.Player user, InteractionHand hand) {
+        if (!world.isClient && user instanceof ServerPlayer serverPlayer) {
             if (ManhuntManager.isHunter(serverPlayer)) {
                 ManhuntManager.useContextualAbility(serverPlayer);
             } else {
-                user.sendMessage(Text.literal("Only hunters can use this item!")
-                    .formatted(Formatting.RED), true);
+                user.sendMessage(Component.literal("Only hunters can use this item!")
+                    .formatted(ChatFormatting.RED), true);
             }
         }
-        return TypedActionResult.success(user.getStackInHand(hand));
+        return InteractionResultHolder.success(user.getStackInHand(hand));
     }
     
     @Override
-    public void inventoryTick(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
+    public void inventoryTick(ItemStack stack, Level world, Entity entity, int slot, boolean selected) {
         if (!isManhuntCompass(stack)) return;
         
-        if (!(entity instanceof ServerPlayerEntity player)) return;
+        if (!(entity instanceof ServerPlayer player)) return;
         
-        if (!world.isClient && world instanceof ServerWorld) {
+        if (!world.isClient && world instanceof ServerLevel) {
             // Only update every 20 ticks (1 second) to reduce server load
             if (world.getTime() % 20 == 0) {
                 // Use ManhuntManager to get target
-                ServerPlayerEntity target = ManhuntManager.getTarget(player);
+                ServerPlayer target = ManhuntManager.getTarget(player);
                 
-                NbtCompound nbt = stack.getOrCreateNbt();
+                CompoundTag nbt = stack.getOrCreateNbt();
                 
                 if (target != null && target.isAlive()) {
                     // Update tooltip with target info
-                    stack.setCustomName(Text.literal("Tracking: " + target.getName().getString())
-                        .formatted(Formatting.RED, Formatting.BOLD));
+                    stack.setCustomName(Component.literal("Tracking: " + target.getName().getString())
+                        .formatted(ChatFormatting.RED, ChatFormatting.BOLD));
                     
                     // Store target position in NBT for compass tracking
                     BlockPos targetPos = new BlockPos(
@@ -84,12 +84,12 @@ public class ManhuntCompassItem extends Item {
                     if (selected) {
                         double distance = player.squaredDistanceTo(target);
                         int distanceBlocks = (int) Math.sqrt(distance);
-                        player.sendMessage(Text.literal("Target is " + distanceBlocks + " blocks away")
-                            .formatted(Formatting.YELLOW), true);
+                        player.sendMessage(Component.literal("Target is " + distanceBlocks + " blocks away")
+                            .formatted(ChatFormatting.YELLOW), true);
                     }
                 } else {
-                    stack.setCustomName(Text.literal("No target")
-                        .formatted(Formatting.GRAY));
+                    stack.setCustomName(Component.literal("No target")
+                        .formatted(ChatFormatting.GRAY));
                     nbt.remove("TargetX");
                     nbt.remove("TargetY");
                     nbt.remove("TargetZ");

@@ -1,8 +1,8 @@
 package com.wayacreate.frogslimegamemode.guild;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 
 import java.util.*;
 
@@ -119,31 +119,31 @@ public class GuildMission {
         return true;
     }
     
-    public NbtCompound toNbt() {
-        NbtCompound nbt = new NbtCompound();
+    public CompoundTag toNbt() {
+        CompoundTag nbt = new CompoundTag();
         nbt.putUuid("id", id);
         nbt.putString("name", name);
         nbt.putString("description", description);
         
-        NbtList requiredList = new NbtList();
+        ListTag requiredList = new ListTag();
         for (ItemStack stack : requiredItems) {
-            requiredList.add(stack.writeNbt(new NbtCompound()));
+            requiredList.add(stack.writeNbt(new CompoundTag()));
         }
         nbt.put("requiredItems", requiredList);
         
         nbt.putInt("coinReward", coinReward);
         
-        NbtList rewardList = new NbtList();
+        ListTag rewardList = new ListTag();
         for (ItemStack stack : itemRewards) {
-            rewardList.add(stack.writeNbt(new NbtCompound()));
+            rewardList.add(stack.writeNbt(new CompoundTag()));
         }
         nbt.put("itemRewards", rewardList);
         
         nbt.putInt("experienceReward", experienceReward);
         
-        NbtList completedList = new NbtList();
+        ListTag completedList = new ListTag();
         for (UUID uuid : completedBy) {
-            NbtCompound uuidNbt = new NbtCompound();
+            CompoundTag uuidNbt = new CompoundTag();
             uuidNbt.putUuid("uuid", uuid);
             completedList.add(uuidNbt);
         }
@@ -156,12 +156,12 @@ public class GuildMission {
         return nbt;
     }
     
-    public static GuildMission fromNbt(NbtCompound nbt) {
+    public static GuildMission fromNbt(CompoundTag nbt) {
         String name = nbt.getString("name");
         String description = nbt.getString("description");
         
         List<ItemStack> requiredItems = new ArrayList<>();
-        NbtList requiredList = nbt.getList("requiredItems", 10);
+        ListTag requiredList = nbt.getList("requiredItems", 10);
         for (int i = 0; i < requiredList.size(); i++) {
             requiredItems.add(ItemStack.fromNbt(requiredList.getCompound(i)));
         }
@@ -169,7 +169,7 @@ public class GuildMission {
         int coinReward = nbt.getInt("coinReward");
         
         List<ItemStack> itemRewards = new ArrayList<>();
-        NbtList rewardList = nbt.getList("itemRewards", 10);
+        ListTag rewardList = nbt.getList("itemRewards", 10);
         for (int i = 0; i < rewardList.size(); i++) {
             itemRewards.add(ItemStack.fromNbt(rewardList.getCompound(i)));
         }
@@ -181,7 +181,7 @@ public class GuildMission {
             coinReward, itemRewards, experienceReward, durationHours);
         
         // Restore completion status
-        NbtList completedList = nbt.getList("completedBy", 10);
+        ListTag completedList = nbt.getList("completedBy", 10);
         for (int i = 0; i < completedList.size(); i++) {
             mission.completedBy.add(completedList.getCompound(i).getUuid("uuid"));
         }

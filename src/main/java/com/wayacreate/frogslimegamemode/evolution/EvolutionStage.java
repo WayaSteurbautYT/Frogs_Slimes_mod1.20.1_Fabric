@@ -1,6 +1,6 @@
 package com.wayacreate.frogslimegamemode.evolution;
 
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
 
 public enum EvolutionStage {
     BASIC(0, "Basic", "Just starting out"),
@@ -31,13 +31,13 @@ public enum EvolutionStage {
         return description;
     }
     
-    public Formatting getColor() {
+    public ChatFormatting getColor() {
         return switch (this) {
-            case BASIC -> Formatting.WHITE;
-            case ADVANCED -> Formatting.GREEN;
-            case ELITE -> Formatting.AQUA;
-            case MASTER -> Formatting.GOLD;
-            case FINAL -> Formatting.DARK_RED;
+            case BASIC -> ChatFormatting.WHITE;
+            case ADVANCED -> ChatFormatting.GREEN;
+            case ELITE -> ChatFormatting.AQUA;
+            case MASTER -> ChatFormatting.GOLD;
+            case FINAL -> ChatFormatting.DARK_RED;
         };
     }
     

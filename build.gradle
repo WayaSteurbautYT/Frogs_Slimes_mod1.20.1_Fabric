@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '1.5-SNAPSHOT'
+    id 'dev.architectury.loom' version '1.13.467'
     id 'maven-publish'
 }
 
@@ -12,13 +12,22 @@ base {
 
 repositories {
     maven { url 'https://maven.fabricmc.net/' }
+    maven { url 'https://maven.neoforged.net/releases/' }
+    maven { url 'https://maven.architectury.dev/' }
+    maven {
+        name = 'FirstDarkDev'
+        url = 'https://maven.firstdarkdev.xyz/snapshots'
+    }
+}
+
+loom {
+    silentMojangMappingsLicense()
 }
 
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    mappings loom.officialMojangMappings()
+    neoForge "net.neoforged:neoforge:${project.neoforge_version}"
 }
 
 loom {
@@ -28,21 +37,21 @@ loom {
             name("Minecraft Server")
             runDir("run/server")
         }
-        
+
         client {
             client()
             name("Minecraft Client")
             runDir("run/client")
             programArgs("--username", "Player1")
         }
-        
+
         client2 {
             client()
             name("Minecraft Client 2")
             runDir("run/client2")
             programArgs("--username", "Player2")
         }
-        
+
         client3 {
             client()
             name("Minecraft Client 3")
@@ -54,15 +63,27 @@ loom {
 
 processResources {
     doNotTrackState("OneDrive reparse point workaround")
-    inputs.property "version", project.version
-    filteringCharset "UTF-8"
+    filteringCharset = "UTF-8"
 
-    filesMatching("fabric.mod.json") {
-        expand "version": project.version
+    def replaceProperties = [
+        version         : project.version,
+        minecraft_version: project.minecraft_version,
+        neoforge_version: project.neoforge_version,
+        mod_id          : project.mod_id,
+        mod_name        : project.mod_name,
+        mod_authors     : project.mod_authors,
+        mod_description : project.mod_description,
+        mod_license     : project.mod_license
+    ]
+
+    inputs.properties(replaceProperties)
+
+    filesMatching(["META-INF/neoforge.mods.toml", "pack.mcmeta"]) {
+        expand(replaceProperties)
     }
 }
 
-def targetJavaVersion = 17
+def targetJavaVersion = 21
 tasks.withType(JavaCompile).configureEach {
     it.options.encoding = "UTF-8"
     it.options.release = targetJavaVersion
@@ -75,6 +96,6 @@ java {
 
 jar {
     from("LICENSE") {
-        rename { "${it}_${project.archivesBaseName}"}
+        rename { "${it}_${project.archivesBaseName}" }
     }
 }

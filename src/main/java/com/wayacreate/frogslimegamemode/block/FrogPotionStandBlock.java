@@ -1,29 +1,29 @@
 package com.wayacreate.frogslimegamemode.block;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.BrewingStandBlock;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.screen.NamedScreenHandlerFactory;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.BrewingStandBlock;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 public class FrogPotionStandBlock extends BrewingStandBlock {
-    public FrogPotionStandBlock(Settings settings) {
+    public FrogPotionStandBlock(Properties settings) {
         super(settings);
     }
 
     @Override
-    public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+    public InteractionResult onUse(BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         if (!world.isClient) {
-            NamedScreenHandlerFactory factory = state.createScreenHandlerFactory(world, pos);
+            MenuProvider factory = state.createScreenHandlerFactory(world, pos);
             if (factory != null) {
                 player.openHandledScreen(factory);
-                return ActionResult.SUCCESS;
+                return InteractionResult.SUCCESS;
             }
         }
-        return ActionResult.CONSUME;
+        return InteractionResult.CONSUME;
     }
 }

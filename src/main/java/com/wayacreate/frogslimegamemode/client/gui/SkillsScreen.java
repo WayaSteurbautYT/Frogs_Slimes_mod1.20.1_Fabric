@@ -3,10 +3,10 @@ package com.wayacreate.frogslimegamemode.client.gui;
 import com.wayacreate.frogslimegamemode.client.state.ManhuntClientState;
 import com.wayacreate.frogslimegamemode.client.state.ProgressionClientState;
 import com.wayacreate.frogslimegamemode.tasks.TaskType;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.network.chat.Component;
 
 public class SkillsScreen extends Screen {
     private static final String[] CATEGORIES = {"Journey", "Helpers", "Abilities", "Manhunt"};
@@ -14,68 +14,75 @@ public class SkillsScreen extends Screen {
     private int currentCategory;
 
     public SkillsScreen() {
-        super(Text.literal("Route Systems"));
+        super(Component.literal(GuiCopy.PRIMARY));
     }
 
     @Override
     protected void init() {
-        this.addDrawableChild(ButtonWidget.builder(Text.literal("Close"), button -> this.close())
+        this.addDrawableChild(Button.builder(Component.literal("Close"), button -> this.close())
             .dimensions(this.width - 108, this.height - 36, 80, 20)
             .build());
 
         for (int i = 0; i < CATEGORIES.length; i++) {
             int index = i;
-            this.addDrawableChild(ButtonWidget.builder(Text.literal(CATEGORIES[i]), button -> currentCategory = index)
+            this.addDrawableChild(Button.builder(Component.literal(CATEGORIES[i]), button -> currentCategory = index)
                 .dimensions(28, 76 + i * 26, 90, 20)
                 .build());
         }
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         MenuStyle.drawFrame(context, this.width, this.height);
         MenuStyle.drawHeader(
             context,
             this.textRenderer,
-            "Route Systems",
-            "Progress, helpers, abilities, and manhunt controls",
-            this.width
+            GuiCopy.PRIMARY,
+            GuiCopy.SECONDARY,
+            MenuStyle.getContentMargin(this.width, this.height),
+            this.width - MenuStyle.getContentMargin(this.width, this.height) * 2
         );
 
-        MenuStyle.drawPanel(context, 28, 72, 102, this.height - 118, true);
-        MenuStyle.drawPanel(context, 140, 72, this.width - 168, this.height - 118, false);
+        int leftX = MenuStyle.getContentMargin(this.width, this.height);
+        int topY = MenuStyle.getContentTop();
+        int leftWidth = MenuStyle.clamp(this.width / 7, 102, 144);
+        int gutter = MenuStyle.getGutter(this.width);
+        int rightX = leftX + leftWidth + gutter;
+        int rightWidth = this.width - rightX - leftX;
+        int panelHeight = this.height - topY - MenuStyle.getBottomInset(this.height) - 12;
+        MenuStyle.drawPanel(context, leftX, topY, leftWidth, panelHeight, true);
+        MenuStyle.drawPanel(context, rightX, topY, rightWidth, panelHeight, false);
 
-        renderCategoryList(context);
-        renderCategory(context);
+        renderCategoryList(context, leftX);
+        renderCategory(context, rightX);
 
         super.render(context, mouseX, mouseY, delta);
     }
 
-    private void renderCategoryList(DrawContext context) {
-        context.drawTextWithShadow(this.textRenderer, Text.literal("Systems"), 40, 84, MenuStyle.ACCENT_GOLD);
+    private void renderCategoryList(GuiGraphics context, int leftX) {
+        context.drawTextWithShadow(this.textRenderer, Component.literal("Systems"), leftX + 12, 84, MenuStyle.ACCENT_GOLD);
         for (int i = 0; i < CATEGORIES.length; i++) {
             int y = 112 + i * 26;
             int color = i == currentCategory ? MenuStyle.ACCENT : MenuStyle.MUTED;
-            context.drawTextWithShadow(this.textRenderer, Text.literal(CATEGORIES[i]), 40, y, color);
+            context.drawTextWithShadow(this.textRenderer, Component.literal(CATEGORIES[i]), leftX + 12, y, color);
         }
     }
 
-    private void renderCategory(DrawContext context) {
+    private void renderCategory(GuiGraphics context, int contentX) {
         switch (currentCategory) {
-            case 0 -> renderJourney(context);
-            case 1 -> renderHelpers(context);
-            case 2 -> renderAbilities(context);
-            default -> renderManhunt(context);
+            case 0 -> renderJourney(context, contentX);
+            case 1 -> renderHelpers(context, contentX);
+            case 2 -> renderAbilities(context, contentX);
+            default -> renderManhunt(context, contentX);
         }
     }
 
-    private void renderJourney(DrawContext context) {
-        int x = 154;
+    private void renderJourney(GuiGraphics context, int x) {
         int y = 86;
-        context.drawTextWithShadow(this.textRenderer, Text.literal("Journey Flow"), x, y, MenuStyle.ACCENT_GOLD);
+        context.drawTextWithShadow(this.textRenderer, Component.literal("Journey Flow"), x, y, MenuStyle.ACCENT_GOLD);
         y += 24;
 
-        context.drawTextWithShadow(this.textRenderer, Text.literal("Level " + ProgressionClientState.getLevel()), x, y, MenuStyle.TEXT);
+        context.drawTextWithShadow(this.textRenderer, Component.literal("Level " + ProgressionClientState.getLevel()), x, y, MenuStyle.TEXT);
         MenuStyle.drawProgressBar(
             context,
             x + 82,
@@ -87,11 +94,11 @@ public class SkillsScreen extends Screen {
         );
         y += 24;
 
-        context.drawTextWithShadow(this.textRenderer, Text.literal("Completed Tasks"), x, y, MenuStyle.MUTED);
-        context.drawTextWithShadow(this.textRenderer, Text.literal(ProgressionClientState.getCompletedTaskCount() + "/" + TaskType.values().length), x + 110, y, MenuStyle.TEXT);
+        context.drawTextWithShadow(this.textRenderer, Component.literal("Completed Tasks"), x, y, MenuStyle.MUTED);
+        context.drawTextWithShadow(this.textRenderer, Component.literal(ProgressionClientState.getCompletedTaskCount() + "/" + TaskType.values().length), x + 110, y, MenuStyle.TEXT);
         y += 24;
 
-        context.drawTextWithShadow(this.textRenderer, Text.literal("Recommended route"), x, y, MenuStyle.ACCENT_GOLD);
+        context.drawTextWithShadow(this.textRenderer, Component.literal("Recommended route"), x, y, MenuStyle.ACCENT_GOLD);
         y += 18;
         drawLine(context, x, y, taskHint(TaskType.TAME_HELPER)); y += 16;
         drawLine(context, x, y, taskHint(TaskType.ASSIGN_ROLE)); y += 16;
@@ -101,10 +108,9 @@ public class SkillsScreen extends Screen {
         drawLine(context, x, y, taskHint(TaskType.DEFEAT_FINAL_BOSS));
     }
 
-    private void renderHelpers(DrawContext context) {
-        int x = 154;
+    private void renderHelpers(GuiGraphics context, int x) {
         int y = 86;
-        context.drawTextWithShadow(this.textRenderer, Text.literal("Helper Command"), x, y, MenuStyle.ACCENT_GOLD);
+        context.drawTextWithShadow(this.textRenderer, Component.literal("Helper Command"), x, y, MenuStyle.ACCENT_GOLD);
         y += 24;
 
         drawLine(context, x, y, "Helpers spawned: " + ProgressionClientState.getHelpersSpawned()); y += 16;
@@ -113,17 +119,16 @@ public class SkillsScreen extends Screen {
         drawLine(context, x, y, progressLine(TaskType.ASSIGN_ROLE)); y += 16;
         drawLine(context, x, y, progressLine(TaskType.EVOLVE_HELPER)); y += 24;
 
-        context.drawTextWithShadow(this.textRenderer, Text.literal("What changed"), x, y, MenuStyle.ACCENT_GOLD);
+        context.drawTextWithShadow(this.textRenderer, Component.literal("What changed"), x, y, MenuStyle.ACCENT_GOLD);
         y += 18;
         drawLine(context, x, y, "Starter kit now includes helper role items."); y += 16;
         drawLine(context, x, y, "Role assignment advances progression and achievements."); y += 16;
-        drawLine(context, x, y, "Evolution progress now feeds task and unlock tracking.");
+        drawLine(context, x, y, "Evolution progress now feeds task and unlock tracking. " + GuiCopy.PRIMARY);
     }
 
-    private void renderAbilities(DrawContext context) {
-        int x = 154;
+    private void renderAbilities(GuiGraphics context, int x) {
         int y = 86;
-        context.drawTextWithShadow(this.textRenderer, Text.literal("Ability Loop"), x, y, MenuStyle.ACCENT_GOLD);
+        context.drawTextWithShadow(this.textRenderer, Component.literal("Ability Loop"), x, y, MenuStyle.ACCENT_GOLD);
         y += 24;
 
         drawLine(context, x, y, "Current slot: " + ProgressionClientState.getSelectedAbilityName()); y += 16;
@@ -132,17 +137,16 @@ public class SkillsScreen extends Screen {
         drawLine(context, x, y, progressLine(TaskType.UNLOCK_ABILITIES)); y += 16;
         drawLine(context, x, y, progressLine(TaskType.CRAFT_ABILITY)); y += 24;
 
-        context.drawTextWithShadow(this.textRenderer, Text.literal("Controls"), x, y, MenuStyle.ACCENT_GOLD);
+        context.drawTextWithShadow(this.textRenderer, Component.literal("Controls"), x, y, MenuStyle.ACCENT_GOLD);
         y += 18;
         drawLine(context, x, y, "TAB cycles your selected player ability."); y += 16;
         drawLine(context, x, y, "R casts the selected active ability."); y += 16;
         drawLine(context, x, y, "X consumes a held mob ability item if you forged one.");
     }
 
-    private void renderManhunt(DrawContext context) {
-        int x = 154;
+    private void renderManhunt(GuiGraphics context, int x) {
         int y = 86;
-        context.drawTextWithShadow(this.textRenderer, Text.literal("Manhunt Controls"), x, y, MenuStyle.ACCENT_GOLD);
+        context.drawTextWithShadow(this.textRenderer, Component.literal("Manhunt Controls"), x, y, MenuStyle.ACCENT_GOLD);
         y += 24;
 
         if (!ManhuntClientState.isActive()) {
@@ -170,8 +174,8 @@ public class SkillsScreen extends Screen {
         }
     }
 
-    private void drawLine(DrawContext context, int x, int y, String line) {
-        context.drawTextWithShadow(this.textRenderer, Text.literal(line), x, y, MenuStyle.MUTED);
+    private void drawLine(GuiGraphics context, int x, int y, String line) {
+        context.drawTextWithShadow(this.textRenderer, Component.literal(line), x, y, MenuStyle.MUTED);
     }
 
     private String progressLine(TaskType task) {

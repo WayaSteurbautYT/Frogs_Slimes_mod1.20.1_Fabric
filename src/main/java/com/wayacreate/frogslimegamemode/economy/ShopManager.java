@@ -1,9 +1,9 @@
 package com.wayacreate.frogslimegamemode.economy;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Formatting;
-import net.minecraft.text.Text;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -12,14 +12,14 @@ public class ShopManager {
     private static final List<ShopItem> listings = new CopyOnWriteArrayList<>();
     private static final int MAX_LISTINGS_PER_PLAYER = 10;
     
-    public static boolean listItem(ServerPlayerEntity seller, ItemStack item, int price) {
+    public static boolean listItem(ServerPlayer seller, ItemStack item, int price) {
         if (price <= 0) {
-            seller.sendMessage(Text.literal("Price must be greater than 0!").formatted(Formatting.RED), false);
+            seller.sendMessage(Component.literal("Price must be greater than 0!").formatted(ChatFormatting.RED), false);
             return false;
         }
         
         if (item.isEmpty()) {
-            seller.sendMessage(Text.literal("Cannot sell empty item!").formatted(Formatting.RED), false);
+            seller.sendMessage(Component.literal("Cannot sell empty item!").formatted(ChatFormatting.RED), false);
             return false;
         }
         
@@ -29,8 +29,8 @@ public class ShopManager {
             .count();
         
         if (currentListings >= MAX_LISTINGS_PER_PLAYER) {
-            seller.sendMessage(Text.literal("You can only have " + MAX_LISTINGS_PER_PLAYER + " items listed at once!")
-                .formatted(Formatting.RED), false);
+            seller.sendMessage(Component.literal("You can only have " + MAX_LISTINGS_PER_PLAYER + " items listed at once!")
+                .formatted(ChatFormatting.RED), false);
             return false;
         }
         
@@ -40,51 +40,51 @@ public class ShopManager {
         ShopItem listing = new ShopItem(seller.getUuid(), seller.getName().getString(), listedStack, price);
         listings.add(listing);
         
-        seller.sendMessage(Text.literal("Listed ").formatted(Formatting.GREEN)
+        seller.sendMessage(Component.literal("Listed ").formatted(ChatFormatting.GREEN)
             .append(listedStack.getName())
-            .append(Text.literal(" for ").formatted(Formatting.WHITE))
-            .append(Text.literal(price + " coins").formatted(Formatting.GOLD)), false);
+            .append(Component.literal(" for ").formatted(ChatFormatting.WHITE))
+            .append(Component.literal(price + " coins").formatted(ChatFormatting.GOLD)), false);
         
         return true;
     }
     
-    public static boolean buyItem(ServerPlayerEntity buyer, int index) {
+    public static boolean buyItem(ServerPlayer buyer, int index) {
         if (index < 0 || index >= listings.size()) {
-            buyer.sendMessage(Text.literal("Invalid item!").formatted(Formatting.RED), false);
+            buyer.sendMessage(Component.literal("Invalid item!").formatted(ChatFormatting.RED), false);
             return false;
         }
         
         return buyItem(buyer, listings.get(index));
     }
 
-    public static boolean buyItem(ServerPlayerEntity buyer, ShopItem requestedItem) {
+    public static boolean buyItem(ServerPlayer buyer, ShopItem requestedItem) {
         ShopItem item = findListing(requestedItem);
         if (item == null) {
-            buyer.sendMessage(Text.literal("That listing is no longer available!").formatted(Formatting.RED), false);
+            buyer.sendMessage(Component.literal("That listing is no longer available!").formatted(ChatFormatting.RED), false);
             return false;
         }
         
         // Can't buy your own item
         if (item.getSellerUuid().equals(buyer.getUuid())) {
-            buyer.sendMessage(Text.literal("You can't buy your own item!").formatted(Formatting.RED), false);
+            buyer.sendMessage(Component.literal("You can't buy your own item!").formatted(ChatFormatting.RED), false);
             return false;
         }
         
         // Check balance
         if (!EconomyManager.removeBalance(buyer, item.getPrice())) {
-            buyer.sendMessage(Text.literal("You don't have enough coins!").formatted(Formatting.RED), false);
+            buyer.sendMessage(Component.literal("You don't have enough coins!").formatted(ChatFormatting.RED), false);
             return false;
         }
         
         // Give money to seller (if online)
-        ServerPlayerEntity seller = buyer.getServer().getPlayerManager().getPlayer(item.getSellerUuid());
+        ServerPlayer seller = buyer.getServer().getPlayerManager().getPlayer(item.getSellerUuid());
         if (seller != null) {
             EconomyManager.addBalance(seller, item.getPrice());
-            seller.sendMessage(Text.literal(buyer.getName().getString()).formatted(Formatting.GREEN)
-                .append(Text.literal(" bought your ").formatted(Formatting.WHITE))
+            seller.sendMessage(Component.literal(buyer.getName().getString()).formatted(ChatFormatting.GREEN)
+                .append(Component.literal(" bought your ").formatted(ChatFormatting.WHITE))
                 .append(item.getItem().getName())
-                .append(Text.literal(" for ").formatted(Formatting.WHITE))
-                .append(Text.literal(item.getPrice() + " coins!").formatted(Formatting.GOLD)), false);
+                .append(Component.literal(" for ").formatted(ChatFormatting.WHITE))
+                .append(Component.literal(item.getPrice() + " coins!").formatted(ChatFormatting.GOLD)), false);
         }
         
         // Give item to buyer
@@ -93,15 +93,15 @@ public class ShopManager {
         // Remove listing
         listings.remove(item);
         
-        buyer.sendMessage(Text.literal("Bought ").formatted(Formatting.GREEN)
+        buyer.sendMessage(Component.literal("Bought ").formatted(ChatFormatting.GREEN)
             .append(item.getItem().getName())
-            .append(Text.literal(" for ").formatted(Formatting.WHITE))
-            .append(Text.literal(item.getPrice() + " coins!").formatted(Formatting.GOLD)), false);
+            .append(Component.literal(" for ").formatted(ChatFormatting.WHITE))
+            .append(Component.literal(item.getPrice() + " coins!").formatted(ChatFormatting.GOLD)), false);
         
         return true;
     }
     
-    public static boolean cancelListing(ServerPlayerEntity seller, int index) {
+    public static boolean cancelListing(ServerPlayer seller, int index) {
         if (index < 0 || index >= listings.size()) {
             return false;
         }
@@ -109,15 +109,15 @@ public class ShopManager {
         return cancelListing(seller, listings.get(index));
     }
 
-    public static boolean cancelListing(ServerPlayerEntity seller, ShopItem requestedItem) {
+    public static boolean cancelListing(ServerPlayer seller, ShopItem requestedItem) {
         ShopItem item = findListing(requestedItem);
         if (item == null) {
-            seller.sendMessage(Text.literal("That listing is no longer available!").formatted(Formatting.RED), false);
+            seller.sendMessage(Component.literal("That listing is no longer available!").formatted(ChatFormatting.RED), false);
             return false;
         }
         
         if (!item.getSellerUuid().equals(seller.getUuid())) {
-            seller.sendMessage(Text.literal("You can only cancel your own listings!").formatted(Formatting.RED), false);
+            seller.sendMessage(Component.literal("You can only cancel your own listings!").formatted(ChatFormatting.RED), false);
             return false;
         }
         
@@ -125,7 +125,7 @@ public class ShopManager {
         seller.getInventory().offerOrDrop(item.getItem());
         listings.remove(item);
         
-        seller.sendMessage(Text.literal("Cancelled listing and returned ").formatted(Formatting.GREEN)
+        seller.sendMessage(Component.literal("Cancelled listing and returned ").formatted(ChatFormatting.GREEN)
             .append(item.getItem().getName()), false);
         
         return true;

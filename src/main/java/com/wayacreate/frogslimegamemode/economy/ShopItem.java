@@ -1,7 +1,7 @@
 package com.wayacreate.frogslimegamemode.economy;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
 
 import java.util.UUID;
 
@@ -40,17 +40,17 @@ public class ShopItem {
         return listedTime;
     }
     
-    public NbtCompound toNbt() {
-        NbtCompound nbt = new NbtCompound();
+    public CompoundTag toNbt() {
+        CompoundTag nbt = new CompoundTag();
         nbt.putUuid("seller", sellerUuid);
         nbt.putString("sellerName", sellerName);
-        nbt.put("item", item.writeNbt(new NbtCompound()));
+        nbt.put("item", item.writeNbt(new CompoundTag()));
         nbt.putInt("price", price);
         nbt.putLong("listedTime", listedTime);
         return nbt;
     }
     
-    public static ShopItem fromNbt(NbtCompound nbt) {
+    public static ShopItem fromNbt(CompoundTag nbt) {
         UUID sellerUuid = nbt.getUuid("seller");
         String sellerName = nbt.getString("sellerName");
         ItemStack item = ItemStack.fromNbt(nbt.getCompound("item"));

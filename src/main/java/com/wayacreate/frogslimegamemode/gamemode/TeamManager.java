@@ -1,8 +1,8 @@
 package com.wayacreate.frogslimegamemode.gamemode;
 
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 import java.util.*;
 
@@ -29,7 +29,7 @@ public class TeamManager {
         public boolean hasMember(UUID uuid) { return members.contains(uuid); }
     }
     
-    public static boolean createTeam(String name, String color, ServerPlayerEntity owner) {
+    public static boolean createTeam(String name, String color, ServerPlayer owner) {
         if (teams.containsKey(name)) {
             return false;
         }
@@ -39,16 +39,16 @@ public class TeamManager {
         teams.put(name, team);
         playerToTeam.put(owner.getUuid(), name);
         
-        owner.sendMessage(Text.literal("Team '" + name + "' created!")
-            .formatted(Formatting.GREEN), false);
+        owner.sendMessage(Component.literal("Team '" + name + "' created!")
+            .formatted(ChatFormatting.GREEN), false);
         return true;
     }
     
-    public static boolean joinTeam(String name, ServerPlayerEntity player) {
+    public static boolean joinTeam(String name, ServerPlayer player) {
         Team team = teams.get(name);
         if (team == null) {
-            player.sendMessage(Text.literal("Team '" + name + "' does not exist!")
-                .formatted(Formatting.RED), false);
+            player.sendMessage(Component.literal("Team '" + name + "' does not exist!")
+                .formatted(ChatFormatting.RED), false);
             return false;
         }
         
@@ -62,23 +62,23 @@ public class TeamManager {
         
         // Notify all team members
         for (UUID memberUuid : team.getMembers()) {
-            ServerPlayerEntity member = player.getServer().getPlayerManager().getPlayer(memberUuid);
+            ServerPlayer member = player.getServer().getPlayerManager().getPlayer(memberUuid);
             if (member != null) {
-                member.sendMessage(Text.literal(player.getName().getString() + " joined the team!")
-                    .formatted(Formatting.YELLOW), false);
+                member.sendMessage(Component.literal(player.getName().getString() + " joined the team!")
+                    .formatted(ChatFormatting.YELLOW), false);
             }
         }
         
-        player.sendMessage(Text.literal("You joined team '" + name + "'!")
-            .formatted(Formatting.GREEN), false);
+        player.sendMessage(Component.literal("You joined team '" + name + "'!")
+            .formatted(ChatFormatting.GREEN), false);
         return true;
     }
     
-    public static boolean leaveTeam(ServerPlayerEntity player) {
+    public static boolean leaveTeam(ServerPlayer player) {
         String teamName = playerToTeam.get(player.getUuid());
         if (teamName == null) {
-            player.sendMessage(Text.literal("You are not in a team!")
-                .formatted(Formatting.RED), false);
+            player.sendMessage(Component.literal("You are not in a team!")
+                .formatted(ChatFormatting.RED), false);
             return false;
         }
         
@@ -93,8 +93,8 @@ public class TeamManager {
         }
         
         playerToTeam.remove(player.getUuid());
-        player.sendMessage(Text.literal("You left the team.")
-            .formatted(Formatting.YELLOW), false);
+        player.sendMessage(Component.literal("You left the team.")
+            .formatted(ChatFormatting.YELLOW), false);
         return true;
     }
     
@@ -106,41 +106,41 @@ public class TeamManager {
         return teams.get(name);
     }
     
-    public static void listTeams(ServerPlayerEntity player) {
+    public static void listTeams(ServerPlayer player) {
         if (teams.isEmpty()) {
-            player.sendMessage(Text.literal("No teams exist yet.")
-                .formatted(Formatting.GRAY), false);
+            player.sendMessage(Component.literal("No teams exist yet.")
+                .formatted(ChatFormatting.GRAY), false);
             return;
         }
         
-        player.sendMessage(Text.literal("Teams:").formatted(Formatting.BOLD), false);
+        player.sendMessage(Component.literal("Teams:").formatted(ChatFormatting.BOLD), false);
         for (Team team : teams.values()) {
             try {
-                Formatting color = Formatting.valueOf(team.getColor().toUpperCase());
-                player.sendMessage(Text.literal("- " + team.getName() + " (" + team.getMembers().size() + " members)")
+                ChatFormatting color = ChatFormatting.valueOf(team.getColor().toUpperCase());
+                player.sendMessage(Component.literal("- " + team.getName() + " (" + team.getMembers().size() + " members)")
                     .formatted(color), false);
             } catch (IllegalArgumentException e) {
                 // Fallback to white if color is invalid
-                player.sendMessage(Text.literal("- " + team.getName() + " (" + team.getMembers().size() + " members)")
-                    .formatted(Formatting.WHITE), false);
+                player.sendMessage(Component.literal("- " + team.getName() + " (" + team.getMembers().size() + " members)")
+                    .formatted(ChatFormatting.WHITE), false);
             }
         }
     }
     
-    public static void teleportToTeamMember(ServerPlayerEntity player, String targetName) {
+    public static void teleportToTeamMember(ServerPlayer player, String targetName) {
         String teamName = playerToTeam.get(player.getUuid());
         if (teamName == null) {
-            player.sendMessage(Text.literal("You are not in a team!")
-                .formatted(Formatting.RED), false);
+            player.sendMessage(Component.literal("You are not in a team!")
+                .formatted(ChatFormatting.RED), false);
             return;
         }
         
         Team team = teams.get(teamName);
         if (team == null) return;
         
-        ServerPlayerEntity target = null;
+        ServerPlayer target = null;
         for (UUID memberUuid : team.getMembers()) {
-            ServerPlayerEntity member = player.getServer().getPlayerManager().getPlayer(memberUuid);
+            ServerPlayer member = player.getServer().getPlayerManager().getPlayer(memberUuid);
             if (member != null && member.getName().getString().equalsIgnoreCase(targetName)) {
                 target = member;
                 break;
@@ -148,19 +148,19 @@ public class TeamManager {
         }
         
         if (target == null) {
-            player.sendMessage(Text.literal("Team member '" + targetName + "' not found or offline.")
-                .formatted(Formatting.RED), false);
+            player.sendMessage(Component.literal("Team member '" + targetName + "' not found or offline.")
+                .formatted(ChatFormatting.RED), false);
             return;
         }
         
         if (target == player) {
-            player.sendMessage(Text.literal("You cannot teleport to yourself!")
-                .formatted(Formatting.RED), false);
+            player.sendMessage(Component.literal("You cannot teleport to yourself!")
+                .formatted(ChatFormatting.RED), false);
             return;
         }
         
         player.teleport(target.getServerWorld(), target.getX(), target.getY(), target.getZ(), target.getYaw(), target.getPitch());
-        player.sendMessage(Text.literal("Teleported to " + target.getName().getString() + "!")
-            .formatted(Formatting.GREEN), false);
+        player.sendMessage(Component.literal("Teleported to " + target.getName().getString() + "!")
+            .formatted(ChatFormatting.GREEN), false);
     }
 }

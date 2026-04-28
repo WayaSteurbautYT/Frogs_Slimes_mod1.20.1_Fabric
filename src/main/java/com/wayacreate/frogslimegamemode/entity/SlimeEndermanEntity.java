@@ -1,28 +1,28 @@
 package com.wayacreate.frogslimegamemode.entity;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.goal.*;
-import net.minecraft.entity.attribute.DefaultAttributeContainer;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.data.DataTracker;
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.data.TrackedDataHandlerRegistry;
-import net.minecraft.entity.mob.EndermanEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.goal.*;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.world.entity.monster.EnderMan;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.Level;
 
-public class SlimeEndermanEntity extends EndermanEntity {
-    private static final TrackedData<Boolean> IS_SLIME_ENDERMAN = DataTracker.registerData(SlimeEndermanEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
-    private static final TrackedData<Integer> SLIME_SIZE = DataTracker.registerData(SlimeEndermanEntity.class, TrackedDataHandlerRegistry.INTEGER);
+public class SlimeEndermanEntity extends EnderMan {
+    private static final EntityDataAccessor<Boolean> IS_SLIME_ENDERMAN = SynchedEntityData.registerData(SlimeEndermanEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Integer> SLIME_SIZE = SynchedEntityData.registerData(SlimeEndermanEntity.class, EntityDataSerializers.INTEGER);
     
     private int teleportCooldown = 0;
     private int splitCooldown = 0;
     
-    public SlimeEndermanEntity(EntityType<? extends EndermanEntity> entityType, World world) {
+    public SlimeEndermanEntity(EntityType<? extends EnderMan> entityType, Level world) {
         super(entityType, world);
         this.experiencePoints = 50;
     }
@@ -34,13 +34,13 @@ public class SlimeEndermanEntity extends EndermanEntity {
         this.dataTracker.startTracking(SLIME_SIZE, 2);
     }
     
-    public static DefaultAttributeContainer.Builder createAttributes() {
-        return EndermanEntity.createEndermanAttributes()
-            .add(EntityAttributes.GENERIC_MAX_HEALTH, 40.0)
-            .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 7.0)
-            .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.35)
-            .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 48.0)
-            .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 0.8);
+    public static AttributeSupplier.Builder createAttributes() {
+        return EnderMan.createEndermanAttributes()
+            .add(Attributes.GENERIC_MAX_HEALTH, 40.0)
+            .add(Attributes.GENERIC_ATTACK_DAMAGE, 7.0)
+            .add(Attributes.GENERIC_MOVEMENT_SPEED, 0.35)
+            .add(Attributes.GENERIC_FOLLOW_RANGE, 48.0)
+            .add(Attributes.GENERIC_KNOCKBACK_RESISTANCE, 0.8);
     }
     
     @Override
@@ -49,10 +49,10 @@ public class SlimeEndermanEntity extends EndermanEntity {
         this.goalSelector.add(2, new MeleeAttackGoal(this, 1.2, true));
         this.goalSelector.add(3, new TeleportTowardsTargetGoal(this));
         this.goalSelector.add(4, new WanderAroundFarGoal(this, 0.8));
-        this.goalSelector.add(5, new LookAtEntityGoal(this, PlayerEntity.class, 16.0f));
+        this.goalSelector.add(5, new LookAtEntityGoal(this, Player.class, 16.0f));
         this.goalSelector.add(6, new LookAroundGoal(this));
         
-        this.targetSelector.add(1, new ActiveTargetGoal<>(this, PlayerEntity.class, true));
+        this.targetSelector.add(1, new ActiveTargetGoal<>(this, Player.class, true));
         this.targetSelector.add(2, new ActiveTargetGoal<>(this, FrogHelperEntity.class, true));
     }
     
@@ -67,13 +67,13 @@ public class SlimeEndermanEntity extends EndermanEntity {
             
             // Slime appearance - green particles instead of purple
             if (this.age % 20 == 0) {
-                ServerWorld world = (ServerWorld) this.getWorld();
+                ServerLevel world = (ServerLevel) this.getWorld();
                 for (int i = 0; i < 3; i++) {
                     double offsetX = (world.random.nextDouble() - 0.5) * 1.5;
                     double offsetY = world.random.nextDouble() * 2;
                     double offsetZ = (world.random.nextDouble() - 0.5) * 1.5;
                     
-                    world.spawnParticles(net.minecraft.particle.ParticleTypes.ITEM_SNOWBALL,
+                    world.spawnParticles(net.minecraft.core.particles.ParticleTypes.ITEM_SNOWBALL,
                         this.getX() + offsetX,
                         this.getY() + offsetY,
                         this.getZ() + offsetZ,
@@ -90,7 +90,7 @@ public class SlimeEndermanEntity extends EndermanEntity {
     }
     
     private void performSlimeSplit() {
-        ServerWorld world = (ServerWorld) this.getWorld();
+        ServerLevel world = (ServerLevel) this.getWorld();
         
         // Spawn 2 smaller slime endermen using the entity type directly
         for (int i = 0; i < 2; i++) {
@@ -107,7 +107,7 @@ public class SlimeEndermanEntity extends EndermanEntity {
         }
         
         // Particle effect
-        world.spawnParticles(net.minecraft.particle.ParticleTypes.SQUID_INK,
+        world.spawnParticles(net.minecraft.core.particles.ParticleTypes.SQUID_INK,
             this.getX(), this.getY(), this.getZ(),
             20, 0.5, 0.5, 0.5, 0.1);
     }
@@ -117,7 +117,7 @@ public class SlimeEndermanEntity extends EndermanEntity {
         super.onDeath(damageSource);
         
         if (!this.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) this.getWorld();
+            ServerLevel world = (ServerLevel) this.getWorld();
             
             // Spawn slime particles on death
             for (int i = 0; i < 30; i++) {
@@ -125,7 +125,7 @@ public class SlimeEndermanEntity extends EndermanEntity {
                 double offsetY = world.random.nextDouble() * 2;
                 double offsetZ = (world.random.nextDouble() - 0.5) * 3;
                 
-                world.spawnParticles(net.minecraft.particle.ParticleTypes.ITEM_SNOWBALL,
+                world.spawnParticles(net.minecraft.core.particles.ParticleTypes.ITEM_SNOWBALL,
                     this.getX() + offsetX,
                     this.getY() + offsetY,
                     this.getZ() + offsetZ,
@@ -133,15 +133,15 @@ public class SlimeEndermanEntity extends EndermanEntity {
             }
             
             // Drop ender pearls and slime balls
-            this.dropItem(net.minecraft.item.Items.ENDER_PEARL);
-            this.dropItem(net.minecraft.item.Items.SLIME_BALL);
+            this.dropItem(net.minecraft.world.item.Items.ENDER_PEARL);
+            this.dropItem(net.minecraft.world.item.Items.SLIME_BALL);
         }
     }
     
     @Override
     public boolean damage(DamageSource source, float amount) {
         // Water still hurts (enderman trait)
-        if (source.getAttacker() != null && source.getAttacker() instanceof PlayerEntity) {
+        if (source.getAttacker() != null && source.getAttacker() instanceof Player) {
             // Teleport away when attacked by player
             if (teleportCooldown == 0 && this.random.nextFloat() < 0.3f) {
                 teleportRandomly();
@@ -167,14 +167,14 @@ public class SlimeEndermanEntity extends EndermanEntity {
     }
     
     @Override
-    public void writeCustomDataToNbt(NbtCompound nbt) {
+    public void writeCustomDataToNbt(CompoundTag nbt) {
         super.writeCustomDataToNbt(nbt);
         nbt.putBoolean("IsSlimeEnderman", isSlimeEnderman());
         nbt.putInt("SlimeSize", getSlimeSize());
     }
     
     @Override
-    public void readCustomDataFromNbt(NbtCompound nbt) {
+    public void readCustomDataFromNbt(CompoundTag nbt) {
         super.readCustomDataFromNbt(nbt);
         setSlimeEnderman(nbt.getBoolean("IsSlimeEnderman"));
         setSlimeSize(nbt.getInt("SlimeSize"));
@@ -207,8 +207,8 @@ public class SlimeEndermanEntity extends EndermanEntity {
                 double distance = enderman.squaredDistanceTo(enderman.getTarget());
                 if (distance > 16.0 && distance < 64.0 && enderman.random.nextFloat() < 0.02f) {
                     // Try to teleport closer to target
-                    Vec3d targetPos = enderman.getTarget().getPos();
-                    Vec3d teleportPos = new Vec3d(
+                    Vec3 targetPos = enderman.getTarget().getPos();
+                    Vec3 teleportPos = new Vec3(
                         targetPos.x + (enderman.random.nextDouble() - 0.5) * 8,
                         targetPos.y,
                         targetPos.z + (enderman.random.nextDouble() - 0.5) * 8

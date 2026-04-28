@@ -1,10 +1,10 @@
 package com.wayacreate.frogslimegamemode.item;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -58,12 +58,12 @@ public class MobItemFactory {
         }
         
         ItemStack stack = new ItemStack(definition.baseItem());
-        NbtCompound nbt = stack.getOrCreateNbt();
+        CompoundTag nbt = stack.getOrCreateNbt();
         nbt.putBoolean(MOB_ITEM_NBT, true);
         nbt.putString(MOB_TYPE_NBT, mobType);
         
-        stack.setCustomName(Text.literal(definition.displayName())
-            .formatted(Formatting.BOLD)
+        stack.setCustomName(Component.literal(definition.displayName())
+            .formatted(ChatFormatting.BOLD)
             .styled(style -> style.withColor(definition.color())));
         
         return stack;
@@ -71,13 +71,13 @@ public class MobItemFactory {
     
     public static boolean isMobItem(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return false;
-        NbtCompound nbt = stack.getNbt();
+        CompoundTag nbt = stack.getNbt();
         return nbt != null && nbt.getBoolean(MOB_ITEM_NBT);
     }
     
     public static String getMobType(ItemStack stack) {
         if (!isMobItem(stack)) return null;
-        NbtCompound nbt = stack.getNbt();
+        CompoundTag nbt = stack.getNbt();
         return nbt != null ? nbt.getString(MOB_TYPE_NBT) : null;
     }
     
@@ -91,7 +91,7 @@ public class MobItemFactory {
     
     public record MobItemDefinition(
         String mobType,
-        net.minecraft.item.Item baseItem,
+        net.minecraft.world.item.Item baseItem,
         String displayName,
         int color
     ) {}

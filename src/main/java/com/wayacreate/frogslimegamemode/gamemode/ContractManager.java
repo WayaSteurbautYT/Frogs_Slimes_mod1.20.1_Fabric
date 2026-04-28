@@ -4,9 +4,9 @@ import com.wayacreate.frogslimegamemode.FrogSlimeGamemode;
 import com.wayacreate.frogslimegamemode.achievements.AchievementManager;
 import com.wayacreate.frogslimegamemode.tasks.TaskManager;
 import com.wayacreate.frogslimegamemode.tasks.TaskType;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -82,15 +82,15 @@ public class ContractManager {
         }
     }
     
-    public static void acceptContract(ServerPlayerEntity player, String contractTypeId) {
+    public static void acceptContract(ServerPlayer player, String contractTypeId) {
         UUID uuid = player.getUuid();
         List<Contract> contracts = activeContracts.computeIfAbsent(uuid, k -> new ArrayList<>());
         
         // Check if player already has this contract type
         for (Contract contract : contracts) {
             if (contract.getType().getId().equals(contractTypeId) && !contract.isComplete()) {
-                player.sendMessage(Text.literal("You already have this active contract!")
-                    .formatted(Formatting.RED), false);
+                player.sendMessage(Component.literal("You already have this active contract!")
+                    .formatted(ChatFormatting.RED), false);
                 return;
             }
         }
@@ -102,8 +102,8 @@ public class ContractManager {
             .orElse(null);
         
         if (type == null) {
-            player.sendMessage(Text.literal("Contract type not found!")
-                .formatted(Formatting.RED), false);
+            player.sendMessage(Component.literal("Contract type not found!")
+                .formatted(ChatFormatting.RED), false);
             return;
         }
         
@@ -114,16 +114,16 @@ public class ContractManager {
         Contract contract = new Contract(type, 0, reward, expiryTime);
         contracts.add(contract);
         
-        player.sendMessage(Text.literal("Contract Accepted: ")
-            .formatted(Formatting.GREEN, Formatting.BOLD)
-            .append(Text.literal(type.getName())
-                .formatted(Formatting.YELLOW)), false);
-        player.sendMessage(Text.literal("Goal: " + type.getDescription())
-            .formatted(Formatting.GRAY), false);
-        player.sendMessage(Text.literal("Reward: " + reward + " coins")
-            .formatted(Formatting.GOLD), false);
-        player.sendMessage(Text.literal("Expires in 30 minutes")
-            .formatted(Formatting.GRAY), false);
+        player.sendMessage(Component.literal("Contract Accepted: ")
+            .formatted(ChatFormatting.GREEN, ChatFormatting.BOLD)
+            .append(Component.literal(type.getName())
+                .formatted(ChatFormatting.YELLOW)), false);
+        player.sendMessage(Component.literal("Goal: " + type.getDescription())
+            .formatted(ChatFormatting.GRAY), false);
+        player.sendMessage(Component.literal("Reward: " + reward + " coins")
+            .formatted(ChatFormatting.GOLD), false);
+        player.sendMessage(Component.literal("Expires in 30 minutes")
+            .formatted(ChatFormatting.GRAY), false);
         
         // Unlock achievement
         int totalCompleted = completedContracts.getOrDefault(uuid, 0);
@@ -132,7 +132,7 @@ public class ContractManager {
         }
     }
     
-    public static void updateProgress(ServerPlayerEntity player, String contractTypeId, int amount) {
+    public static void updateProgress(ServerPlayer player, String contractTypeId, int amount) {
         UUID uuid = player.getUuid();
         List<Contract> contracts = activeContracts.get(uuid);
         
@@ -158,7 +158,7 @@ public class ContractManager {
         }
     }
     
-    private static void completeContract(ServerPlayerEntity player, int contractIndex) {
+    private static void completeContract(ServerPlayer player, int contractIndex) {
         UUID uuid = player.getUuid();
         List<Contract> contracts = activeContracts.get(uuid);
         
@@ -170,12 +170,12 @@ public class ContractManager {
         // Add reward to player's balance
         com.wayacreate.frogslimegamemode.economy.EconomyManager.addBalance(player, contract.getReward());
         
-        player.sendMessage(Text.literal("Contract Completed: ")
-            .formatted(Formatting.GREEN, Formatting.BOLD)
-            .append(Text.literal(contract.getType().getName())
-                .formatted(Formatting.YELLOW)), false);
-        player.sendMessage(Text.literal("Reward: " + contract.getReward() + " coins")
-            .formatted(Formatting.GOLD), false);
+        player.sendMessage(Component.literal("Contract Completed: ")
+            .formatted(ChatFormatting.GREEN, ChatFormatting.BOLD)
+            .append(Component.literal(contract.getType().getName())
+                .formatted(ChatFormatting.YELLOW)), false);
+        player.sendMessage(Component.literal("Reward: " + contract.getReward() + " coins")
+            .formatted(ChatFormatting.GOLD), false);
 
         TaskManager.completeTask(player, TaskType.COMPLETE_CONTRACT);
         
@@ -194,49 +194,49 @@ public class ContractManager {
         FrogSlimeGamemode.LOGGER.info("Player " + player.getName().getString() + " completed contract: " + contract.getType().getId());
     }
     
-    public static void listContracts(ServerPlayerEntity player) {
+    public static void listContracts(ServerPlayer player) {
         UUID uuid = player.getUuid();
         List<Contract> contracts = activeContracts.get(uuid);
         
         if (contracts == null || contracts.isEmpty()) {
-            player.sendMessage(Text.literal("You have no active contracts.")
-                .formatted(Formatting.GRAY), false);
-            player.sendMessage(Text.literal("Use /frogslime contract accept <type> to accept a contract.")
-                .formatted(Formatting.YELLOW), false);
+            player.sendMessage(Component.literal("You have no active contracts.")
+                .formatted(ChatFormatting.GRAY), false);
+            player.sendMessage(Component.literal("Use /frogslime contract accept <type> to accept a contract.")
+                .formatted(ChatFormatting.YELLOW), false);
             return;
         }
         
-        player.sendMessage(Text.literal("Active Contracts:").formatted(Formatting.BOLD), false);
+        player.sendMessage(Component.literal("Active Contracts:").formatted(ChatFormatting.BOLD), false);
         for (Contract contract : contracts) {
             if (contract.isExpired()) {
-                player.sendMessage(Text.literal("- " + contract.getType().getName() + " (EXPIRED)")
-                    .formatted(Formatting.RED, Formatting.STRIKETHROUGH), false);
+                player.sendMessage(Component.literal("- " + contract.getType().getName() + " (EXPIRED)")
+                    .formatted(ChatFormatting.RED, ChatFormatting.STRIKETHROUGH), false);
             } else if (contract.isComplete()) {
-                player.sendMessage(Text.literal("- " + contract.getType().getName() + " (COMPLETE - " + contract.getReward() + " coins)")
-                    .formatted(Formatting.GREEN), false);
+                player.sendMessage(Component.literal("- " + contract.getType().getName() + " (COMPLETE - " + contract.getReward() + " coins)")
+                    .formatted(ChatFormatting.GREEN), false);
             } else {
                 long minutesLeft = (contract.getExpiryTime() - System.currentTimeMillis()) / 60000;
-                player.sendMessage(Text.literal("- " + contract.getType().getName() + " (" + contract.getProgress() + "/" + contract.getType().getTargetAmount() + ") - " + minutesLeft + " min left")
-                    .formatted(Formatting.YELLOW), false);
+                player.sendMessage(Component.literal("- " + contract.getType().getName() + " (" + contract.getProgress() + "/" + contract.getType().getTargetAmount() + ") - " + minutesLeft + " min left")
+                    .formatted(ChatFormatting.YELLOW), false);
             }
         }
     }
     
-    public static void listAvailableContracts(ServerPlayerEntity player) {
-        player.sendMessage(Text.literal("Available Contracts:").formatted(Formatting.GOLD, Formatting.BOLD), false);
+    public static void listAvailableContracts(ServerPlayer player) {
+        player.sendMessage(Component.literal("Available Contracts:").formatted(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
         for (ContractType type : contractTypes) {
-            player.sendMessage(Text.literal("- " + type.getName() + " [" + type.getId() + "]")
-                .formatted(Formatting.YELLOW), false);
-            player.sendMessage(Text.literal("  " + type.getDescription())
-                .formatted(Formatting.GRAY), false);
-            player.sendMessage(Text.literal("  Reward: " + type.getBaseReward() + "-" + type.getMaxReward() + " coins")
-                .formatted(Formatting.GOLD), false);
+            player.sendMessage(Component.literal("- " + type.getName() + " [" + type.getId() + "]")
+                .formatted(ChatFormatting.YELLOW), false);
+            player.sendMessage(Component.literal("  " + type.getDescription())
+                .formatted(ChatFormatting.GRAY), false);
+            player.sendMessage(Component.literal("  Reward: " + type.getBaseReward() + "-" + type.getMaxReward() + " coins")
+                .formatted(ChatFormatting.GOLD), false);
         }
-        player.sendMessage(Text.literal("Use /frogslime contract accept <id> to accept a contract.")
-            .formatted(Formatting.YELLOW), false);
+        player.sendMessage(Component.literal("Use /frogslime contract accept <id> to accept a contract.")
+            .formatted(ChatFormatting.YELLOW), false);
     }
     
-    public static void clearExpiredContracts(ServerPlayerEntity player) {
+    public static void clearExpiredContracts(ServerPlayer player) {
         UUID uuid = player.getUuid();
         List<Contract> contracts = activeContracts.get(uuid);
         

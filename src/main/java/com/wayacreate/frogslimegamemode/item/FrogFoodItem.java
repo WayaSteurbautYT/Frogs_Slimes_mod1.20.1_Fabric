@@ -1,36 +1,36 @@
 package com.wayacreate.frogslimegamemode.item;
 
 import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.FoodComponent;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.level.Level;
 
 public class FrogFoodItem extends Item {
-    public static final FoodComponent FROG_FOOD_COMPONENT = new FoodComponent.Builder()
+    public static final FoodProperties FROG_FOOD_COMPONENT = new FoodProperties.Builder()
         .hunger(3)
         .saturationModifier(0.5f)
         .alwaysEdible()
         .build();
     
-    public FrogFoodItem(Settings settings) {
+    public FrogFoodItem(Properties settings) {
         super(settings);
     }
     
     @Override
-    public ItemStack finishUsing(ItemStack stack, World world, LivingEntity user) {
-        if (user instanceof PlayerEntity player) {
+    public ItemStack finishUsing(ItemStack stack, Level world, LivingEntity user) {
+        if (user instanceof Player player) {
             if (!world.isClient && GamemodeManager.isInGamemode(player)) {
-                player.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, 600, 1));
-                player.addStatusEffect(new StatusEffectInstance(StatusEffects.WATER_BREATHING, 600, 0));
-                player.sendMessage(Text.literal("You feel swift like a frog!")
-                    .formatted(Formatting.GREEN), true);
+                player.addStatusEffect(new MobEffectInstance(MobEffects.SPEED, 600, 1));
+                player.addStatusEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 600, 0));
+                player.sendMessage(Component.literal("You feel swift like a frog!")
+                    .formatted(ChatFormatting.GREEN), true);
             }
         }
         return super.finishUsing(stack, world, user);

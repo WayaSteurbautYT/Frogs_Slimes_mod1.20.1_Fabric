@@ -8,10 +8,10 @@ import com.wayacreate.frogslimegamemode.command.EconomyCommands;
 import com.wayacreate.frogslimegamemode.command.FrogSlimeCommand;
 import com.wayacreate.frogslimegamemode.command.GuildCommand;
 import com.wayacreate.frogslimegamemode.command.HelperCommand;
-import com.wayacreate.frogslimegamemode.economy.BountyManager;
 import com.wayacreate.frogslimegamemode.crafting.AnvilRecipeHandler;
 import com.wayacreate.frogslimegamemode.dimension.ModDimensions;
 import com.wayacreate.frogslimegamemode.eating.EatingSystem;
+import com.wayacreate.frogslimegamemode.economy.BountyManager;
 import com.wayacreate.frogslimegamemode.entity.ModEntities;
 import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
 import com.wayacreate.frogslimegamemode.gamemode.ManhuntManager;
@@ -21,88 +21,84 @@ import com.wayacreate.frogslimegamemode.item.ModItems;
 import com.wayacreate.frogslimegamemode.item.ModPotions;
 import com.wayacreate.frogslimegamemode.network.ModNetworking;
 import com.wayacreate.frogslimegamemode.tasks.TaskManager;
-import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.event.ServerChatEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.server.ServerStoppingEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FrogSlimeGamemode implements ModInitializer {
+@Mod(FrogSlimeGamemode.MOD_ID)
+public class FrogSlimeGamemode {
     public static final String MOD_ID = "frogslimegamemode";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-    @Override
-    public void onInitialize() {
+    public FrogSlimeGamemode(IEventBus modBus) {
         LOGGER.info("Initializing Frog & Slime Gamemode by WayaCreate!");
 
-        // Register entities first (items depend on entity types)
-        ModEntities.register();
-        ModBlocks.register();
-        ModItems.register();
-        ModPotions.register();
+        ModEntities.register(modBus);
+        ModBlocks.register(modBus);
+        ModItems.register(modBus);
+        ModPotions.register(modBus);
+        ModNetworking.register(modBus);
         ModDimensions.register();
-        ModNetworking.registerServer();
         TaskManager.init();
         AchievementManager.init();
         ModGameRules.register();
         AnvilRecipeHandler.register();
-        
-        FrogSlimeGamemode.LOGGER.info("Dimension teleportation available via /frogslime dimension command");
 
-        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
-            FrogSlimeCommand.register(dispatcher);
-            HelperCommand.register(dispatcher, registryAccess, environment);
-            EconomyCommands.register(dispatcher);
-            GuildCommand.register(dispatcher);
-            BountyCommand.register(dispatcher);
-        });
+        NeoForge.EVENT_BUS.addListener(FrogSlimeGamemode::onRegisterCommands);
+        NeoForge.EVENT_BUS.addListener(FrogSlimeGamemode::onServerChat);
+        NeoForge.EVENT_BUS.addListener(FrogSlimeGamemode::onServerTick);
+        NeoForge.EVENT_BUS.addListener(FrogSlimeGamemode::onServerStopping);
+        NeoForge.EVENT_BUS.addListener(FrogSlimeGamemode::onLivingDeath);
 
-        // Register chat message event for rank and team display
-        ServerMessageEvents.ALLOW_CHAT_MESSAGE.register((message, player, params) -> {
-            if (player != null) {
-                // Send a custom message with rank/team prefix to all players
-                net.minecraft.text.Text displayName = RankManager.getPlayerDisplayName(player);
-                net.minecraft.text.Text formattedMessage = net.minecraft.text.Text.literal("")
-                    .append(displayName)
-                    .append(net.minecraft.text.Text.literal(": "))
-                    .append(net.minecraft.text.Text.literal(message.getContent().getString()));
-                
-                // Send to all players
-                player.getServer().getPlayerManager().broadcast(formattedMessage, false);
-                
-                // Return false to prevent the original message from being sent
-                return false;
-            }
-            return true;
-        });
-
-        ServerTickEvents.END_SERVER_TICK.register(server -> {
-            GamemodeManager.tick(server);
-            EatingSystem.tick(server);
-            TaskManager.tick(server);
-            PlayerAbilityManager.tick();
-            ManhuntManager.tick(server);
-        });
-
-        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
-            // Save all player data when server stops
-            for (var player : server.getPlayerManager().getPlayerList()) {
-                GamemodeManager.onPlayerLeave(player);
-            }
-        });
-        
-        // Register player death event for bounties
-        ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
-            if (entity instanceof ServerPlayerEntity player && 
-                damageSource.getAttacker() instanceof ServerPlayerEntity killer) {
-                BountyManager.onPlayerDeath(player, killer);
-            }
-        });
-
+        LOGGER.info("Dimension teleportation available via /frogslime dimension command");
         LOGGER.info("Frog & Slime Gamemode initialized! Prepare for an unexpected ending...");
+    }
+
+    private static void onRegisterCommands(RegisterCommandsEvent event) {
+        FrogSlimeCommand.register(event.getDispatcher());
+        HelperCommand.register(event.getDispatcher(), event.getBuildContext(), event.getCommandSelection());
+        EconomyCommands.register(event.getDispatcher());
+        GuildCommand.register(event.getDispatcher());
+        BountyCommand.register(event.getDispatcher());
+    }
+
+    private static void onServerChat(ServerChatEvent event) {
+        Component displayName = RankManager.getPlayerDisplayName(event.getPlayer());
+        Component formattedMessage = Component.literal("")
+            .append(displayName)
+            .append(Component.literal(": "))
+            .append(Component.literal(event.getRawText()));
+        event.setMessage(formattedMessage);
+    }
+
+    private static void onServerTick(ServerTickEvent.Post event) {
+        var server = event.getServer();
+        GamemodeManager.tick(server);
+        EatingSystem.tick(server);
+        TaskManager.tick(server);
+        PlayerAbilityManager.tick();
+        ManhuntManager.tick(server);
+    }
+
+    private static void onServerStopping(ServerStoppingEvent event) {
+        for (var player : event.getServer().getPlayerManager().getPlayerList()) {
+            GamemodeManager.onPlayerLeave(player);
+        }
+    }
+
+    private static void onLivingDeath(LivingDeathEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player
+            && event.getSource().getAttacker() instanceof ServerPlayer killer) {
+            BountyManager.onPlayerDeath(player, killer);
+        }
     }
 }

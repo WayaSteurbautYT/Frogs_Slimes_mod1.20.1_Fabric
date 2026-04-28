@@ -1,13 +1,13 @@
 package com.wayacreate.frogslimegamemode.item;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.SwordItem;
-import net.minecraft.item.ToolMaterial;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.item.Tier;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.level.Level;
 
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -15,15 +15,15 @@ import java.util.concurrent.ThreadLocalRandom;
 public class YouTuberSwordItem extends SwordItem {
     private final String youtuberName;
     
-    public YouTuberSwordItem(String youtuberName, ToolMaterial toolMaterial, int attackDamage, float attackSpeed, Settings settings) {
+    public YouTuberSwordItem(String youtuberName, Tier toolMaterial, int attackDamage, float attackSpeed, Properties settings) {
         super(toolMaterial, attackDamage, attackSpeed, settings);
         this.youtuberName = youtuberName;
     }
     
     @Override
-    public Text getName(ItemStack stack) {
-        return Text.literal(youtuberName + "'s Blade")
-            .formatted(Formatting.GOLD, Formatting.BOLD);
+    public Component getName(ItemStack stack) {
+        return Component.literal(youtuberName + "'s Blade")
+            .formatted(ChatFormatting.GOLD, ChatFormatting.BOLD);
     }
     
     @Override
@@ -32,44 +32,44 @@ public class YouTuberSwordItem extends SwordItem {
     }
     
     @Override
-    public void onStoppedUsing(ItemStack stack, World world, LivingEntity user, int remainingUseTicks) {
-        if (!world.isClient && user instanceof PlayerEntity player) {
+    public void onStoppedUsing(ItemStack stack, Level world, LivingEntity user, int remainingUseTicks) {
+        if (!world.isClient && user instanceof Player player) {
             applySwordAbility(player);
         }
         super.onStoppedUsing(stack, world, user, remainingUseTicks);
     }
     
-    private void applySwordAbility(PlayerEntity player) {
+    private void applySwordAbility(Player player) {
         switch (youtuberName.toLowerCase()) {
             case "dream" -> {
                 // Speed boost for "speedrunning"
-                player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
-                    net.minecraft.entity.effect.StatusEffects.SPEED, 200, 2));
-                player.sendMessage(Text.literal("Speedrun activated!")
-                    .formatted(Formatting.GREEN), true);
+                player.addStatusEffect(new net.minecraft.world.effect.MobEffectInstance(
+                    net.minecraft.world.effect.MobEffects.SPEED, 200, 2));
+                player.sendMessage(Component.literal("Speedrun activated!")
+                    .formatted(ChatFormatting.GREEN), true);
             }
             case "technoblade" -> {
                 // Strength and resistance
-                player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
-                    net.minecraft.entity.effect.StatusEffects.STRENGTH, 200, 1));
-                player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
-                    net.minecraft.entity.effect.StatusEffects.RESISTANCE, 200, 1));
-                player.sendMessage(Text.literal("Blood for the Blood God!")
-                    .formatted(Formatting.DARK_RED), true);
+                player.addStatusEffect(new net.minecraft.world.effect.MobEffectInstance(
+                    net.minecraft.world.effect.MobEffects.STRENGTH, 200, 1));
+                player.addStatusEffect(new net.minecraft.world.effect.MobEffectInstance(
+                    net.minecraft.world.effect.MobEffects.RESISTANCE, 200, 1));
+                player.sendMessage(Component.literal("Blood for the Blood God!")
+                    .formatted(ChatFormatting.DARK_RED), true);
             }
             case "grian" -> {
                 // Invisibility for "pranking"
-                player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
-                    net.minecraft.entity.effect.StatusEffects.INVISIBILITY, 100, 0));
-                player.sendMessage(Text.literal("Prank time!")
-                    .formatted(Formatting.LIGHT_PURPLE), true);
+                player.addStatusEffect(new net.minecraft.world.effect.MobEffectInstance(
+                    net.minecraft.world.effect.MobEffects.INVISIBILITY, 100, 0));
+                player.sendMessage(Component.literal("Prank time!")
+                    .formatted(ChatFormatting.LIGHT_PURPLE), true);
             }
             case "mumbo jumbo" -> {
                 // Haste for "engineering"
-                player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
-                    net.minecraft.entity.effect.StatusEffects.HASTE, 200, 2));
-                player.sendMessage(Text.literal("Engineering mode activated!")
-                    .formatted(Formatting.YELLOW), true);
+                player.addStatusEffect(new net.minecraft.world.effect.MobEffectInstance(
+                    net.minecraft.world.effect.MobEffects.HASTE, 200, 2));
+                player.sendMessage(Component.literal("Engineering mode activated!")
+                    .formatted(ChatFormatting.YELLOW), true);
             }
         }
     }

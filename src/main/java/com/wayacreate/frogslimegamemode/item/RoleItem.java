@@ -6,16 +6,16 @@ import com.wayacreate.frogslimegamemode.entity.SlimeHelperEntity;
 import com.wayacreate.frogslimegamemode.entity.ai.HelperRoleManager;
 import com.wayacreate.frogslimegamemode.tasks.TaskManager;
 import com.wayacreate.frogslimegamemode.tasks.TaskType;
-import net.minecraft.entity.passive.TameableEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.util.Hand;
-import net.minecraft.util.TypedActionResult;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.level.Level;
 
 import java.util.Comparator;
 import java.util.stream.Stream;
@@ -25,12 +25,12 @@ public class RoleItem extends Item {
     public static final String ROLE_TYPE_NBT = "RoleType";
     private final String roleType;
     
-    public RoleItem(Settings settings) {
+    public RoleItem(Properties settings) {
         super(settings);
         this.roleType = null;
     }
     
-    public RoleItem(Settings settings, String roleType) {
+    public RoleItem(Properties settings, String roleType) {
         super(settings);
         this.roleType = roleType;
     }
@@ -41,7 +41,7 @@ public class RoleItem extends Item {
         return configureRoleStack(stack, roleType);
     }
     
-    private Formatting getRoleColor(String role) {
+    private ChatFormatting getRoleColor(String role) {
         return HelperRoleManager.getRoleColor(role);
     }
     
@@ -55,19 +55,19 @@ public class RoleItem extends Item {
         return configureRoleStack(new ItemStack(roleItem), normalizedRole);
     }
     
-    private static Formatting getRoleColorStatic(String role) {
+    private static ChatFormatting getRoleColorStatic(String role) {
         return HelperRoleManager.getRoleColor(role);
     }
     
     public static boolean isRoleItem(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return false;
-        NbtCompound nbt = stack.getNbt();
+        CompoundTag nbt = stack.getNbt();
         return stack.getItem() instanceof RoleItem || (nbt != null && nbt.getBoolean(ROLE_ITEM_NBT));
     }
     
     public static String getRoleType(ItemStack stack) {
         if (!isRoleItem(stack)) return null;
-        NbtCompound nbt = stack.getNbt();
+        CompoundTag nbt = stack.getNbt();
         if (nbt != null && nbt.contains(ROLE_TYPE_NBT)) {
             return HelperRoleManager.normalizeRole(nbt.getString(ROLE_TYPE_NBT));
         }
@@ -78,12 +78,12 @@ public class RoleItem extends Item {
     }
     
     @Override
-    public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+    public InteractionResultHolder<ItemStack> use(Level world, Player user, InteractionHand hand) {
         ItemStack stack = user.getStackInHand(hand);
         
         String role = HelperRoleManager.normalizeRole(getRoleType(stack));
         if (role == null) {
-            return TypedActionResult.pass(stack);
+            return InteractionResultHolder.pass(stack);
         }
         
         if (!world.isClient) {
@@ -101,24 +101,24 @@ public class RoleItem extends Item {
                 e -> e.isOwner(user)
             );
             
-            TameableEntity nearestHelper = Stream.concat(frogs.stream(), slimes.stream())
+            TamableAnimal nearestHelper = Stream.concat(frogs.stream(), slimes.stream())
                 .min(Comparator.comparingDouble(entity -> entity.squaredDistanceTo(user)))
                 .orElse(null);
 
             if (nearestHelper != null) {
                 assignRole(nearestHelper, role, user);
                 stack.decrement(1);
-                return TypedActionResult.success(stack, false);
+                return InteractionResultHolder.success(stack, false);
             } else {
-                user.sendMessage(Text.literal("No helper nearby to assign role!")
-                    .formatted(Formatting.RED), true);
+                user.sendMessage(Component.literal("No helper nearby to assign role!")
+                    .formatted(ChatFormatting.RED), true);
             }
         }
         
-        return TypedActionResult.pass(stack);
+        return InteractionResultHolder.pass(stack);
     }
     
-    private void assignRole(TameableEntity helper, String role, PlayerEntity player) {
+    private void assignRole(TamableAnimal helper, String role, Player player) {
         String message = "";
         
         if (helper instanceof FrogHelperEntity frog) {
@@ -129,24 +129,24 @@ public class RoleItem extends Item {
             message = "Your slime helper is now a " + role + "!";
         }
         
-        player.sendMessage(Text.literal(message)
-            .formatted(Formatting.GREEN, Formatting.BOLD), true);
+        player.sendMessage(Component.literal(message)
+            .formatted(ChatFormatting.GREEN, ChatFormatting.BOLD), true);
 
         TaskManager.completeTask(player, TaskType.ASSIGN_ROLE);
-        if (player instanceof net.minecraft.server.network.ServerPlayerEntity serverPlayer) {
+        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
             AchievementManager.unlockAchievement(serverPlayer, "helper_commander");
         }
     }
 
     private static ItemStack configureRoleStack(ItemStack stack, String role) {
         String normalizedRole = HelperRoleManager.normalizeRole(role);
-        NbtCompound nbt = stack.getOrCreateNbt();
+        CompoundTag nbt = stack.getOrCreateNbt();
         nbt.putBoolean(ROLE_ITEM_NBT, true);
         nbt.putString(ROLE_TYPE_NBT, normalizedRole);
 
-        Formatting color = getRoleColorStatic(normalizedRole);
-        stack.setCustomName(Text.literal(normalizedRole + " Assignment Stick")
-            .formatted(color, Formatting.BOLD));
+        ChatFormatting color = getRoleColorStatic(normalizedRole);
+        stack.setCustomName(Component.literal(normalizedRole + " Assignment Stick")
+            .formatted(color, ChatFormatting.BOLD));
         return stack;
     }
 

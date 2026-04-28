@@ -4,40 +4,40 @@ import com.wayacreate.frogslimegamemode.achievements.AchievementManager;
 import com.wayacreate.frogslimegamemode.gamemode.ManhuntManager;
 import com.wayacreate.frogslimegamemode.tasks.TaskManager;
 import com.wayacreate.frogslimegamemode.tasks.TaskType;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.goal.*;
-import net.minecraft.entity.attribute.DefaultAttributeContainer;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.data.DataTracker;
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.data.TrackedDataHandlerRegistry;
-import net.minecraft.entity.mob.HostileEntity;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.goal.*;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.level.Level;
 
-public class GiantSlimeBossEntity extends HostileEntity {
-    private static final TrackedData<Integer> BOSS_PHASE = DataTracker.registerData(GiantSlimeBossEntity.class, TrackedDataHandlerRegistry.INTEGER);
-    private static final TrackedData<Boolean> ENRAGED = DataTracker.registerData(GiantSlimeBossEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
+public class GiantSlimeBossEntity extends Monster {
+    private static final EntityDataAccessor<Integer> BOSS_PHASE = SynchedEntityData.registerData(GiantSlimeBossEntity.class, EntityDataSerializers.INTEGER);
+    private static final EntityDataAccessor<Boolean> ENRAGED = SynchedEntityData.registerData(GiantSlimeBossEntity.class, EntityDataSerializers.BOOLEAN);
     private int specialAttackCooldown = 0;
     
-    public GiantSlimeBossEntity(EntityType<? extends HostileEntity> entityType, World world) {
+    public GiantSlimeBossEntity(EntityType<? extends Monster> entityType, Level world) {
         super(entityType, world);
         this.experiencePoints = 500;
     }
     
-    public static DefaultAttributeContainer.Builder createAttributes() {
-        return MobEntity.createMobAttributes()
-            .add(EntityAttributes.GENERIC_MAX_HEALTH, 500.0)
-            .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 15.0)
-            .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.35)
-            .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 64.0)
-            .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 0.8);
+    public static AttributeSupplier.Builder createAttributes() {
+        return Mob.createMobAttributes()
+            .add(Attributes.GENERIC_MAX_HEALTH, 500.0)
+            .add(Attributes.GENERIC_ATTACK_DAMAGE, 15.0)
+            .add(Attributes.GENERIC_MOVEMENT_SPEED, 0.35)
+            .add(Attributes.GENERIC_FOLLOW_RANGE, 64.0)
+            .add(Attributes.GENERIC_KNOCKBACK_RESISTANCE, 0.8);
     }
     
     @Override
@@ -52,10 +52,10 @@ public class GiantSlimeBossEntity extends HostileEntity {
         this.goalSelector.add(1, new SwimGoal(this));
         this.goalSelector.add(2, new MeleeAttackGoal(this, 1.2, true));
         this.goalSelector.add(3, new WanderAroundFarGoal(this, 0.8));
-        this.goalSelector.add(4, new LookAtEntityGoal(this, PlayerEntity.class, 16.0f));
+        this.goalSelector.add(4, new LookAtEntityGoal(this, Player.class, 16.0f));
         this.goalSelector.add(5, new LookAroundGoal(this));
         
-        this.targetSelector.add(1, new ActiveTargetGoal<>(this, PlayerEntity.class, true));
+        this.targetSelector.add(1, new ActiveTargetGoal<>(this, Player.class, true));
         this.targetSelector.add(2, new ActiveTargetGoal<>(this, FrogHelperEntity.class, true));
         this.targetSelector.add(3, new ActiveTargetGoal<>(this, SlimeHelperEntity.class, true));
     }
@@ -64,7 +64,7 @@ public class GiantSlimeBossEntity extends HostileEntity {
     public void onDeath(DamageSource damageSource) {
         super.onDeath(damageSource);
         if (!this.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) this.getWorld();
+            ServerLevel world = (ServerLevel) this.getWorld();
             
             // Spawn death particles
             for (int i = 0; i < 100; i++) {
@@ -72,7 +72,7 @@ public class GiantSlimeBossEntity extends HostileEntity {
                 double offsetY = world.random.nextDouble() * 8;
                 double offsetZ = (world.random.nextDouble() - 0.5) * 8;
                 
-                world.spawnParticles(net.minecraft.particle.ParticleTypes.EXPLOSION_EMITTER,
+                world.spawnParticles(net.minecraft.core.particles.ParticleTypes.EXPLOSION_EMITTER,
                     this.getX() + offsetX,
                     this.getY() + offsetY,
                     this.getZ() + offsetZ,
@@ -80,19 +80,19 @@ public class GiantSlimeBossEntity extends HostileEntity {
             }
             
             // Broadcast death message
-            if (damageSource.getAttacker() instanceof PlayerEntity player) {
+            if (damageSource.getAttacker() instanceof Player player) {
                 TaskManager.completeTask(player, TaskType.DEFEAT_FINAL_BOSS);
-                if (player instanceof net.minecraft.server.network.ServerPlayerEntity serverPlayer) {
+                if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
                     AchievementManager.unlockAchievement(serverPlayer, "boss_killer");
                     if (ManhuntManager.isInGame(serverPlayer) && ManhuntManager.isSpeedrunner(serverPlayer)) {
                         ManhuntManager.onSpeedrunnerWin(serverPlayer);
                     }
                 }
                 this.getWorld().getPlayers().forEach(p -> 
-                    p.sendMessage(Text.literal("The Giant Slime Boss has been defeated by ")
-                        .formatted(Formatting.GOLD)
-                        .append(Text.literal(player.getName().getString()).formatted(Formatting.YELLOW, Formatting.BOLD))
-                        .append(Text.literal("!").formatted(Formatting.GOLD)), false)
+                    p.sendMessage(Component.literal("The Giant Slime Boss has been defeated by ")
+                        .formatted(ChatFormatting.GOLD)
+                        .append(Component.literal(player.getName().getString()).formatted(ChatFormatting.YELLOW, ChatFormatting.BOLD))
+                        .append(Component.literal("!").formatted(ChatFormatting.GOLD)), false)
                 );
             }
         }
@@ -126,8 +126,8 @@ public class GiantSlimeBossEntity extends HostileEntity {
             
             // Enraged mode effects
             if (isEnraged() && this.age % 20 == 0) {
-                ServerWorld world = (ServerWorld) this.getWorld();
-                world.spawnParticles(net.minecraft.particle.ParticleTypes.LAVA,
+                ServerLevel world = (ServerLevel) this.getWorld();
+                world.spawnParticles(net.minecraft.core.particles.ParticleTypes.LAVA,
                     this.getX(),
                     this.getY() + 2,
                     this.getZ(),
@@ -138,25 +138,25 @@ public class GiantSlimeBossEntity extends HostileEntity {
     
     private void broadcastPhaseChange(int phase) {
         this.getWorld().getPlayers().forEach(p -> {
-            p.sendMessage(Text.literal("═══════════════════════════")
-                .formatted(Formatting.DARK_RED, Formatting.BOLD), false);
-            p.sendMessage(Text.literal("GIANT SLIME BOSS PHASE " + phase)
-                .formatted(Formatting.RED, Formatting.BOLD), false);
-            p.sendMessage(Text.literal(getPhaseDescription(phase))
-                .formatted(Formatting.DARK_RED), false);
-            p.sendMessage(Text.literal("═══════════════════════════")
-                .formatted(Formatting.DARK_RED, Formatting.BOLD), false);
+            p.sendMessage(Component.literal("═══════════════════════════")
+                .formatted(ChatFormatting.DARK_RED, ChatFormatting.BOLD), false);
+            p.sendMessage(Component.literal("GIANT SLIME BOSS PHASE " + phase)
+                .formatted(ChatFormatting.RED, ChatFormatting.BOLD), false);
+            p.sendMessage(Component.literal(getPhaseDescription(phase))
+                .formatted(ChatFormatting.DARK_RED), false);
+            p.sendMessage(Component.literal("═══════════════════════════")
+                .formatted(ChatFormatting.DARK_RED, ChatFormatting.BOLD), false);
         });
         
         // Apply phase bonuses
         switch (phase) {
             case 2:
-                this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(20.0);
-                this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(0.4);
+                this.getAttributeInstance(Attributes.GENERIC_ATTACK_DAMAGE).setBaseValue(20.0);
+                this.getAttributeInstance(Attributes.GENERIC_MOVEMENT_SPEED).setBaseValue(0.4);
                 break;
             case 3:
-                this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(30.0);
-                this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(0.5);
+                this.getAttributeInstance(Attributes.GENERIC_ATTACK_DAMAGE).setBaseValue(30.0);
+                this.getAttributeInstance(Attributes.GENERIC_MOVEMENT_SPEED).setBaseValue(0.5);
                 break;
         }
     }
@@ -187,14 +187,14 @@ public class GiantSlimeBossEntity extends HostileEntity {
     }
     
     @Override
-    public void writeCustomDataToNbt(NbtCompound nbt) {
+    public void writeCustomDataToNbt(CompoundTag nbt) {
         super.writeCustomDataToNbt(nbt);
         nbt.putInt("BossPhase", getBossPhase());
         nbt.putBoolean("Enraged", isEnraged());
     }
     
     @Override
-    public void readCustomDataFromNbt(NbtCompound nbt) {
+    public void readCustomDataFromNbt(CompoundTag nbt) {
         super.readCustomDataFromNbt(nbt);
         setBossPhase(nbt.getInt("BossPhase"));
         setEnraged(nbt.getBoolean("Enraged"));

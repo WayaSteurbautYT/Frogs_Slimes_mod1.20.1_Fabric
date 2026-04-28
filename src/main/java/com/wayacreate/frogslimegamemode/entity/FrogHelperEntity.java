@@ -13,62 +13,62 @@ import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
 import com.wayacreate.frogslimegamemode.gamemode.PlayerLevel;
 import com.wayacreate.frogslimegamemode.tasks.TaskManager;
 import com.wayacreate.frogslimegamemode.tasks.TaskType;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.goal.*;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.attribute.DefaultAttributeContainer;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.data.DataTracker;
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.data.TrackedDataHandlerRegistry;
-import net.minecraft.entity.mob.HostileEntity;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.passive.PassiveEntity;
-import net.minecraft.entity.passive.TameableEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.EntityView;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.goal.*;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.AgeableMob;
+import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.EntityGetter;
+import net.minecraft.world.level.Level;
 
 import java.util.Objects;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class FrogHelperEntity extends TameableEntity {
-    private static final TrackedData<Integer> EVOLUTION_STAGE = DataTracker.registerData(FrogHelperEntity.class, TrackedDataHandlerRegistry.INTEGER);
-    private static final TrackedData<Integer> MOBS_KILLED = DataTracker.registerData(FrogHelperEntity.class, TrackedDataHandlerRegistry.INTEGER);
-    private static final TrackedData<String> ROLE = DataTracker.registerData(FrogHelperEntity.class, TrackedDataHandlerRegistry.STRING);
-    private static final TrackedData<String> TRANSFORMATION = DataTracker.registerData(FrogHelperEntity.class, TrackedDataHandlerRegistry.STRING);
+public class FrogHelperEntity extends TamableAnimal {
+    private static final EntityDataAccessor<Integer> EVOLUTION_STAGE = SynchedEntityData.registerData(FrogHelperEntity.class, EntityDataSerializers.INTEGER);
+    private static final EntityDataAccessor<Integer> MOBS_KILLED = SynchedEntityData.registerData(FrogHelperEntity.class, EntityDataSerializers.INTEGER);
+    private static final EntityDataAccessor<String> ROLE = SynchedEntityData.registerData(FrogHelperEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<String> TRANSFORMATION = SynchedEntityData.registerData(FrogHelperEntity.class, EntityDataSerializers.STRING);
     private int particleCooldown = 0;
     private final List<String> abilities = new ArrayList<>();
     private final List<Goal> activeRoleGoals = new ArrayList<>();
     private String lastRole = "";
     private int abilityCooldown = 0;
     private int tongueExtensionTicks = 0;
-    private net.minecraft.entity.Entity tongueTarget = null;
+    private net.minecraft.world.entity.Entity tongueTarget = null;
     
-    public FrogHelperEntity(EntityType<? extends TameableEntity> entityType, World world) {
+    public FrogHelperEntity(EntityType<? extends TamableAnimal> entityType, Level world) {
         super(entityType, world);
         this.setTamed(false);
     }
     
-    public static DefaultAttributeContainer.Builder createAttributes() {
-        return MobEntity.createMobAttributes()
-            .add(EntityAttributes.GENERIC_MAX_HEALTH, 20.0)
-            .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 4.0)
-            .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.3)
-            .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 32.0);
+    public static AttributeSupplier.Builder createAttributes() {
+        return Mob.createMobAttributes()
+            .add(Attributes.GENERIC_MAX_HEALTH, 20.0)
+            .add(Attributes.GENERIC_ATTACK_DAMAGE, 4.0)
+            .add(Attributes.GENERIC_MOVEMENT_SPEED, 0.3)
+            .add(Attributes.GENERIC_FOLLOW_RANGE, 32.0);
     }
     
     @Override
@@ -87,32 +87,32 @@ public class FrogHelperEntity extends TameableEntity {
         this.goalSelector.add(3, new MeleeAttackGoal(this, 1.2, true));
         this.goalSelector.add(4, new FollowOwnerGoal(this, 1.0, 10.0f, 2.0f, false));
         this.goalSelector.add(5, new WanderAroundFarGoal(this, 0.8));
-        this.goalSelector.add(6, new LookAtEntityGoal(this, PlayerEntity.class, 8.0f));
+        this.goalSelector.add(6, new LookAtEntityGoal(this, Player.class, 8.0f));
         this.goalSelector.add(7, new LookAroundGoal(this));
         
         this.targetSelector.add(1, new TrackOwnerAttackerGoal(this));
         this.targetSelector.add(2, new AttackWithOwnerGoal(this));
-        this.targetSelector.add(3, new ActiveTargetGoal<>(this, HostileEntity.class, true));
+        this.targetSelector.add(3, new ActiveTargetGoal<>(this, Monster.class, true));
     }
     
     @Override
-    public ActionResult interactMob(PlayerEntity player, Hand hand) {
+    public InteractionResult interactMob(Player player, InteractionHand hand) {
         ItemStack stack = player.getStackInHand(hand);
         
         if (!this.getWorld().isClient) {
             if (this.isOwner(player)) {
                 if (stack.isEmpty() && player.isSneaking()) {
-                    player.sendMessage(Text.literal("Frog Helper Stats:")
-                        .formatted(Formatting.GREEN, Formatting.BOLD), false);
-                    player.sendMessage(Text.literal("Evolution: " + EvolutionStage.fromLevel(getEvolutionStage()).getName())
-                        .formatted(Formatting.YELLOW), false);
-                    player.sendMessage(Text.literal("Mobs Killed: " + getMobsKilled())
-                        .formatted(Formatting.AQUA), false);
-                    player.sendMessage(Text.literal("Attack Damage: " + getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE))
-                        .formatted(Formatting.RED), false);
-                    player.sendMessage(Text.literal("Abilities: " + abilities.size())
-                        .formatted(Formatting.LIGHT_PURPLE), false);
-                    return ActionResult.SUCCESS;
+                    player.sendMessage(Component.literal("Frog Helper Stats:")
+                        .formatted(ChatFormatting.GREEN, ChatFormatting.BOLD), false);
+                    player.sendMessage(Component.literal("Evolution: " + EvolutionStage.fromLevel(getEvolutionStage()).getName())
+                        .formatted(ChatFormatting.YELLOW), false);
+                    player.sendMessage(Component.literal("Mobs Killed: " + getMobsKilled())
+                        .formatted(ChatFormatting.AQUA), false);
+                    player.sendMessage(Component.literal("Attack Damage: " + getAttributeValue(Attributes.GENERIC_ATTACK_DAMAGE))
+                        .formatted(ChatFormatting.RED), false);
+                    player.sendMessage(Component.literal("Abilities: " + abilities.size())
+                        .formatted(ChatFormatting.LIGHT_PURPLE), false);
+                    return InteractionResult.SUCCESS;
                 } else if (!stack.isEmpty()) {
                     spawnInteractParticles();
                 }
@@ -121,14 +121,14 @@ public class FrogHelperEntity extends TameableEntity {
                 this.setTamed(true);
                 GamemodeManager.getData(player).incrementHelpers();
                 TaskManager.completeTask(player, TaskType.TAME_HELPER);
-                if (player instanceof ServerPlayerEntity serverPlayer) {
+                if (player instanceof ServerPlayer serverPlayer) {
                     AchievementManager.unlockAchievement(serverPlayer, "first_helper");
                 }
-                GamemodeManager.grantAdvancement((net.minecraft.server.network.ServerPlayerEntity) player, "frogslimegamemode:tame_frog");
-                player.sendMessage(Text.literal("Frog helper joined your team!")
-                    .formatted(Formatting.GREEN), false);
+                GamemodeManager.grantAdvancement((net.minecraft.server.level.ServerPlayer) player, "frogslimegamemode:tame_frog");
+                player.sendMessage(Component.literal("Frog helper joined your team!")
+                    .formatted(ChatFormatting.GREEN), false);
                 spawnInteractParticles();
-                return ActionResult.SUCCESS;
+                return InteractionResult.SUCCESS;
             }
         }
         
@@ -138,9 +138,9 @@ public class FrogHelperEntity extends TameableEntity {
     @Override
     public void onDeath(DamageSource damageSource) {
         super.onDeath(damageSource);
-        if (!this.getWorld().isClient && this.getOwner() instanceof PlayerEntity owner) {
-            owner.sendMessage(Text.literal("Your frog helper has fallen!")
-                .formatted(Formatting.RED), false);
+        if (!this.getWorld().isClient && this.getOwner() instanceof Player owner) {
+            owner.sendMessage(Component.literal("Your frog helper has fallen!")
+                .formatted(ChatFormatting.RED), false);
         }
     }
     
@@ -156,13 +156,13 @@ public class FrogHelperEntity extends TameableEntity {
             evolve();
         }
         
-        if (this.getOwner() instanceof PlayerEntity owner) {
+        if (this.getOwner() instanceof Player owner) {
             var gamemodeData = GamemodeManager.getData(owner);
             if (gamemodeData != null) {
                 gamemodeData.incrementMobsEaten();
             }
             // Grant XP to player for mob kills
-            if (owner instanceof ServerPlayerEntity serverPlayer) {
+            if (owner instanceof ServerPlayer serverPlayer) {
                 PlayerLevel.addXP(serverPlayer, 10.0);
             }
         }
@@ -184,14 +184,14 @@ public class FrogHelperEntity extends TameableEntity {
             spawnEvolutionParticles();
             updateCustomName();
             
-            if (this.getOwner() instanceof PlayerEntity owner) {
-                owner.sendMessage(Text.literal("Your frog helper evolved to ")
-                    .formatted(Formatting.GOLD)
-                    .append(Text.literal(EvolutionStage.fromLevel(newStage).getName())
-                        .formatted(Formatting.LIGHT_PURPLE, Formatting.BOLD))
-                    .append(Text.literal("!").formatted(Formatting.GOLD)), false);
+            if (this.getOwner() instanceof Player owner) {
+                owner.sendMessage(Component.literal("Your frog helper evolved to ")
+                    .formatted(ChatFormatting.GOLD)
+                    .append(Component.literal(EvolutionStage.fromLevel(newStage).getName())
+                        .formatted(ChatFormatting.LIGHT_PURPLE, ChatFormatting.BOLD))
+                    .append(Component.literal("!").formatted(ChatFormatting.GOLD)), false);
                 TaskManager.completeTask(owner, TaskType.EVOLVE_HELPER);
-                if (owner instanceof ServerPlayerEntity serverPlayer) {
+                if (owner instanceof ServerPlayer serverPlayer) {
                     AchievementManager.unlockAchievement(serverPlayer, "first_evolution");
                     if (newStage >= 2) {
                         AchievementManager.unlockAchievement(serverPlayer, "elite_helper");
@@ -212,11 +212,11 @@ public class FrogHelperEntity extends TameableEntity {
         if (next != current) {
             setTransformation(next.getId());
 
-            if (this.getOwner() instanceof PlayerEntity owner) {
-                owner.sendMessage(Text.literal("Your helper transformed into ")
-                    .formatted(Formatting.AQUA)
+            if (this.getOwner() instanceof Player owner) {
+                owner.sendMessage(Component.literal("Your helper transformed into ")
+                    .formatted(ChatFormatting.AQUA)
                     .append(next.getFormattedName())
-                    .append(Text.literal("!").formatted(Formatting.AQUA)), false);
+                    .append(Component.literal("!").formatted(ChatFormatting.AQUA)), false);
             }
         }
     }
@@ -274,10 +274,10 @@ public class FrogHelperEntity extends TameableEntity {
             }
         }
         
-        this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(attackDamage);
-        this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(movementSpeed);
-        this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(maxHealth);
-        this.getAttributeInstance(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE).setBaseValue(knockbackResistance);
+        this.getAttributeInstance(Attributes.GENERIC_ATTACK_DAMAGE).setBaseValue(attackDamage);
+        this.getAttributeInstance(Attributes.GENERIC_MOVEMENT_SPEED).setBaseValue(movementSpeed);
+        this.getAttributeInstance(Attributes.GENERIC_MAX_HEALTH).setBaseValue(maxHealth);
+        this.getAttributeInstance(Attributes.GENERIC_KNOCKBACK_RESISTANCE).setBaseValue(knockbackResistance);
         this.setHealth(Math.min(this.getHealth(), this.getMaxHealth()));
     }
     
@@ -313,7 +313,7 @@ public class FrogHelperEntity extends TameableEntity {
     }
     
     @Override
-    public void writeCustomDataToNbt(NbtCompound nbt) {
+    public void writeCustomDataToNbt(CompoundTag nbt) {
         super.writeCustomDataToNbt(nbt);
         nbt.putInt("EvolutionStage", getEvolutionStage());
         nbt.putInt("MobsKilled", getMobsKilled());
@@ -328,7 +328,7 @@ public class FrogHelperEntity extends TameableEntity {
     }
     
     @Override
-    public void readCustomDataFromNbt(NbtCompound nbt) {
+    public void readCustomDataFromNbt(CompoundTag nbt) {
         super.readCustomDataFromNbt(nbt);
         setEvolutionStage(nbt.getInt("EvolutionStage"));
         setMobsKilled(nbt.getInt("MobsKilled"));
@@ -353,7 +353,7 @@ public class FrogHelperEntity extends TameableEntity {
         super.tick();
         
         // Handle ability cooldowns and execution
-        if (!this.getWorld().isClient && this.getWorld() instanceof ServerWorld serverWorld) {
+        if (!this.getWorld().isClient && this.getWorld() instanceof ServerLevel serverWorld) {
             if (abilityCooldown > 0) {
                 abilityCooldown--;
             } else if (this.getTarget() != null && getEvolutionStage() >= 1) {
@@ -368,7 +368,7 @@ public class FrogHelperEntity extends TameableEntity {
         // Handle tongue animation on both client and server
         if (tongueExtensionTicks > 0) {
             tongueExtensionTicks--;
-            if (this.getWorld() instanceof ServerWorld serverWorld) {
+            if (this.getWorld() instanceof ServerLevel serverWorld) {
                 spawnTongueParticles(serverWorld);
             }
         }
@@ -390,7 +390,7 @@ public class FrogHelperEntity extends TameableEntity {
         }
     }
     
-    private void tryUseCombatAbility(ServerWorld world) {
+    private void tryUseCombatAbility(ServerLevel world) {
         if (abilities.isEmpty()) return;
         
         // Pick a random ability with active combat effect
@@ -415,11 +415,11 @@ public class FrogHelperEntity extends TameableEntity {
         }
     }
     
-    private void executeAbility(ServerWorld world, MobAbility ability) {
+    private void executeAbility(ServerLevel world, MobAbility ability) {
         com.wayacreate.frogslimegamemode.abilities.HelperAbilityManager.executeAbility(this, ability, world);
     }
     
-    private void handleTongueEating(ServerWorld world) {
+    private void handleTongueEating(ServerLevel world) {
         // Only attempt tongue eating if not already extending tongue
         if (tongueExtensionTicks > 0) return;
         
@@ -435,34 +435,34 @@ public class FrogHelperEntity extends TameableEntity {
         }
     }
     
-    private void startTongueAttack(net.minecraft.entity.Entity target) {
+    private void startTongueAttack(net.minecraft.world.entity.Entity target) {
         tongueTarget = target;
         tongueExtensionTicks = 20; // 1 second animation
         
         // Pull target towards the frog
-        Vec3d direction = this.getPos().subtract(target.getPos()).normalize();
+        Vec3 direction = this.getPos().subtract(target.getPos()).normalize();
         double pullStrength = 0.8;
         target.addVelocity(direction.x * pullStrength, 0.3, direction.z * pullStrength);
         target.velocityModified = true;
         
         // Damage target when pulled close
-        if (target instanceof net.minecraft.entity.LivingEntity livingTarget) {
+        if (target instanceof net.minecraft.world.entity.LivingEntity livingTarget) {
             livingTarget.damage(this.getWorld().getDamageSources().mobAttack(this), 3.0f);
         }
     }
     
-    private void spawnTongueParticles(ServerWorld world) {
+    private void spawnTongueParticles(ServerLevel world) {
         if (tongueTarget != null && tongueTarget.isAlive()) {
             // Create particle line from frog to target
-            Vec3d startPos = this.getPos().add(0, 0.5, 0);
-            Vec3d endPos = tongueTarget.getPos().add(0, 0.5, 0);
-            Vec3d direction = endPos.subtract(startPos);
+            Vec3 startPos = this.getPos().add(0, 0.5, 0);
+            Vec3 endPos = tongueTarget.getPos().add(0, 0.5, 0);
+            Vec3 direction = endPos.subtract(startPos);
             double distance = direction.length();
             int particleCount = (int) (distance * 2);
             
             for (int i = 0; i < particleCount; i++) {
                 double t = i / (double) particleCount;
-                Vec3d particlePos = startPos.add(direction.multiply(t));
+                Vec3 particlePos = startPos.add(direction.multiply(t));
                 
                 // Add some randomness for organic look
                 double offsetX = (world.random.nextDouble() - 0.5) * 0.2;
@@ -489,13 +489,13 @@ public class FrogHelperEntity extends TameableEntity {
     
     private void spawnInteractParticles() {
         if (!this.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) this.getWorld();
+            ServerLevel world = (ServerLevel) this.getWorld();
             for (int i = 0; i < 10; i++) {
                 double offsetX = (world.random.nextDouble() - 0.5) * 1.5;
                 double offsetY = world.random.nextDouble() * 1.5;
                 double offsetZ = (world.random.nextDouble() - 0.5) * 1.5;
                 
-                world.spawnParticles(net.minecraft.particle.ParticleTypes.HEART,
+                world.spawnParticles(net.minecraft.core.particles.ParticleTypes.HEART,
                     this.getX() + offsetX,
                     this.getY() + offsetY,
                     this.getZ() + offsetZ,
@@ -506,13 +506,13 @@ public class FrogHelperEntity extends TameableEntity {
     
     private void spawnEvolutionParticles() {
         if (!this.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) this.getWorld();
+            ServerLevel world = (ServerLevel) this.getWorld();
             for (int i = 0; i < 30; i++) {
                 double offsetX = (world.random.nextDouble() - 0.5) * 2;
                 double offsetY = world.random.nextDouble() * 2;
                 double offsetZ = (world.random.nextDouble() - 0.5) * 2;
                 
-                world.spawnParticles(net.minecraft.particle.ParticleTypes.TOTEM_OF_UNDYING,
+                world.spawnParticles(net.minecraft.core.particles.ParticleTypes.TOTEM_OF_UNDYING,
                     this.getX() + offsetX,
                     this.getY() + offsetY,
                     this.getZ() + offsetZ,
@@ -523,8 +523,8 @@ public class FrogHelperEntity extends TameableEntity {
     
     private void spawnIdleParticles() {
         if (getEvolutionStage() >= 2 && !this.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) this.getWorld();
-            world.spawnParticles(net.minecraft.particle.ParticleTypes.FLAME,
+            ServerLevel world = (ServerLevel) this.getWorld();
+            world.spawnParticles(net.minecraft.core.particles.ParticleTypes.FLAME,
                 this.getX(),
                 this.getY() + 0.5,
                 this.getZ(),
@@ -544,7 +544,7 @@ public class FrogHelperEntity extends TameableEntity {
             nameText += " - " + role;
         }
         
-        this.setCustomName(Text.literal(nameText)
+        this.setCustomName(Component.literal(nameText)
             .formatted(mobTransform.getColor()));
         this.setCustomNameVisible(true);
     }
@@ -563,7 +563,7 @@ public class FrogHelperEntity extends TameableEntity {
     }
     
     @Override
-    public FrogHelperEntity createChild(ServerWorld world, PassiveEntity entity) {
+    public FrogHelperEntity createChild(ServerLevel world, AgeableMob entity) {
         return null; // Helpers cannot breed
     }
     
@@ -573,7 +573,7 @@ public class FrogHelperEntity extends TameableEntity {
     }
 
     @Override
-    public EntityView method_48926() {
+    public EntityGetter method_48926() {
         return this.getWorld();
     }
 }

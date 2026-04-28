@@ -2,7 +2,7 @@ package com.wayacreate.frogslimegamemode.util;
 
 /**
  * Utility class to track Frog & Slime gamemode state during world creation.
- * World name containing "frogslime" will auto-enable the gamemode.
+ * Level name containing "frogslime" will auto-enable the gamemode.
  */
 public class CreateWorldState {
     

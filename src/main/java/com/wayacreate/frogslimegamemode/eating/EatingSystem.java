@@ -4,19 +4,19 @@ import com.wayacreate.frogslimegamemode.entity.FrogHelperEntity;
 import com.wayacreate.frogslimegamemode.entity.SlimeHelperEntity;
 import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
 import com.wayacreate.frogslimegamemode.item.AbilityDropItem;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.particle.ItemStackParticleEffect;
-import net.minecraft.particle.ParticleTypes;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.core.particles.ItemParticleOption;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.Box;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.phys.AABB;
 
 import java.util.List;
 
@@ -30,8 +30,8 @@ public class EatingSystem {
             return;
         }
 
-        for (ServerWorld world : server.getWorlds()) {
-            for (ServerPlayerEntity player : world.getPlayers()) {
+        for (ServerLevel world : server.getWorlds()) {
+            for (ServerPlayer player : world.getPlayers()) {
                 if (!GamemodeManager.isInGamemode(player)) {
                     continue;
                 }
@@ -62,14 +62,14 @@ public class EatingSystem {
         }
     }
     
-    private static void playerEatNearbyMobs(ServerPlayerEntity player, ServerWorld world) {
+    private static void playerEatNearbyMobs(ServerPlayer player, ServerLevel world) {
         Box searchBox = player.getBoundingBox().expand(PLAYER_EAT_RADIUS);
         
-        List<MobEntity> mobs = world.getEntitiesByClass(MobEntity.class, searchBox, e -> 
+        List<Mob> mobs = world.getEntitiesByClass(Mob.class, searchBox, e -> 
             e.isAlive() && !(e instanceof FrogHelperEntity) && !(e instanceof SlimeHelperEntity) && e.getHealth() <= 8
         );
         
-        for (MobEntity mob : mobs) {
+        for (Mob mob : mobs) {
             if (mob.getHealth() <= 4) {
                 // Send tongue animation packet to client
                 com.wayacreate.frogslimegamemode.network.ModNetworking.sendPlayerTongueAnimation(player, mob.getId());
@@ -86,19 +86,19 @@ public class EatingSystem {
                             world.spawnEntity(new ItemEntity(world, mob.getX(), mob.getY(), mob.getZ(), abilityDrop));
                         }
                         
-                        player.sendMessage(Text.literal("You ate a ")
-                            .formatted(Formatting.GREEN)
-                            .append(Text.literal(mob.getName().getString())
-                                .formatted(Formatting.YELLOW))
-                            .append(Text.literal(" and a totem dropped!")
-                                .formatted(Formatting.GREEN)), false);
+                        player.sendMessage(Component.literal("You ate a ")
+                            .formatted(ChatFormatting.GREEN)
+                            .append(Component.literal(mob.getName().getString())
+                                .formatted(ChatFormatting.YELLOW))
+                            .append(Component.literal(" and a totem dropped!")
+                                .formatted(ChatFormatting.GREEN)), false);
                     } else {
-                        player.sendMessage(Text.literal("The ")
-                            .formatted(Formatting.GRAY)
-                            .append(Text.literal(mob.getName().getString())
-                                .formatted(Formatting.YELLOW))
-                            .append(Text.literal(" was too slippery to catch!")
-                                .formatted(Formatting.GRAY)), false);
+                        player.sendMessage(Component.literal("The ")
+                            .formatted(ChatFormatting.GRAY)
+                            .append(Component.literal(mob.getName().getString())
+                                .formatted(ChatFormatting.YELLOW))
+                            .append(Component.literal(" was too slippery to catch!")
+                                .formatted(ChatFormatting.GRAY)), false);
                     }
                 }
                 
@@ -110,16 +110,16 @@ public class EatingSystem {
         }
     }
     
-    private static void collectNearbyItems(Object helper, ServerWorld world) {
+    private static void collectNearbyItems(Object helper, ServerLevel world) {
         Box searchBox;
-        PlayerEntity owner = null;
+        Player owner = null;
         
         if (helper instanceof FrogHelperEntity frog) {
             searchBox = frog.getBoundingBox().expand(3.0);
-            owner = (PlayerEntity) frog.getOwner();
+            owner = (Player) frog.getOwner();
         } else if (helper instanceof SlimeHelperEntity slime) {
             searchBox = slime.getBoundingBox().expand(3.0);
-            owner = (PlayerEntity) slime.getOwner();
+            owner = (Player) slime.getOwner();
         } else {
             return;
         }
@@ -141,18 +141,18 @@ public class EatingSystem {
         }
     }
     
-    private static void eatNearbyMobs(Object helper, ServerWorld world) {
+    private static void eatNearbyMobs(Object helper, ServerLevel world) {
         Box searchBox;
-        PlayerEntity owner = null;
+        Player owner = null;
         int evolutionStage = 0;
         
         if (helper instanceof FrogHelperEntity frog) {
             searchBox = frog.getBoundingBox().expand(2.0 + (frog.getEvolutionStage() * 0.5));
-            owner = (PlayerEntity) frog.getOwner();
+            owner = (Player) frog.getOwner();
             evolutionStage = frog.getEvolutionStage();
         } else if (helper instanceof SlimeHelperEntity slime) {
             searchBox = slime.getBoundingBox().expand(2.0 + (slime.getEvolutionStage() * 0.5));
-            owner = (PlayerEntity) slime.getOwner();
+            owner = (Player) slime.getOwner();
             evolutionStage = slime.getEvolutionStage();
         } else {
             return;
@@ -167,11 +167,11 @@ public class EatingSystem {
             return;
         }
         
-        List<MobEntity> mobs = world.getEntitiesByClass(MobEntity.class, searchBox, e -> 
+        List<Mob> mobs = world.getEntitiesByClass(Mob.class, searchBox, e -> 
             e.isAlive() && !(e instanceof FrogHelperEntity) && !(e instanceof SlimeHelperEntity) && e.getHealth() <= 10
         );
         
-        for (MobEntity mob : mobs) {
+        for (Mob mob : mobs) {
             if (mob.getHealth() <= 5) {
                 // Drop ability totem before killing the mob - 50% chance for helpers
                 MobAbility ability = MobAbility.getAbilityFromEntity(mob.getType());
@@ -184,20 +184,20 @@ public class EatingSystem {
                     }
                     
                     if (owner != null) {
-                        owner.sendMessage(Text.literal("Your helper ate a ")
-                            .formatted(Formatting.GREEN)
-                            .append(Text.literal(mob.getName().getString())
-                                .formatted(Formatting.YELLOW))
-                            .append(Text.literal(" and a totem dropped!")
-                                .formatted(Formatting.GREEN)), false);
+                        owner.sendMessage(Component.literal("Your helper ate a ")
+                            .formatted(ChatFormatting.GREEN)
+                            .append(Component.literal(mob.getName().getString())
+                                .formatted(ChatFormatting.YELLOW))
+                            .append(Component.literal(" and a totem dropped!")
+                                .formatted(ChatFormatting.GREEN)), false);
                     }
                 } else if (ability != null) {
                     if (owner != null) {
-                        owner.sendMessage(Text.literal("Your helper missed the ")
-                            .formatted(Formatting.GRAY)
-                            .append(Text.literal(mob.getName().getString())
-                                .formatted(Formatting.YELLOW))
-                            .append(Text.literal("!").formatted(Formatting.GRAY)), false);
+                        owner.sendMessage(Component.literal("Your helper missed the ")
+                            .formatted(ChatFormatting.GRAY)
+                            .append(Component.literal(mob.getName().getString())
+                                .formatted(ChatFormatting.YELLOW))
+                            .append(Component.literal("!").formatted(ChatFormatting.GRAY)), false);
                     }
                 }
                 
@@ -209,7 +209,7 @@ public class EatingSystem {
         }
     }
     
-    private static void spawnEatParticles(ServerWorld world, double x, double y, double z) {
+    private static void spawnEatParticles(ServerLevel world, double x, double y, double z) {
         ItemStackParticleEffect slimeParticles = new ItemStackParticleEffect(ParticleTypes.ITEM, new ItemStack(Items.SLIME_BALL));
         for (int i = 0; i < 15; i++) {
             double offsetX = (world.random.nextDouble() - 0.5) * 1.0;

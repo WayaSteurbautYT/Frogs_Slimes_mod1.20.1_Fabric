@@ -1,7 +1,7 @@
 package com.wayacreate.frogslimegamemode.economy;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.server.level.ServerPlayer;
 
 import java.util.UUID;
 
@@ -14,7 +14,7 @@ public class TradeRequest {
     private final long requestTime;
     private boolean accepted;
     
-    public TradeRequest(ServerPlayerEntity requester, ServerPlayerEntity target, ItemStack offerItem, int offerCoins) {
+    public TradeRequest(ServerPlayer requester, ServerPlayer target, ItemStack offerItem, int offerCoins) {
         this.requesterUuid = requester.getUuid();
         this.requesterName = requester.getName().getString();
         this.targetUuid = target.getUuid();

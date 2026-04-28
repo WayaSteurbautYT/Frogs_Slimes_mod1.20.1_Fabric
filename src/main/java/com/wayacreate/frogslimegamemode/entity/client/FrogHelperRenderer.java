@@ -2,21 +2,21 @@ package com.wayacreate.frogslimegamemode.entity.client;
 
 import com.wayacreate.frogslimegamemode.FrogSlimeGamemode;
 import com.wayacreate.frogslimegamemode.entity.FrogHelperEntity;
-import net.minecraft.client.render.entity.EntityRendererFactory;
-import net.minecraft.client.render.entity.MobEntityRenderer;
-import net.minecraft.client.render.entity.model.EntityModelLayers;
-import net.minecraft.client.render.entity.model.SlimeEntityModel;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.MobRenderer;
+import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.SlimeModel;
+import net.minecraft.resources.ResourceLocation;
 
-public class FrogHelperRenderer extends MobEntityRenderer<FrogHelperEntity, SlimeEntityModel<FrogHelperEntity>> {
-    private static final Identifier TEXTURE = new Identifier(FrogSlimeGamemode.MOD_ID, "textures/entity/frog_helper.png");
+public class FrogHelperRenderer extends MobRenderer<FrogHelperEntity, SlimeModel<FrogHelperEntity>> {
+    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "textures/entity/frog_helper.png");
     
-    public FrogHelperRenderer(EntityRendererFactory.Context context) {
-        super(context, new SlimeEntityModel<>(context.getPart(EntityModelLayers.SLIME)), 0.5f);
+    public FrogHelperRenderer(EntityRendererProvider.Context context) {
+        super(context, new SlimeModel<>(context.getPart(ModelLayers.SLIME)), 0.5f);
     }
     
     @Override
-    public Identifier getTexture(FrogHelperEntity entity) {
+    public ResourceLocation getTexture(FrogHelperEntity entity) {
         return TEXTURE;
     }
     

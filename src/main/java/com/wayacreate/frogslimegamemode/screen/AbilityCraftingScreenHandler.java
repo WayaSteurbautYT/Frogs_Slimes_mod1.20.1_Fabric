@@ -1,21 +1,21 @@
 package com.wayacreate.frogslimegamemode.screen;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.screen.AnvilScreenHandler;
-import net.minecraft.screen.ScreenHandlerContext;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.AnvilMenu;
+import net.minecraft.world.inventory.ContainerLevelAccess;
 
-public class AbilityCraftingScreenHandler extends AnvilScreenHandler {
-    public AbilityCraftingScreenHandler(int syncId, PlayerInventory playerInventory) {
-        this(syncId, playerInventory, ScreenHandlerContext.EMPTY);
+public class AbilityCraftingScreenHandler extends AnvilMenu {
+    public AbilityCraftingScreenHandler(int syncId, Inventory playerInventory) {
+        this(syncId, playerInventory, ContainerLevelAccess.EMPTY);
     }
 
-    public AbilityCraftingScreenHandler(int syncId, PlayerInventory playerInventory, ScreenHandlerContext context) {
+    public AbilityCraftingScreenHandler(int syncId, Inventory playerInventory, ContainerLevelAccess context) {
         super(syncId, playerInventory, context);
     }
 
     @Override
-    public boolean canUse(PlayerEntity player) {
+    public boolean canUse(Player player) {
         return true;
     }
 }

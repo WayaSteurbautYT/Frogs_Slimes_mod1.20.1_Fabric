@@ -1,18 +1,18 @@
 package com.wayacreate.frogslimegamemode.item;
 
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttributeModifier;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.ShieldItem;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Rarity;
-import net.minecraft.util.UseAction;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.ShieldItem;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.item.Rarity;
+import net.minecraft.world.item.UseAnim;
+import net.minecraft.world.level.Level;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -22,29 +22,29 @@ public class OrphanShieldItem extends ShieldItem {
     private static final UUID ARMOR_MODIFIER_UUID = UUID.fromString("2AD3F246-FEE1-4E67-B886-69FD380BB150");
     private static final UUID DAMAGE_REDUCTION_UUID = UUID.fromString("7E0292F2-9434-48D5-A629-615F8EEDAF29");
     
-    public OrphanShieldItem(Settings settings) {
+    public OrphanShieldItem(Properties settings) {
         super(settings);
     }
     
     public static boolean isOrphanShield(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return false;
-        NbtCompound nbt = stack.getNbt();
+        CompoundTag nbt = stack.getNbt();
         return nbt != null && nbt.getBoolean(ORPHAN_SHIELD_NBT);
     }
     
     @Override
     public ItemStack getDefaultStack() {
         ItemStack shield = new ItemStack(Items.SHIELD);
-        NbtCompound nbt = shield.getOrCreateNbt();
+        CompoundTag nbt = shield.getOrCreateNbt();
         nbt.putBoolean(ORPHAN_SHIELD_NBT, true);
-        shield.setCustomName(Text.literal("Orphan Shield").formatted(Formatting.DARK_GRAY, Formatting.BOLD));
+        shield.setCustomName(Component.literal("Orphan Shield").formatted(ChatFormatting.DARK_GRAY, ChatFormatting.BOLD));
         return shield;
     }
     
     @Override
-    public Text getName(ItemStack stack) {
-        return Text.literal("Orphan Shield")
-            .formatted(Formatting.DARK_GRAY, Formatting.BOLD);
+    public Component getName(ItemStack stack) {
+        return Component.literal("Orphan Shield")
+            .formatted(ChatFormatting.DARK_GRAY, ChatFormatting.BOLD);
     }
     
     @Override
@@ -58,9 +58,9 @@ public class OrphanShieldItem extends ShieldItem {
     }
     
     @Override
-    public void inventoryTick(ItemStack stack, net.minecraft.world.World world, net.minecraft.entity.Entity entity, int slot, boolean selected) {
+    public void inventoryTick(ItemStack stack, net.minecraft.world.level.Level world, net.minecraft.world.entity.Entity entity, int slot, boolean selected) {
         if (!isOrphanShield(stack)) return;
-        if (!(entity instanceof net.minecraft.entity.LivingEntity living)) return;
+        if (!(entity instanceof net.minecraft.world.entity.LivingEntity living)) return;
         
         // Add armor modifier when held or equipped
         if (selected || Objects.equals(living.getEquippedStack(EquipmentSlot.OFFHAND), stack) || 
@@ -71,37 +71,37 @@ public class OrphanShieldItem extends ShieldItem {
             Objects.equals(living.getEquippedStack(EquipmentSlot.FEET), stack)) {
             
             // Add armor
-            EntityAttributeModifier armorModifier = new EntityAttributeModifier(
+            AttributeModifier armorModifier = new AttributeModifier(
                 ARMOR_MODIFIER_UUID,
                 "Orphan Shield Armor",
                 10.0,
-                EntityAttributeModifier.Operation.ADDITION
+                AttributeModifier.Operation.ADDITION
             );
-            if (!living.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).hasModifier(armorModifier)) {
-                living.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).addPersistentModifier(armorModifier);
+            if (!living.getAttributeInstance(Attributes.GENERIC_ARMOR).hasModifier(armorModifier)) {
+                living.getAttributeInstance(Attributes.GENERIC_ARMOR).addPersistentModifier(armorModifier);
             }
             
             // Add damage reduction (toughness)
-            EntityAttributeModifier toughnessModifier = new EntityAttributeModifier(
+            AttributeModifier toughnessModifier = new AttributeModifier(
                 DAMAGE_REDUCTION_UUID,
                 "Orphan Shield Toughness",
                 5.0,
-                EntityAttributeModifier.Operation.ADDITION
+                AttributeModifier.Operation.ADDITION
             );
-            if (!living.getAttributeInstance(EntityAttributes.GENERIC_ARMOR_TOUGHNESS).hasModifier(toughnessModifier)) {
-                living.getAttributeInstance(EntityAttributes.GENERIC_ARMOR_TOUGHNESS).addPersistentModifier(toughnessModifier);
+            if (!living.getAttributeInstance(Attributes.GENERIC_ARMOR_TOUGHNESS).hasModifier(toughnessModifier)) {
+                living.getAttributeInstance(Attributes.GENERIC_ARMOR_TOUGHNESS).addPersistentModifier(toughnessModifier);
             }
         } else {
             // Remove modifiers when not held
-            for (EntityAttributeModifier modifier : living.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).getModifiers(EntityAttributeModifier.Operation.ADDITION)) {
+            for (AttributeModifier modifier : living.getAttributeInstance(Attributes.GENERIC_ARMOR).getModifiers(AttributeModifier.Operation.ADDITION)) {
                 if (Objects.equals(modifier.getId(), ARMOR_MODIFIER_UUID)) {
-                    living.getAttributeInstance(EntityAttributes.GENERIC_ARMOR).removeModifier(modifier);
+                    living.getAttributeInstance(Attributes.GENERIC_ARMOR).removeModifier(modifier);
                     break;
                 }
             }
-            for (EntityAttributeModifier modifier : living.getAttributeInstance(EntityAttributes.GENERIC_ARMOR_TOUGHNESS).getModifiers(EntityAttributeModifier.Operation.ADDITION)) {
+            for (AttributeModifier modifier : living.getAttributeInstance(Attributes.GENERIC_ARMOR_TOUGHNESS).getModifiers(AttributeModifier.Operation.ADDITION)) {
                 if (Objects.equals(modifier.getId(), DAMAGE_REDUCTION_UUID)) {
-                    living.getAttributeInstance(EntityAttributes.GENERIC_ARMOR_TOUGHNESS).removeModifier(modifier);
+                    living.getAttributeInstance(Attributes.GENERIC_ARMOR_TOUGHNESS).removeModifier(modifier);
                     break;
                 }
             }
@@ -109,8 +109,8 @@ public class OrphanShieldItem extends ShieldItem {
     }
     
     @Override
-    public UseAction getUseAction(ItemStack stack) {
-        return UseAction.BLOCK;
+    public UseAnim getUseAction(ItemStack stack) {
+        return UseAnim.BLOCK;
     }
     
     @Override
@@ -119,7 +119,7 @@ public class OrphanShieldItem extends ShieldItem {
     }
     
     @Override
-    public void onStoppedUsing(ItemStack stack, World world, LivingEntity user, int remainingUseTicks) {
+    public void onStoppedUsing(ItemStack stack, Level world, LivingEntity user, int remainingUseTicks) {
         // Shield blocking logic is handled by vanilla ShieldItem
         // This is called when the player stops holding right-click
         super.onStoppedUsing(stack, world, user, remainingUseTicks);

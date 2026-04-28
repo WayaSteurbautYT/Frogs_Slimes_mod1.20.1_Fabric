@@ -6,23 +6,23 @@ import com.wayacreate.frogslimegamemode.item.HunterTrackerItem;
 import com.wayacreate.frogslimegamemode.item.ManhuntCompassItem;
 import com.wayacreate.frogslimegamemode.item.ModItems;
 import com.wayacreate.frogslimegamemode.network.ModNetworking;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.GameMode;
-import net.minecraft.world.Heightmap;
-import net.minecraft.world.dimension.DimensionTypes;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -87,26 +87,26 @@ public class ManhuntManager {
     private ManhuntManager() {
     }
 
-    public static void setSpeedrunner(ServerPlayerEntity speedrunner) {
+    public static void setSpeedrunner(ServerPlayer speedrunner) {
         startSpeedrunner(speedrunner, false, true);
         giveSpeedrunnerClock(speedrunner);
     }
 
-    public static void setSoloSpeedrunner(ServerPlayerEntity speedrunner) {
+    public static void setSoloSpeedrunner(ServerPlayer speedrunner) {
         startSpeedrunner(speedrunner, true, true);
         giveSpeedrunnerClock(speedrunner);
     }
 
-    public static void startAutoManhunt(ServerPlayerEntity initiator) {
+    public static void startAutoManhunt(ServerPlayer initiator) {
         MinecraftServer server = initiator.getServer();
         if (server == null) {
             return;
         }
 
-        List<ServerPlayerEntity> players = new ArrayList<>(server.getPlayerManager().getPlayerList());
+        List<ServerPlayer> players = new ArrayList<>(server.getPlayerList().getPlayerList());
         if (players.size() < 2) {
-            initiator.sendMessage(Text.literal("Need at least 2 players for auto manhunt!")
-                .formatted(Formatting.RED), false);
+            initiator.sendSystemMessage(Component.literal("Need at least 2 players for auto manhunt!")
+                .withStyle(ChatFormatting.RED), false);
             return;
         }
 
@@ -115,38 +115,38 @@ public class ManhuntManager {
         countdownTicks = COUNTDOWN_SECONDS * 20;
 
         Collections.shuffle(players);
-        ServerPlayerEntity chosenSpeedrunner = players.get(0);
+        ServerPlayer chosenSpeedrunner = players.get(0);
         playerRoles.put(chosenSpeedrunner.getUuid(), ROLE_SPEEDRUNNER);
         for (int i = 1; i < players.size(); i++) {
             playerRoles.put(players.get(i).getUuid(), ROLE_HUNTER);
         }
 
-        server.getPlayerManager().broadcast(
-            Text.literal("[MANHUNT] ")
-                .formatted(Formatting.GOLD, Formatting.BOLD)
-                .append(Text.literal("Auto Manhunt starts in " + COUNTDOWN_SECONDS + " seconds.")
-                    .formatted(Formatting.YELLOW)),
+        server.getPlayerList().broadcast(
+            Component.literal("[MANHUNT] ")
+                .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
+                .append(Component.literal("Auto Manhunt starts in " + COUNTDOWN_SECONDS + " seconds.")
+                    .withStyle(ChatFormatting.YELLOW)),
             false
         );
-        server.getPlayerManager().broadcast(
-            Text.literal("[MANHUNT] ")
-                .formatted(Formatting.GOLD)
-                .append(Text.literal(chosenSpeedrunner.getName().getString() + " is the speedrunner.")
-                    .formatted(Formatting.GREEN, Formatting.BOLD)),
+        server.getPlayerList().broadcast(
+            Component.literal("[MANHUNT] ")
+                .withStyle(ChatFormatting.GOLD)
+                .append(Component.literal(chosenSpeedrunner.getName().getString() + " is the speedrunner.")
+                    .withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD)),
             false
         );
     }
 
-    public static void startTeamManhunt(ServerPlayerEntity initiator, String speedrunnerTeam, String hunterTeam) {
+    public static void startTeamManhunt(ServerPlayer initiator, String speedrunnerTeam, String hunterTeam) {
         MinecraftServer server = initiator.getServer();
         if (server == null) {
             return;
         }
 
-        List<ServerPlayerEntity> players = new ArrayList<>(server.getPlayerManager().getPlayerList());
+        List<ServerPlayer> players = new ArrayList<>(server.getPlayerList().getPlayerList());
         if (players.size() < 2) {
-            initiator.sendMessage(Text.literal("Need at least 2 players for team manhunt!")
-                .formatted(Formatting.RED), false);
+            initiator.sendSystemMessage(Component.literal("Need at least 2 players for team manhunt!")
+                .withStyle(ChatFormatting.RED), false);
             return;
         }
 
@@ -154,22 +154,22 @@ public class ManhuntManager {
         autoManhuntMode = true;
         countdownTicks = COUNTDOWN_SECONDS * 20;
 
-        List<ServerPlayerEntity> speedrunnerPlayers = new ArrayList<>();
-        List<ServerPlayerEntity> hunterPlayers = new ArrayList<>();
-        for (ServerPlayerEntity player : players) {
+        List<ServerPlayer> speedrunnerPlayers = new ArrayList<>();
+        List<ServerPlayer> hunterPlayers = new ArrayList<>();
+        for (ServerPlayer player : players) {
             String grouping = getGroupingName(player);
             if (speedrunnerTeam.equalsIgnoreCase(grouping)) {
                 speedrunnerPlayers.add(player);
-                playerRoles.put(player.getUuid(), ROLE_SPEEDRUNNER);
+                playerRoles.put(player.getUUID(), ROLE_SPEEDRUNNER);
             } else if (hunterTeam.equalsIgnoreCase(grouping)) {
                 hunterPlayers.add(player);
-                playerRoles.put(player.getUuid(), ROLE_HUNTER);
+                playerRoles.put(player.getUUID(), ROLE_HUNTER);
             }
         }
 
         if (speedrunnerPlayers.isEmpty()) {
-            initiator.sendMessage(Text.literal("Speedrunner team has no online members!")
-                .formatted(Formatting.RED), false);
+            initiator.sendSystemMessage(Component.literal("Speedrunner team has no online members!")
+                .withStyle(ChatFormatting.RED), false);
             autoManhuntMode = false;
             countdownTicks = 0;
             playerRoles.clear();
@@ -177,75 +177,75 @@ public class ManhuntManager {
         }
 
         if (hunterPlayers.isEmpty()) {
-            initiator.sendMessage(Text.literal("Hunter team has no online members!")
-                .formatted(Formatting.RED), false);
+            initiator.sendSystemMessage(Component.literal("Hunter team has no online members!")
+                .withStyle(ChatFormatting.RED), false);
             autoManhuntMode = false;
             countdownTicks = 0;
             playerRoles.clear();
             return;
         }
 
-        server.getPlayerManager().broadcast(
-            Text.literal("[MANHUNT] ")
-                .formatted(Formatting.GOLD, Formatting.BOLD)
-                .append(Text.literal("Team Manhunt starts in " + COUNTDOWN_SECONDS + " seconds.")
-                    .formatted(Formatting.YELLOW)),
+        server.getPlayerList().broadcast(
+            Component.literal("[MANHUNT] ")
+                .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
+                .append(Component.literal("Team Manhunt starts in " + COUNTDOWN_SECONDS + " seconds.")
+                    .withStyle(ChatFormatting.YELLOW)),
             false
         );
-        server.getPlayerManager().broadcast(
-            Text.literal("[MANHUNT] ")
-                .formatted(Formatting.GOLD)
-                .append(Text.literal("Speedrunners: " + joinNames(speedrunnerPlayers))
-                    .formatted(Formatting.GREEN)),
+        server.getPlayerList().broadcast(
+            Component.literal("[MANHUNT] ")
+                .withStyle(ChatFormatting.GOLD)
+                .append(Component.literal("Speedrunners: " + joinNames(speedrunnerPlayers))
+                    .withStyle(ChatFormatting.GREEN)),
             false
         );
-        server.getPlayerManager().broadcast(
-            Text.literal("[MANHUNT] ")
-                .formatted(Formatting.GOLD)
-                .append(Text.literal("Hunters: " + joinNames(hunterPlayers))
-                    .formatted(Formatting.RED)),
+        server.getPlayerList().broadcast(
+            Component.literal("[MANHUNT] ")
+                .withStyle(ChatFormatting.GOLD)
+                .append(Component.literal("Hunters: " + joinNames(hunterPlayers))
+                    .withStyle(ChatFormatting.RED)),
             false
         );
     }
 
-    public static void setHunter(ServerPlayerEntity hunter, ServerPlayerEntity target) {
+    public static void setHunter(ServerPlayer hunter, ServerPlayer target) {
         if (hunter == target) {
-            hunter.sendMessage(Text.literal("You cannot hunt yourself.")
-                .formatted(Formatting.RED), false);
+            hunter.sendSystemMessage(Component.literal("You cannot hunt yourself.")
+                .withStyle(ChatFormatting.RED), false);
             return;
         }
 
         if (isHunter(target)) {
-            hunter.sendMessage(Text.literal("Cannot target another hunter.")
-                .formatted(Formatting.RED), false);
+            hunter.sendSystemMessage(Component.literal("Cannot target another hunter.")
+                .withStyle(ChatFormatting.RED), false);
             return;
         }
 
-        UUID uuid = hunter.getUuid();
+        UUID uuid = hunter.getUUID();
         initializeHunter(hunter, target, true);
 
-        hunter.sendMessage(Text.literal("You are now hunting ")
-            .formatted(Formatting.RED)
-            .append(Text.literal(target.getName().getString()).formatted(Formatting.YELLOW, Formatting.BOLD))
-            .append(Text.literal(". Hold a tracker or manhunt compass, press TAB to cycle, then R to use.")
-                .formatted(Formatting.RED)), false);
+        hunter.sendSystemMessage(Component.literal("You are now hunting ")
+            .withStyle(ChatFormatting.RED)
+            .append(Component.literal(target.getName().getString()).withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD))
+            .append(Component.literal(". Hold a tracker or manhunt compass, press TAB to cycle, then R to use.")
+                .withStyle(ChatFormatting.RED)), false);
 
         giveHunterClock(hunter);
         sendHudUpdate(hunter);
     }
 
-    public static void endGame(ServerPlayerEntity player) {
-        UUID uuid = player.getUuid();
+    public static void endGame(ServerPlayer player) {
+        UUID uuid = player.getUUID();
         boolean wasGhost = ghostSpeedrunners.contains(uuid);
         clearParticipantState(uuid);
 
         if (wasGhost && player.isSpectator()) {
-            player.changeGameMode(GameMode.SURVIVAL);
+            player.changeGameMode(GameType.SURVIVAL);
         }
 
         ModNetworking.clearManhuntHud(player);
-        player.sendMessage(Text.literal("Manhunt ended for you.")
-            .formatted(Formatting.GRAY), false);
+        player.sendSystemMessage(Component.literal("Manhunt ended for you.")
+            .withStyle(ChatFormatting.GRAY), false);
     }
 
     public static void endAllGames(MinecraftServer server) {
@@ -255,17 +255,17 @@ public class ManhuntManager {
 
         Set<UUID> uuids = getAllParticipantUuids();
         for (UUID uuid : uuids) {
-            ServerPlayerEntity player = server.getPlayerManager().getPlayer(uuid);
+            ServerPlayer player = server.getPlayerList().getPlayer(uuid);
             boolean wasGhost = ghostSpeedrunners.contains(uuid);
             clearParticipantState(uuid);
 
             if (player != null) {
                 if (wasGhost && player.isSpectator()) {
-                    player.changeGameMode(GameMode.SURVIVAL);
+                    player.changeGameMode(GameType.SURVIVAL);
                 }
                 ModNetworking.clearManhuntHud(player);
-                player.sendMessage(Text.literal("Manhunt ended.")
-                    .formatted(Formatting.GRAY), false);
+                player.sendSystemMessage(Component.literal("Manhunt ended.")
+                    .withStyle(ChatFormatting.GRAY), false);
             }
         }
 
@@ -273,19 +273,19 @@ public class ManhuntManager {
         countdownTicks = 0;
     }
 
-    public static void onSpeedrunnerWin(ServerPlayerEntity speedrunner) {
+    public static void onSpeedrunnerWin(ServerPlayer speedrunner) {
         if (!isSpeedrunner(speedrunner)) {
             return;
         }
 
-        long elapsed = System.currentTimeMillis() - startTime.getOrDefault(speedrunner.getUuid(), System.currentTimeMillis());
+        long elapsed = System.currentTimeMillis() - startTime.getOrDefault(speedrunner.getUUID(), System.currentTimeMillis());
         String time = formatTime(elapsed);
 
-        speedrunner.getServer().getPlayerManager().broadcast(
-            Text.literal("[MANHUNT] ")
-                .formatted(Formatting.GOLD, Formatting.BOLD)
-                .append(Text.literal(speedrunner.getName().getString() + " beat the run in " + time + ".")
-                    .formatted(Formatting.GREEN, Formatting.BOLD)),
+        speedrunner.getServer().getPlayerList().broadcast(
+            Component.literal("[MANHUNT] ")
+                .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
+                .append(Component.literal(speedrunner.getName().getString() + " beat the run in " + time + ".")
+                    .withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD)),
             false
         );
 
@@ -302,69 +302,69 @@ public class ManhuntManager {
         endAllGames(speedrunner.getServer());
     }
 
-    public static void onSpeedrunnerDeath(ServerPlayerEntity speedrunner) {
+    public static void onSpeedrunnerDeath(ServerPlayer speedrunner) {
         if (!isSpeedrunner(speedrunner)) {
             return;
         }
 
-        UUID uuid = speedrunner.getUuid();
+        UUID uuid = speedrunner.getUUID();
         int deathCount = deaths.getOrDefault(uuid, 0) + 1;
         deaths.put(uuid, deathCount);
         sendHudUpdate(speedrunner);
 
-        ServerPlayerEntity nearestHunter = findNearestHunter(speedrunner);
+        ServerPlayer nearestHunter = findNearestHunter(speedrunner);
         if (nearestHunter != null) {
-            int kills = hunterKills.getOrDefault(nearestHunter.getUuid(), 0) + 1;
-            hunterKills.put(nearestHunter.getUuid(), kills);
+            int kills = hunterKills.getOrDefault(nearestHunter.getUUID(), 0) + 1;
+            hunterKills.put(nearestHunter.getUUID(), kills);
             if (kills == 1) {
                 AchievementManager.unlockAchievement(nearestHunter, "first_hunt");
             }
         }
 
         if (isSoloSpeedrunner(speedrunner)) {
-            speedrunner.getServer().getPlayerManager().broadcast(
-                Text.literal("[MANHUNT] ")
-                    .formatted(Formatting.GOLD, Formatting.BOLD)
-                    .append(Text.literal(speedrunner.getName().getString() + " died (" + deathCount + "/3).")
-                        .formatted(Formatting.RED)),
+            speedrunner.getServer().getPlayerList().broadcast(
+                Component.literal("[MANHUNT] ")
+                    .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
+                    .append(Component.literal(speedrunner.getName().getString() + " died (" + deathCount + "/3).")
+                        .withStyle(ChatFormatting.RED)),
                 false
             );
 
             if (deathCount >= 3) {
-                speedrunner.getServer().getPlayerManager().broadcast(
-                    Text.literal("[MANHUNT] ")
-                        .formatted(Formatting.GOLD, Formatting.BOLD)
-                        .append(Text.literal(speedrunner.getName().getString() + " failed the solo run.")
-                            .formatted(Formatting.DARK_RED, Formatting.BOLD)),
+                speedrunner.getServer().getPlayerList().broadcast(
+                    Component.literal("[MANHUNT] ")
+                        .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
+                        .append(Component.literal(speedrunner.getName().getString() + " failed the solo run.")
+                            .withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD)),
                     false
                 );
                 endAllGames(speedrunner.getServer());
             } else {
-                speedrunner.sendMessage(Text.literal("Lives remaining: " + (3 - deathCount))
-                    .formatted(Formatting.YELLOW), false);
+                speedrunner.sendSystemMessage(Component.literal("Lives remaining: " + (3 - deathCount))
+                    .withStyle(ChatFormatting.YELLOW), false);
             }
             return;
         }
 
         activeSpeedrunners.remove(uuid);
         ghostSpeedrunners.add(uuid);
-        speedrunner.changeGameMode(GameMode.SPECTATOR);
+        speedrunner.changeGameMode(GameType.SPECTATOR);
 
-        speedrunner.getServer().getPlayerManager().broadcast(
-            Text.literal("[MANHUNT] ")
-                .formatted(Formatting.GOLD, Formatting.BOLD)
-                .append(Text.literal(speedrunner.getName().getString() + " has been turned into a ghost.")
-                    .formatted(Formatting.GRAY, Formatting.ITALIC)),
+        speedrunner.getServer().getPlayerList().broadcast(
+            Component.literal("[MANHUNT] ")
+                .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
+                .append(Component.literal(speedrunner.getName().getString() + " has been turned into a ghost.")
+                    .withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC)),
             false
         );
 
-        speedrunner.sendMessage(Text.literal("You are out for this life. Spectate the remaining speedrunners.")
-            .formatted(Formatting.GRAY), false);
+        speedrunner.sendSystemMessage(Component.literal("You are out for this life. Spectate the remaining speedrunners.")
+            .withStyle(ChatFormatting.GRAY), false);
 
         checkHuntersWinCondition(speedrunner.getServer());
     }
 
-    public static boolean useContextualAbility(ServerPlayerEntity player) {
+    public static boolean useContextualAbility(ServerPlayer player) {
         if (!isInGame(player)) {
             return false;
         }
@@ -382,40 +382,40 @@ public class ManhuntManager {
         return false;
     }
 
-    public static boolean cycleContextualAbility(ServerPlayerEntity player) {
+    public static boolean cycleContextualAbility(ServerPlayer player) {
         if (!isInGame(player)) {
             return false;
         }
 
         if (isHunter(player) && hasHunterController(player)) {
-            cycleSelectedAbility(player, HUNTER_ABILITY_NAMES, HUNTER_ABILITY_DESCRIPTIONS, Formatting.RED);
+            cycleSelectedAbility(player, HUNTER_ABILITY_NAMES, HUNTER_ABILITY_DESCRIPTIONS, ChatFormatting.RED);
             return true;
         }
 
         if (isSpeedrunner(player) && hasSpeedrunnerController(player)) {
-            cycleSelectedAbility(player, SPEEDRUNNER_ABILITY_NAMES, SPEEDRUNNER_ABILITY_DESCRIPTIONS, Formatting.AQUA);
+            cycleSelectedAbility(player, SPEEDRUNNER_ABILITY_NAMES, SPEEDRUNNER_ABILITY_DESCRIPTIONS, ChatFormatting.AQUA);
             return true;
         }
 
         return false;
     }
 
-    public static boolean isSpeedrunner(PlayerEntity player) {
-        UUID uuid = player.getUuid();
+    public static boolean isSpeedrunner(Player player) {
+        UUID uuid = player.getUUID();
         return participantTargets.containsKey(uuid) && participantTargets.get(uuid).equals(uuid);
     }
 
-    public static boolean isSoloSpeedrunner(PlayerEntity player) {
-        return isSpeedrunner(player) && soloSpeedrunners.contains(player.getUuid());
+    public static boolean isSoloSpeedrunner(Player player) {
+        return isSpeedrunner(player) && soloSpeedrunners.contains(player.getUUID());
     }
 
-    public static boolean isHunter(PlayerEntity player) {
-        UUID uuid = player.getUuid();
+    public static boolean isHunter(Player player) {
+        UUID uuid = player.getUUID();
         return participantTargets.containsKey(uuid) && !participantTargets.get(uuid).equals(uuid);
     }
 
-    public static boolean isInGame(PlayerEntity player) {
-        return gameActive.getOrDefault(player.getUuid(), false);
+    public static boolean isInGame(Player player) {
+        return gameActive.getOrDefault(player.getUUID(), false);
     }
 
     public static boolean isCountdownActive() {
@@ -438,7 +438,7 @@ public class ManhuntManager {
         return ghostSpeedrunners.size();
     }
 
-    public static String getRole(PlayerEntity player) {
+    public static String getRole(Player player) {
         if (isHunter(player)) {
             return ROLE_HUNTER;
         }
@@ -448,21 +448,21 @@ public class ManhuntManager {
         return "";
     }
 
-    public static ServerPlayerEntity getTarget(ServerPlayerEntity hunter) {
-        UUID targetUuid = participantTargets.get(hunter.getUuid());
-        if (targetUuid == null || hunter.getServer() == null || targetUuid.equals(hunter.getUuid())) {
+    public static ServerPlayer getTarget(ServerPlayer hunter) {
+        UUID targetUuid = participantTargets.get(hunter.getUUID());
+        if (targetUuid == null || hunter.getServer() == null || targetUuid.equals(hunter.getUUID())) {
             return null;
         }
-        return hunter.getServer().getPlayerManager().getPlayer(targetUuid);
+        return hunter.getServer().getPlayerList().getPlayer(targetUuid);
     }
 
-    public static ServerPlayerEntity getPrimarySpeedrunner(MinecraftServer server) {
+    public static ServerPlayer getPrimarySpeedrunner(MinecraftServer server) {
         if (server == null) {
             return null;
         }
 
         for (UUID uuid : activeSpeedrunners) {
-            ServerPlayerEntity player = server.getPlayerManager().getPlayer(uuid);
+            ServerPlayer player = server.getPlayerList().getPlayer(uuid);
             if (player != null) {
                 return player;
             }
@@ -470,7 +470,7 @@ public class ManhuntManager {
 
         for (UUID uuid : participantTargets.keySet()) {
             if (participantTargets.get(uuid).equals(uuid)) {
-                ServerPlayerEntity player = server.getPlayerManager().getPlayer(uuid);
+                ServerPlayer player = server.getPlayerList().getPlayer(uuid);
                 if (player != null) {
                     return player;
                 }
@@ -480,25 +480,25 @@ public class ManhuntManager {
         return null;
     }
 
-    public static void updateCompass(ServerPlayerEntity hunter) {
+    public static void updateCompass(ServerPlayer hunter) {
         if (!isHunter(hunter)) {
             return;
         }
 
-        ServerPlayerEntity target = getTarget(hunter);
+        ServerPlayer target = getTarget(hunter);
         if (target == null) {
-            hunter.sendMessage(Text.literal("No speedrunner target assigned.")
-                .formatted(Formatting.GRAY), true);
+            hunter.sendSystemMessage(Component.literal("No speedrunner target assigned.")
+                .withStyle(ChatFormatting.GRAY), true);
             return;
         }
 
-        if (target.getWorld() == hunter.getWorld()) {
-            double distance = Math.sqrt(hunter.squaredDistanceTo(target));
-            hunter.sendMessage(Text.literal("Target: " + target.getName().getString() + " | " + (int) distance + " blocks")
-                .formatted(distance < 100 ? Formatting.RED : Formatting.YELLOW), true);
+        if (target.level() == hunter.level()) {
+            double distance = Math.sqrt(hunter.distanceToSqr(target));
+            hunter.sendSystemMessage(Component.literal("Target: " + target.getName().getString() + " | " + (int) distance + " blocks")
+                .withStyle(distance < 100 ? ChatFormatting.RED : ChatFormatting.YELLOW), true);
         } else {
-            hunter.sendMessage(Text.literal("Target is in " + getDimensionName((ServerWorld) target.getWorld()))
-                .formatted(Formatting.DARK_PURPLE), true);
+            hunter.sendSystemMessage(Component.literal("Target is in " + getDimensionName((ServerLevel) target.level()))
+                .withStyle(ChatFormatting.DARK_PURPLE), true);
         }
     }
 
@@ -508,11 +508,11 @@ public class ManhuntManager {
             if (countdownTicks % 20 == 0) {
                 int secondsLeft = countdownTicks / 20;
                 if (secondsLeft > 0 && (secondsLeft <= 5 || secondsLeft % 10 == 0)) {
-                    server.getPlayerManager().broadcast(
-                        Text.literal("[MANHUNT] ")
-                            .formatted(Formatting.GOLD, Formatting.BOLD)
-                            .append(Text.literal("Starting in " + secondsLeft + " seconds.")
-                                .formatted(Formatting.YELLOW)),
+                    server.getPlayerList().broadcast(
+                        Component.literal("[MANHUNT] ")
+                            .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
+                            .append(Component.literal("Starting in " + secondsLeft + " seconds.")
+                                .withStyle(ChatFormatting.YELLOW)),
                         false
                     );
                 }
@@ -524,7 +524,7 @@ public class ManhuntManager {
             }
         }
 
-        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+        for (ServerPlayer player : server.getPlayerList().getPlayerList()) {
             if (!isInGame(player)) {
                 continue;
             }
@@ -533,7 +533,7 @@ public class ManhuntManager {
                 tickCooldowns(player, hunterTrackCooldowns);
                 tickCooldowns(player, hunterBlockCooldowns);
                 tickCooldowns(player, hunterSlowCooldowns);
-                if (server.getTicks() % 20 == 0) {
+                if (server.getTickCount() % 20 == 0) {
                     updateCompass(player);
                     sendHudUpdate(player);
                 }
@@ -541,7 +541,7 @@ public class ManhuntManager {
                 tickCooldowns(player, speedrunnerEscapeCooldowns);
                 tickCooldowns(player, speedrunnerSpeedCooldowns);
                 tickCooldowns(player, speedrunnerInvisCooldowns);
-                if (server.getTicks() % 20 == 0) {
+                if (server.getTickCount() % 20 == 0) {
                     checkSoloTimeLimit(player);
                     sendHudUpdate(player);
                 }
@@ -549,70 +549,70 @@ public class ManhuntManager {
         }
     }
 
-    public static void useHunterTrackAbility(ServerPlayerEntity hunter) {
+    public static void useHunterTrackAbility(ServerPlayer hunter) {
         if (!isHunter(hunter)) {
             return;
         }
 
-        int cooldown = hunterTrackCooldowns.getOrDefault(hunter.getUuid(), 0);
+        int cooldown = hunterTrackCooldowns.getOrDefault(hunter.getUUID(), 0);
         if (cooldown > 0) {
-            hunter.sendMessage(Text.literal("Track is on cooldown for " + (cooldown / 20) + "s.")
-                .formatted(Formatting.RED), true);
+            hunter.sendSystemMessage(Component.literal("Track is on cooldown for " + (cooldown / 20) + "s.")
+                .withStyle(ChatFormatting.RED), true);
             return;
         }
 
-        ServerPlayerEntity target = getTarget(hunter);
+        ServerPlayer target = getTarget(hunter);
         if (target == null) {
-            hunter.sendMessage(Text.literal("No target assigned.")
-                .formatted(Formatting.RED), true);
+            hunter.sendSystemMessage(Component.literal("No target assigned.")
+                .withStyle(ChatFormatting.RED), true);
             return;
         }
 
-        hunterTrackCooldowns.put(hunter.getUuid(), HUNTER_TRACK_COOLDOWN);
-        BlockPos targetPos = target.getBlockPos();
-        double distance = Math.sqrt(hunter.squaredDistanceTo(target));
+        hunterTrackCooldowns.put(hunter.getUUID(), HUNTER_TRACK_COOLDOWN);
+        BlockPos targetPos = target.blockPosition();
+        double distance = Math.sqrt(hunter.distanceToSqr(target));
 
-        hunter.sendMessage(Text.literal("Track ready.")
-            .formatted(Formatting.GREEN), true);
-        hunter.sendMessage(Text.literal("Dimension: " + getDimensionName((ServerWorld) target.getWorld()))
-            .formatted(Formatting.AQUA), false);
-        hunter.sendMessage(Text.literal("Distance: " + String.format("%.1f", distance) + " blocks")
-            .formatted(Formatting.YELLOW), false);
-        hunter.sendMessage(Text.literal("Coords: " + targetPos.getX() + ", " + targetPos.getY() + ", " + targetPos.getZ())
-            .formatted(Formatting.GRAY), false);
+        hunter.sendSystemMessage(Component.literal("Track ready.")
+            .withStyle(ChatFormatting.GREEN), true);
+        hunter.sendSystemMessage(Component.literal("Dimension: " + getDimensionName((ServerLevel) target.level()))
+            .withStyle(ChatFormatting.AQUA), false);
+        hunter.sendSystemMessage(Component.literal("Distance: " + String.format("%.1f", distance) + " blocks")
+            .withStyle(ChatFormatting.YELLOW), false);
+        hunter.sendSystemMessage(Component.literal("Coords: " + targetPos.getX() + ", " + targetPos.getY() + ", " + targetPos.getZ())
+            .withStyle(ChatFormatting.GRAY), false);
         sendHudUpdate(hunter);
     }
 
-    public static void useHunterBlockAbility(ServerPlayerEntity hunter) {
+    public static void useHunterBlockAbility(ServerPlayer hunter) {
         if (!isHunter(hunter)) {
             return;
         }
 
-        int cooldown = hunterBlockCooldowns.getOrDefault(hunter.getUuid(), 0);
+        int cooldown = hunterBlockCooldowns.getOrDefault(hunter.getUUID(), 0);
         if (cooldown > 0) {
-            hunter.sendMessage(Text.literal("Blockade is on cooldown for " + (cooldown / 20) + "s.")
-                .formatted(Formatting.RED), true);
+            hunter.sendSystemMessage(Component.literal("Blockade is on cooldown for " + (cooldown / 20) + "s.")
+                .withStyle(ChatFormatting.RED), true);
             return;
         }
 
-        ServerPlayerEntity target = getTarget(hunter);
-        if (target == null || target.getWorld() != hunter.getWorld()) {
-            hunter.sendMessage(Text.literal("The target is not in your dimension.")
-                .formatted(Formatting.RED), true);
+        ServerPlayer target = getTarget(hunter);
+        if (target == null || target.level() != hunter.level()) {
+            hunter.sendSystemMessage(Component.literal("The target is not in your dimension.")
+                .withStyle(ChatFormatting.RED), true);
             return;
         }
 
         if (hunter.distanceTo(target) > 30.0f) {
-            hunter.sendMessage(Text.literal("Blockade requires the target to be within 30 blocks.")
-                .formatted(Formatting.RED), true);
+            hunter.sendSystemMessage(Component.literal("Blockade requires the target to be within 30 blocks.")
+                .withStyle(ChatFormatting.RED), true);
             return;
         }
 
-        hunterBlockCooldowns.put(hunter.getUuid(), HUNTER_BLOCK_COOLDOWN);
+        hunterBlockCooldowns.put(hunter.getUUID(), HUNTER_BLOCK_COOLDOWN);
 
-        Vec3d direction = hunter.getPos().subtract(target.getPos()).normalize();
-        BlockPos wallCenter = target.getBlockPos().add((int) (direction.x * 3), 0, (int) (direction.z * 3));
-        ServerWorld world = (ServerWorld) hunter.getWorld();
+        Vec3 direction = hunter.position().subtract(target.position()).normalize();
+        BlockPos wallCenter = target.blockPosition().add((int) (direction.x * 3), 0, (int) (direction.z * 3));
+        ServerLevel world = (ServerLevel) hunter.level();
 
         for (int x = -2; x <= 2; x++) {
             for (int y = 0; y <= 3; y++) {
@@ -626,57 +626,57 @@ public class ManhuntManager {
             }
         }
 
-        hunter.sendMessage(Text.literal("Blockade deployed.")
-            .formatted(Formatting.GREEN), true);
+        hunter.sendSystemMessage(Component.literal("Blockade deployed.")
+            .withStyle(ChatFormatting.GREEN), true);
         sendHudUpdate(hunter);
     }
 
-    public static void useHunterSlowAbility(ServerPlayerEntity hunter) {
+    public static void useHunterSlowAbility(ServerPlayer hunter) {
         if (!isHunter(hunter)) {
             return;
         }
 
-        int cooldown = hunterSlowCooldowns.getOrDefault(hunter.getUuid(), 0);
+        int cooldown = hunterSlowCooldowns.getOrDefault(hunter.getUUID(), 0);
         if (cooldown > 0) {
-            hunter.sendMessage(Text.literal("Snare is on cooldown for " + (cooldown / 20) + "s.")
-                .formatted(Formatting.RED), true);
+            hunter.sendSystemMessage(Component.literal("Snare is on cooldown for " + (cooldown / 20) + "s.")
+                .withStyle(ChatFormatting.RED), true);
             return;
         }
 
-        ServerPlayerEntity target = getTarget(hunter);
-        if (target == null || target.getWorld() != hunter.getWorld()) {
-            hunter.sendMessage(Text.literal("The target is not in your dimension.")
-                .formatted(Formatting.RED), true);
+        ServerPlayer target = getTarget(hunter);
+        if (target == null || target.level() != hunter.level()) {
+            hunter.sendSystemMessage(Component.literal("The target is not in your dimension.")
+                .withStyle(ChatFormatting.RED), true);
             return;
         }
 
         if (hunter.distanceTo(target) > 20.0f) {
-            hunter.sendMessage(Text.literal("Snare requires the target to be within 20 blocks.")
-                .formatted(Formatting.RED), true);
+            hunter.sendSystemMessage(Component.literal("Snare requires the target to be within 20 blocks.")
+                .withStyle(ChatFormatting.RED), true);
             return;
         }
 
-        hunterSlowCooldowns.put(hunter.getUuid(), HUNTER_SLOW_COOLDOWN);
-        target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 200, 2));
-        target.addStatusEffect(new StatusEffectInstance(StatusEffects.MINING_FATIGUE, 200, 1));
+        hunterSlowCooldowns.put(hunter.getUUID(), HUNTER_SLOW_COOLDOWN);
+        target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 200, 2));
+        target.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 200, 1));
 
-        hunter.sendMessage(Text.literal("Target snared.")
-            .formatted(Formatting.GREEN), true);
-        target.sendMessage(Text.literal("A hunter snared you.")
-            .formatted(Formatting.RED), true);
+        hunter.sendSystemMessage(Component.literal("Target snared.")
+            .withStyle(ChatFormatting.GREEN), true);
+        target.sendSystemMessage(Component.literal("A hunter snared you.")
+            .withStyle(ChatFormatting.RED), true);
         sendHudUpdate(hunter);
         sendHudUpdate(target);
     }
 
-    public static void useSpeedrunnerEscapeAbility(ServerPlayerEntity speedrunner) {
+    public static void useSpeedrunnerEscapeAbility(ServerPlayer speedrunner) {
         if (!canUseSpeedrunnerAbility(speedrunner, speedrunnerEscapeCooldowns, "Escape")) {
             return;
         }
 
-        speedrunnerEscapeCooldowns.put(speedrunner.getUuid(), SPEEDRUNNER_ESCAPE_COOLDOWN);
+        speedrunnerEscapeCooldowns.put(speedrunner.getUUID(), SPEEDRUNNER_ESCAPE_COOLDOWN);
 
-        ServerWorld world = (ServerWorld) speedrunner.getWorld();
-        BlockPos origin = speedrunner.getBlockPos();
+        ServerLevel world = (ServerLevel) speedrunner.level();
+        BlockPos origin = speedrunner.blockPosition();
         BlockPos destination = origin;
 
         for (int attempts = 0; attempts < 12; attempts++) {
@@ -684,60 +684,60 @@ public class ManhuntManager {
             int offsetZ = world.random.nextInt(101) - 50;
             int topY = world.getTopY(Heightmap.Type.MOTION_BLOCKING, origin.getX() + offsetX, origin.getZ() + offsetZ);
             BlockPos candidate = new BlockPos(origin.getX() + offsetX, topY, origin.getZ() + offsetZ);
-            if (world.getBlockState(candidate).isAir() && world.getBlockState(candidate.up()).isAir()) {
+            if (world.getBlockState(candidate).isAir() && world.getBlockState(candidate.above()).isAir()) {
                 destination = candidate;
                 break;
             }
         }
 
-        speedrunner.teleport(destination.getX() + 0.5, destination.getY(), destination.getZ() + 0.5);
-        speedrunner.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, 200, 1));
-        speedrunner.sendMessage(Text.literal("Escape activated.")
-            .formatted(Formatting.GREEN), true);
+        speedrunner.teleportTo(destination.getX() + 0.5, destination.getY(), destination.getZ() + 0.5);
+        speedrunner.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 200, 1));
+        speedrunner.sendSystemMessage(Component.literal("Escape activated.")
+            .withStyle(ChatFormatting.GREEN), true);
         sendHudUpdate(speedrunner);
     }
 
-    public static void useSpeedrunnerSpeedAbility(ServerPlayerEntity speedrunner) {
+    public static void useSpeedrunnerSpeedAbility(ServerPlayer speedrunner) {
         if (!canUseSpeedrunnerAbility(speedrunner, speedrunnerSpeedCooldowns, "Burst")) {
             return;
         }
 
-        speedrunnerSpeedCooldowns.put(speedrunner.getUuid(), SPEEDRUNNER_SPEED_COOLDOWN);
-        speedrunner.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, 300, 3));
-        speedrunner.addStatusEffect(new StatusEffectInstance(StatusEffects.JUMP_BOOST, 300, 2));
-        speedrunner.sendMessage(Text.literal("Burst activated.")
-            .formatted(Formatting.GREEN), true);
+        speedrunnerSpeedCooldowns.put(speedrunner.getUUID(), SPEEDRUNNER_SPEED_COOLDOWN);
+        speedrunner.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 300, 3));
+        speedrunner.addEffect(new MobEffectInstance(MobEffects.JUMP, 300, 2));
+        speedrunner.sendSystemMessage(Component.literal("Burst activated.")
+            .withStyle(ChatFormatting.GREEN), true);
         sendHudUpdate(speedrunner);
     }
 
-    public static void useSpeedrunnerInvisAbility(ServerPlayerEntity speedrunner) {
+    public static void useSpeedrunnerInvisAbility(ServerPlayer speedrunner) {
         if (!canUseSpeedrunnerAbility(speedrunner, speedrunnerInvisCooldowns, "Veil")) {
             return;
         }
 
-        speedrunnerInvisCooldowns.put(speedrunner.getUuid(), SPEEDRUNNER_INVIS_COOLDOWN);
-        speedrunner.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, 400, 0));
-        speedrunner.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, 400, 1));
-        speedrunner.sendMessage(Text.literal("Veil activated.")
-            .formatted(Formatting.GREEN), true);
+        speedrunnerInvisCooldowns.put(speedrunner.getUUID(), SPEEDRUNNER_INVIS_COOLDOWN);
+        speedrunner.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 400, 0));
+        speedrunner.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 400, 1));
+        speedrunner.sendSystemMessage(Component.literal("Veil activated.")
+            .withStyle(ChatFormatting.GREEN), true);
         sendHudUpdate(speedrunner);
     }
 
-    public static String getElapsedTime(ServerPlayerEntity player) {
+    public static String getElapsedTime(ServerPlayer player) {
         if (!isSpeedrunner(player)) {
             return "N/A";
         }
 
-        long started = startTime.getOrDefault(player.getUuid(), System.currentTimeMillis());
+        long started = startTime.getOrDefault(player.getUUID(), System.currentTimeMillis());
         return formatTime(System.currentTimeMillis() - started);
     }
 
-    public static int getDeathCount(ServerPlayerEntity player) {
-        return deaths.getOrDefault(player.getUuid(), 0);
+    public static int getDeathCount(ServerPlayer player) {
+        return deaths.getOrDefault(player.getUUID(), 0);
     }
 
-    private static void startSpeedrunner(ServerPlayerEntity speedrunner, boolean solo, boolean announce) {
-        UUID uuid = speedrunner.getUuid();
+    private static void startSpeedrunner(ServerPlayer speedrunner, boolean solo, boolean announce) {
+        UUID uuid = speedrunner.getUUID();
         clearParticipantState(uuid);
 
         participantTargets.put(uuid, uuid);
@@ -760,31 +760,31 @@ public class ManhuntManager {
         }
 
         if (speedrunner.isSpectator()) {
-            speedrunner.changeGameMode(GameMode.SURVIVAL);
+            speedrunner.changeGameMode(GameType.SURVIVAL);
         }
 
         if (announce) {
-            speedrunner.getServer().getPlayerManager().broadcast(
-                Text.literal("[MANHUNT] ")
-                    .formatted(Formatting.GOLD, Formatting.BOLD)
-                    .append(Text.literal(speedrunner.getName().getString() + " is now the speedrunner.")
-                        .formatted(Formatting.GREEN, Formatting.BOLD))
-                    .append(Text.literal(solo ? " Solo mode is active." : "")
-                        .formatted(Formatting.AQUA)),
+            speedrunner.getServer().getPlayerList().broadcast(
+                Component.literal("[MANHUNT] ")
+                    .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
+                    .append(Component.literal(speedrunner.getName().getString() + " is now the speedrunner.")
+                        .withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD))
+                    .append(Component.literal(solo ? " Solo mode is active." : "")
+                        .withStyle(ChatFormatting.AQUA)),
                 false
             );
         }
 
-        speedrunner.sendMessage(Text.literal("Hold a clock, press TAB to cycle Escape, Burst, Veil, then press R.")
-            .formatted(Formatting.AQUA), false);
+        speedrunner.sendSystemMessage(Component.literal("Hold a clock, press TAB to cycle Escape, Burst, Veil, then press R.")
+            .withStyle(ChatFormatting.AQUA), false);
         sendHudUpdate(speedrunner);
     }
 
-    private static void initializeHunter(ServerPlayerEntity hunter, ServerPlayerEntity target, boolean resetCooldowns) {
-        UUID uuid = hunter.getUuid();
+    private static void initializeHunter(ServerPlayer hunter, ServerPlayer target, boolean resetCooldowns) {
+        UUID uuid = hunter.getUUID();
         clearParticipantState(uuid);
 
-        participantTargets.put(uuid, target.getUuid());
+        participantTargets.put(uuid, target.getUUID());
         gameActive.put(uuid, true);
         deaths.put(uuid, 0);
         playerRoles.put(uuid, ROLE_HUNTER);
@@ -839,18 +839,18 @@ public class ManhuntManager {
     private static void resetAllState(MinecraftServer server, boolean notifyPlayers) {
         Set<UUID> uuids = getAllParticipantUuids();
         for (UUID uuid : uuids) {
-            ServerPlayerEntity player = server.getPlayerManager().getPlayer(uuid);
+            ServerPlayer player = server.getPlayerList().getPlayer(uuid);
             boolean wasGhost = ghostSpeedrunners.contains(uuid);
             clearParticipantState(uuid);
 
             if (player != null) {
                 if (wasGhost && player.isSpectator()) {
-                    player.changeGameMode(GameMode.SURVIVAL);
+                    player.changeGameMode(GameType.SURVIVAL);
                 }
                 ModNetworking.clearManhuntHud(player);
                 if (notifyPlayers) {
-                    player.sendMessage(Text.literal("Manhunt ended.")
-                        .formatted(Formatting.GRAY), false);
+                    player.sendSystemMessage(Component.literal("Manhunt ended.")
+                        .withStyle(ChatFormatting.GRAY), false);
                 }
             }
         }
@@ -874,10 +874,10 @@ public class ManhuntManager {
         autoManhuntMode = false;
         countdownTicks = 0;
 
-        List<ServerPlayerEntity> speedrunnerPlayers = new ArrayList<>();
-        List<ServerPlayerEntity> hunterPlayers = new ArrayList<>();
+        List<ServerPlayer> speedrunnerPlayers = new ArrayList<>();
+        List<ServerPlayer> hunterPlayers = new ArrayList<>();
         for (Map.Entry<UUID, String> entry : playerRoles.entrySet()) {
-            ServerPlayerEntity player = server.getPlayerManager().getPlayer(entry.getKey());
+            ServerPlayer player = server.getPlayerList().getPlayer(entry.getKey());
             if (player == null) {
                 continue;
             }
@@ -892,74 +892,74 @@ public class ManhuntManager {
             return;
         }
 
-        for (ServerPlayerEntity speedrunner : speedrunnerPlayers) {
+        for (ServerPlayer speedrunner : speedrunnerPlayers) {
             startSpeedrunner(speedrunner, false, false);
             giveSpeedrunnerClock(speedrunner);
         }
 
-        ServerPlayerEntity primaryTarget = speedrunnerPlayers.get(0);
-        for (ServerPlayerEntity hunter : hunterPlayers) {
+        ServerPlayer primaryTarget = speedrunnerPlayers.get(0);
+        for (ServerPlayer hunter : hunterPlayers) {
             initializeHunter(hunter, primaryTarget, true);
             giveHunterClock(hunter);
-            hunter.sendMessage(Text.literal("Hold your tracker or compass, press TAB to cycle Track, Blockade, Snare, then press R.")
-                .formatted(Formatting.RED), false);
+            hunter.sendSystemMessage(Component.literal("Hold your tracker or compass, press TAB to cycle Track, Blockade, Snare, then press R.")
+                .withStyle(ChatFormatting.RED), false);
             sendHudUpdate(hunter);
         }
 
-        server.getPlayerManager().broadcast(
-            Text.literal("[MANHUNT] ")
-                .formatted(Formatting.GOLD, Formatting.BOLD)
-                .append(Text.literal("GO! The hunt begins.")
-                    .formatted(Formatting.GREEN, Formatting.BOLD)),
+        server.getPlayerList().broadcast(
+            Component.literal("[MANHUNT] ")
+                .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
+                .append(Component.literal("GO! The hunt begins.")
+                    .withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD)),
             false
         );
     }
 
     private static void applyGlowEffects(MinecraftServer server) {
-        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-            String role = playerRoles.get(player.getUuid());
+        for (ServerPlayer player : server.getPlayerList().getPlayerList()) {
+            String role = playerRoles.get(player.getUUID());
             if (ROLE_HUNTER.equals(role)) {
-                player.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, 40, 0, false, false));
+                player.addEffect(new MobEffectInstance(MobEffects.GLOWING, 40, 0, false, false));
             } else if (ROLE_SPEEDRUNNER.equals(role)) {
-                player.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, 40, 0, false, false));
+                player.addEffect(new MobEffectInstance(MobEffects.GLOWING, 40, 0, false, false));
             }
         }
     }
 
-    private static void giveHunterClock(ServerPlayerEntity hunter) {
+    private static void giveHunterClock(ServerPlayer hunter) {
         if (ModItems.HUNTER_TRACKER != null) {
-            hunter.getInventory().insertStack(new ItemStack(ModItems.HUNTER_TRACKER));
+            hunter.getInventory().add(new ItemStack(ModItems.HUNTER_TRACKER));
         }
         if (ModItems.MANHUNT_COMPASS != null) {
-            hunter.getInventory().insertStack(new ItemStack(ModItems.MANHUNT_COMPASS));
+            hunter.getInventory().add(new ItemStack(ModItems.MANHUNT_COMPASS));
         }
     }
 
-    private static void giveSpeedrunnerClock(ServerPlayerEntity speedrunner) {
-        speedrunner.getInventory().insertStack(new ItemStack(Items.CLOCK));
+    private static void giveSpeedrunnerClock(ServerPlayer speedrunner) {
+        speedrunner.getInventory().add(new ItemStack(Items.CLOCK));
     }
 
-    private static void tickCooldowns(ServerPlayerEntity player, Map<UUID, Integer> cooldowns) {
-        UUID uuid = player.getUuid();
+    private static void tickCooldowns(ServerPlayer player, Map<UUID, Integer> cooldowns) {
+        UUID uuid = player.getUUID();
         int current = cooldowns.getOrDefault(uuid, 0);
         if (current > 0) {
             cooldowns.put(uuid, current - 1);
         }
     }
 
-    private static void checkSoloTimeLimit(ServerPlayerEntity player) {
+    private static void checkSoloTimeLimit(ServerPlayer player) {
         if (!isSoloSpeedrunner(player)) {
             return;
         }
 
-        long elapsed = System.currentTimeMillis() - startTime.getOrDefault(player.getUuid(), System.currentTimeMillis());
+        long elapsed = System.currentTimeMillis() - startTime.getOrDefault(player.getUUID(), System.currentTimeMillis());
         long timeLimit = 60L * 60L * 1000L;
         if (elapsed >= timeLimit) {
-            player.getServer().getPlayerManager().broadcast(
-                Text.literal("[MANHUNT] ")
-                    .formatted(Formatting.GOLD, Formatting.BOLD)
-                    .append(Text.literal(player.getName().getString() + " ran out of time.")
-                        .formatted(Formatting.DARK_RED, Formatting.BOLD)),
+            player.getServer().getPlayerList().broadcast(
+                Component.literal("[MANHUNT] ")
+                    .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
+                    .append(Component.literal(player.getName().getString() + " ran out of time.")
+                        .withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD)),
                 false
             );
             endAllGames(player.getServer());
@@ -968,17 +968,17 @@ public class ManhuntManager {
 
         long remainingMinutes = (timeLimit - elapsed) / 1000L / 60L;
         if (remainingMinutes <= 5) {
-            int previous = soloWarningMinutes.getOrDefault(player.getUuid(), Integer.MAX_VALUE);
+            int previous = soloWarningMinutes.getOrDefault(player.getUUID(), Integer.MAX_VALUE);
             if (remainingMinutes < previous) {
-                soloWarningMinutes.put(player.getUuid(), (int) remainingMinutes);
-                player.sendMessage(Text.literal("Solo timer: " + remainingMinutes + " minute(s) left.")
-                    .formatted(Formatting.RED), true);
+                soloWarningMinutes.put(player.getUUID(), (int) remainingMinutes);
+                player.sendSystemMessage(Component.literal("Solo timer: " + remainingMinutes + " minute(s) left.")
+                    .withStyle(ChatFormatting.RED), true);
             }
         }
     }
 
-    private static void useSelectedHunterAbility(ServerPlayerEntity hunter) {
-        int index = selectedAbilityIndex.getOrDefault(hunter.getUuid(), 0);
+    private static void useSelectedHunterAbility(ServerPlayer hunter) {
+        int index = selectedAbilityIndex.getOrDefault(hunter.getUUID(), 0);
         switch (index) {
             case 0 -> useHunterTrackAbility(hunter);
             case 1 -> useHunterBlockAbility(hunter);
@@ -987,8 +987,8 @@ public class ManhuntManager {
         }
     }
 
-    private static void useSelectedSpeedrunnerAbility(ServerPlayerEntity speedrunner) {
-        int index = selectedAbilityIndex.getOrDefault(speedrunner.getUuid(), 0);
+    private static void useSelectedSpeedrunnerAbility(ServerPlayer speedrunner) {
+        int index = selectedAbilityIndex.getOrDefault(speedrunner.getUUID(), 0);
         switch (index) {
             case 0 -> useSpeedrunnerEscapeAbility(speedrunner);
             case 1 -> useSpeedrunnerSpeedAbility(speedrunner);
@@ -997,53 +997,53 @@ public class ManhuntManager {
         }
     }
 
-    private static void cycleSelectedAbility(ServerPlayerEntity player, String[] names, String[] descriptions, Formatting color) {
-        UUID uuid = player.getUuid();
+    private static void cycleSelectedAbility(ServerPlayer player, String[] names, String[] descriptions, ChatFormatting color) {
+        UUID uuid = player.getUUID();
         int next = (selectedAbilityIndex.getOrDefault(uuid, 0) + 1) % ABILITY_COUNT;
         selectedAbilityIndex.put(uuid, next);
 
-        player.sendMessage(Text.literal("Selected " + names[next] + ": " + descriptions[next])
-            .formatted(color), true);
+        player.sendSystemMessage(Component.literal("Selected " + names[next] + ": " + descriptions[next])
+            .withStyle(color), true);
         ModNetworking.showTitle(player, names[next], descriptions[next], color);
         sendHudUpdate(player);
     }
 
-    private static boolean canUseSpeedrunnerAbility(ServerPlayerEntity speedrunner, Map<UUID, Integer> cooldowns, String label) {
+    private static boolean canUseSpeedrunnerAbility(ServerPlayer speedrunner, Map<UUID, Integer> cooldowns, String label) {
         if (!isSpeedrunner(speedrunner)) {
             return false;
         }
 
-        if (!activeSpeedrunners.contains(speedrunner.getUuid())) {
-            speedrunner.sendMessage(Text.literal("Ghost speedrunners cannot use abilities.")
-                .formatted(Formatting.RED), true);
+        if (!activeSpeedrunners.contains(speedrunner.getUUID())) {
+            speedrunner.sendSystemMessage(Component.literal("Ghost speedrunners cannot use abilities.")
+                .withStyle(ChatFormatting.RED), true);
             return false;
         }
 
-        int cooldown = cooldowns.getOrDefault(speedrunner.getUuid(), 0);
+        int cooldown = cooldowns.getOrDefault(speedrunner.getUUID(), 0);
         if (cooldown > 0) {
-            speedrunner.sendMessage(Text.literal(label + " is on cooldown for " + (cooldown / 20) + "s.")
-                .formatted(Formatting.RED), true);
+            speedrunner.sendSystemMessage(Component.literal(label + " is on cooldown for " + (cooldown / 20) + "s.")
+                .withStyle(ChatFormatting.RED), true);
             return false;
         }
 
         return true;
     }
 
-    private static void sendHudUpdate(ServerPlayerEntity player) {
+    private static void sendHudUpdate(ServerPlayer player) {
         if (!isInGame(player)) {
             ModNetworking.clearManhuntHud(player);
             return;
         }
 
         boolean hunter = isHunter(player);
-        int index = selectedAbilityIndex.getOrDefault(player.getUuid(), 0);
+        int index = selectedAbilityIndex.getOrDefault(player.getUUID(), 0);
         String[] names = hunter ? HUNTER_ABILITY_NAMES : SPEEDRUNNER_ABILITY_NAMES;
         String[] descriptions = hunter ? HUNTER_ABILITY_DESCRIPTIONS : SPEEDRUNNER_ABILITY_DESCRIPTIONS;
         String targetName = "";
         String elapsedTime = "N/A";
 
         if (hunter) {
-            ServerPlayerEntity target = getTarget(player);
+            ServerPlayer target = getTarget(player);
             if (target != null) {
                 targetName = target.getName().getString();
                 elapsedTime = getElapsedOrDefault(target);
@@ -1057,33 +1057,33 @@ public class ManhuntManager {
             true,
             hunter ? ROLE_HUNTER : ROLE_SPEEDRUNNER,
             elapsedTime,
-            deaths.getOrDefault(player.getUuid(), 0),
+            deaths.getOrDefault(player.getUUID(), 0),
             targetName,
             index,
             names[index],
             descriptions[index],
-            hunterTrackCooldowns.getOrDefault(player.getUuid(), 0),
-            hunterBlockCooldowns.getOrDefault(player.getUuid(), 0),
-            hunterSlowCooldowns.getOrDefault(player.getUuid(), 0),
-            speedrunnerEscapeCooldowns.getOrDefault(player.getUuid(), 0),
-            speedrunnerSpeedCooldowns.getOrDefault(player.getUuid(), 0),
-            speedrunnerInvisCooldowns.getOrDefault(player.getUuid(), 0)
+            hunterTrackCooldowns.getOrDefault(player.getUUID(), 0),
+            hunterBlockCooldowns.getOrDefault(player.getUUID(), 0),
+            hunterSlowCooldowns.getOrDefault(player.getUUID(), 0),
+            speedrunnerEscapeCooldowns.getOrDefault(player.getUUID(), 0),
+            speedrunnerSpeedCooldowns.getOrDefault(player.getUUID(), 0),
+            speedrunnerInvisCooldowns.getOrDefault(player.getUUID(), 0)
         );
     }
 
-    private static String getElapsedOrDefault(ServerPlayerEntity player) {
+    private static String getElapsedOrDefault(ServerPlayer player) {
         if (!isSpeedrunner(player)) {
             return "N/A";
         }
-        return formatTime(System.currentTimeMillis() - startTime.getOrDefault(player.getUuid(), System.currentTimeMillis()));
+        return formatTime(System.currentTimeMillis() - startTime.getOrDefault(player.getUUID(), System.currentTimeMillis()));
     }
 
-    private static ServerPlayerEntity findNearestHunter(ServerPlayerEntity speedrunner) {
-        ServerPlayerEntity nearest = null;
+    private static ServerPlayer findNearestHunter(ServerPlayer speedrunner) {
+        ServerPlayer nearest = null;
         double nearestDistance = Double.MAX_VALUE;
         for (UUID hunterUuid : hunters) {
-            ServerPlayerEntity hunter = speedrunner.getServer().getPlayerManager().getPlayer(hunterUuid);
-            if (hunter == null || hunter.getWorld() != speedrunner.getWorld()) {
+            ServerPlayer hunter = speedrunner.getServer().getPlayerList().getPlayer(hunterUuid);
+            if (hunter == null || hunter.level() != speedrunner.level()) {
                 continue;
             }
             double distance = hunter.squaredDistanceTo(speedrunner);
@@ -1108,16 +1108,16 @@ public class ManhuntManager {
             return;
         }
 
-        server.getPlayerManager().broadcast(
-            Text.literal("[MANHUNT] ")
-                .formatted(Formatting.GOLD, Formatting.BOLD)
-                .append(Text.literal("Hunters win. All speedrunners were eliminated.")
-                    .formatted(Formatting.RED, Formatting.BOLD)),
+        server.getPlayerList().broadcast(
+            Component.literal("[MANHUNT] ")
+                .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
+                .append(Component.literal("Hunters win. All speedrunners were eliminated.")
+                    .withStyle(ChatFormatting.RED, ChatFormatting.BOLD)),
             false
         );
 
         for (UUID hunterUuid : hunters) {
-            ServerPlayerEntity hunter = server.getPlayerManager().getPlayer(hunterUuid);
+            ServerPlayer hunter = server.getPlayerList().getPlayer(hunterUuid);
             if (hunter != null) {
                 AchievementManager.unlockAchievement(hunter, "team_hunter");
             }
@@ -1126,7 +1126,7 @@ public class ManhuntManager {
         endAllGames(server);
     }
 
-    private static boolean hasHunterController(ServerPlayerEntity player) {
+    private static boolean hasHunterController(ServerPlayer player) {
         return isHunterController(player.getMainHandStack()) || isHunterController(player.getOffHandStack());
     }
 
@@ -1140,11 +1140,11 @@ public class ManhuntManager {
             return true;
         }
 
-        NbtCompound nbt = stack.getNbt();
+        CompoundTag nbt = stack.getNbt();
         return nbt != null && nbt.getBoolean(HunterTrackerItem.HUNTER_TRACKER_NBT);
     }
 
-    private static boolean hasSpeedrunnerController(ServerPlayerEntity player) {
+    private static boolean hasSpeedrunnerController(ServerPlayer player) {
         return isClock(player.getMainHandStack()) || isClock(player.getOffHandStack());
     }
 
@@ -1152,7 +1152,7 @@ public class ManhuntManager {
         return stack != null && !stack.isEmpty() && stack.isOf(Items.CLOCK);
     }
 
-    private static String getDimensionName(ServerWorld world) {
+    private static String getDimensionName(ServerLevel world) {
         if (world.getDimensionKey().equals(DimensionTypes.OVERWORLD)) {
             return "Overworld";
         }
@@ -1176,19 +1176,19 @@ public class ManhuntManager {
         return String.format("%d:%02d", minutes, seconds);
     }
 
-    private static String getGroupingName(ServerPlayerEntity player) {
-        String guildName = GuildManager.getGuildName(player.getUuid());
+    private static String getGroupingName(ServerPlayer player) {
+        String guildName = GuildManager.getGuildName(player.level());
         if (guildName != null && !guildName.isBlank()) {
             return guildName;
         }
 
-        String teamName = TeamManager.getPlayerTeam(player.getUuid());
+        String teamName = TeamManager.getPlayerTeam(player.level());
         return teamName != null ? teamName : "";
     }
 
-    private static String joinNames(List<ServerPlayerEntity> players) {
+    private static String joinNames(List<ServerPlayer> players) {
         List<String> names = new ArrayList<>();
-        for (ServerPlayerEntity player : players) {
+        for (ServerPlayer player : players) {
             names.add(player.getName().getString());
         }
         return String.join(", ", names);

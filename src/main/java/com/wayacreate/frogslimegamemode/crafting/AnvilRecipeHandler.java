@@ -5,89 +5,87 @@ import com.wayacreate.frogslimegamemode.item.ModItems;
 import com.wayacreate.frogslimegamemode.item.MobAbilityItem;
 import com.wayacreate.frogslimegamemode.tasks.TaskManager;
 import com.wayacreate.frogslimegamemode.tasks.TaskType;
-import net.fabricmc.fabric.api.event.player.UseBlockCallback;
-import net.minecraft.block.Blocks;
-import net.minecraft.item.ItemStack;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Formatting;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.ChatFormatting;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
 public class AnvilRecipeHandler {
     
     public static void register() {
-        // Register anvil right-click event
-        UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
-            if (world.isClient) return ActionResult.PASS;
-            
-            // Check if clicking on an anvil
-            if (world.getBlockState(hitResult.getBlockPos()).getBlock() != Blocks.ANVIL) {
-                return ActionResult.PASS;
-            }
-            
-            // Check if player is holding ability_stick in main hand
-            ItemStack mainHand = player.getMainHandStack();
-            if (!mainHand.isOf(ModItems.ABILITY_STICK)) {
-                return ActionResult.PASS;
-            }
-            
-            // Check if player has mob drop in offhand
-            ItemStack offHand = player.getOffHandStack();
-            if (offHand.isEmpty()) {
-                player.sendMessage(Text.literal("Hold the mob drop in your offhand (e.g., rotten flesh, bone, spider eye)!")
-                    .formatted(Formatting.YELLOW), false);
-                return ActionResult.PASS;
-            }
-            
-            // Get ability ID from the mob drop
-            String abilityId = getAbilityIdFromItem(offHand);
-            if (abilityId == null) {
-                player.sendMessage(Text.literal("Unknown mob drop! Use vanilla mob drops like rotten flesh, bones, spider eyes, etc.")
-                    .formatted(Formatting.RED), false);
-                return ActionResult.PASS;
-            }
-            
-            // Validate that the mob item matches the ability
-            if (!isMatchingMobItem(offHand, abilityId)) {
-                player.sendMessage(Text.literal("Invalid mob drop combination!")
-                    .formatted(Formatting.RED), false);
-                return ActionResult.PASS;
-            }
-            
-            // Create mob ability item
-            ItemStack mobAbility = MobAbilityItem.createMobAbility(abilityId);
-            if (mobAbility.isEmpty()) return ActionResult.PASS;
-            
-            // Consume items (ability stick + mob drop)
-            mainHand.decrement(1);
-            offHand.decrement(1);
-            
-            // Give player the mob ability
-            if (!player.getInventory().insertStack(mobAbility)) {
-                player.dropItem(mobAbility, false);
-            }
-            
-            // Play sound
-            player.playSound(SoundEvents.BLOCK_ANVIL_USE, 1.0f, 1.0f);
-            
-            // Send message
-            player.sendMessage(Text.literal("Created " + mobAbility.getName().getString() + "!")
-                .formatted(Formatting.GREEN), false);
+        NeoForge.EVENT_BUS.addListener(AnvilRecipeHandler::onRightClickBlock);
+    }
 
-            TaskManager.completeTask(player, TaskType.CRAFT_ABILITY);
-            if (player instanceof net.minecraft.server.network.ServerPlayerEntity serverPlayer) {
-                AchievementManager.unlockAchievement(serverPlayer, "mob_smith");
-            }
-            
-            // Also works with left click - but right click is more convenient
-            return ActionResult.SUCCESS;
-        });
+    private static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
+        var world = event.getLevel();
+        var player = event.getEntity();
+
+        if (world.isClient()) {
+            return;
+        }
+
+        if (world.getBlockState(event.getPos()).getBlock() != Blocks.ANVIL) {
+            return;
+        }
+
+        ItemStack mainHand = player.getMainHandStack();
+        if (!mainHand.isOf(ModItems.ABILITY_STICK)) {
+            return;
+        }
+
+        ItemStack offHand = player.getOffHandStack();
+        if (offHand.isEmpty()) {
+            player.sendMessage(Component.literal("Hold the mob drop in your offhand (e.g., rotten flesh, bone, spider eye)!")
+                .formatted(ChatFormatting.YELLOW), false);
+            return;
+        }
+
+        String abilityId = getAbilityIdFromItem(offHand);
+        if (abilityId == null) {
+            player.sendMessage(Component.literal("Unknown mob drop! Use vanilla mob drops like rotten flesh, bones, spider eyes, etc.")
+                .formatted(ChatFormatting.RED), false);
+            return;
+        }
+
+        if (!isMatchingMobItem(offHand, abilityId)) {
+            player.sendMessage(Component.literal("Invalid mob drop combination!")
+                .formatted(ChatFormatting.RED), false);
+            return;
+        }
+
+        ItemStack mobAbility = MobAbilityItem.createMobAbility(abilityId);
+        if (mobAbility.isEmpty()) {
+            return;
+        }
+
+        mainHand.decrement(1);
+        offHand.decrement(1);
+
+        if (!player.getInventory().insertStack(mobAbility)) {
+            player.dropItem(mobAbility, false);
+        }
+
+        player.playSound(SoundEvents.BLOCK_ANVIL_USE, 1.0f, 1.0f);
+        player.sendMessage(Component.literal("Created " + mobAbility.getName().getString() + "!")
+            .formatted(ChatFormatting.GREEN), false);
+
+        TaskManager.completeTask(player, TaskType.CRAFT_ABILITY);
+        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+            AchievementManager.unlockAchievement(serverPlayer, "mob_smith");
+        }
+
+        event.setCanceled(true);
+        event.setCancellationResult(InteractionResult.SUCCESS);
     }
     
     private static String getAbilityIdFromItem(ItemStack stack) {
         if (stack.isEmpty()) return null;
         
-        net.minecraft.util.Identifier itemId = net.minecraft.registry.Registries.ITEM.getId(stack.getItem());
+        net.minecraft.resources.ResourceLocation itemId = net.minecraft.core.registries.BuiltInRegistries.ITEM.getId(stack.getItem());
         String itemIdStr = itemId.toString();
         
         if (itemIdStr.equals("minecraft:rotten_flesh")) return "zombie";
@@ -165,7 +163,7 @@ public class AnvilRecipeHandler {
     private static boolean isMatchingMobItem(ItemStack stack, String abilityId) {
         if (stack.isEmpty()) return false;
         
-        net.minecraft.util.Identifier itemId = net.minecraft.registry.Registries.ITEM.getId(stack.getItem());
+        net.minecraft.resources.ResourceLocation itemId = net.minecraft.core.registries.BuiltInRegistries.ITEM.getId(stack.getItem());
         String itemIdStr = itemId.toString();
         
         return switch (abilityId) {

@@ -1,9 +1,9 @@
 package com.wayacreate.frogslimegamemode.economy;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,7 +18,7 @@ public class BountyManager {
         private final List<ItemStack> itemRewards = new ArrayList<>();
         private final long createdAt;
         
-        public Bounty(ServerPlayerEntity target) {
+        public Bounty(ServerPlayer target) {
             this.targetUuid = target.getUuid();
             this.targetName = target.getName().getString();
             this.createdAt = System.currentTimeMillis();
@@ -40,7 +40,7 @@ public class BountyManager {
             return coinContributions.values().stream().mapToInt(Integer::intValue).sum();
         }
         
-        public void addCoinReward(ServerPlayerEntity contributor, int amount) {
+        public void addCoinReward(ServerPlayer contributor, int amount) {
             coinContributions.merge(contributor.getUuid(), amount, Integer::sum);
         }
         
@@ -56,7 +56,7 @@ public class BountyManager {
             return copy;
         }
         
-        public boolean claim(ServerPlayerEntity killer) {
+        public boolean claim(ServerPlayer killer) {
             int reward = getTotalReward();
             
             if (reward > 0) {
@@ -71,18 +71,18 @@ public class BountyManager {
         }
     }
     
-    public static boolean addBounty(ServerPlayerEntity target, ServerPlayerEntity contributor, 
+    public static boolean addBounty(ServerPlayer target, ServerPlayer contributor, 
                                      int coins, List<ItemStack> items) {
         // Verify contributor has coins
         if (coins > 0 && !EconomyManager.removeBalance(contributor, coins)) {
-            contributor.sendMessage(Text.literal("You don't have enough coins!").formatted(Formatting.RED), false);
+            contributor.sendMessage(Component.literal("You don't have enough coins!").formatted(ChatFormatting.RED), false);
             return false;
         }
         
         // Verify contributor has items
         for (ItemStack item : items) {
             if (!contributor.getInventory().contains(item)) {
-                contributor.sendMessage(Text.literal("You don't have the required items!").formatted(Formatting.RED), false);
+                contributor.sendMessage(Component.literal("You don't have the required items!").formatted(ChatFormatting.RED), false);
                 // Refund coins if already taken
                 if (coins > 0) {
                     EconomyManager.addBalance(contributor, coins);
@@ -107,19 +107,19 @@ public class BountyManager {
             bounty.addItemReward(item);
         }
         
-        contributor.sendMessage(Text.literal("Added bounty on ").formatted(Formatting.GREEN)
+        contributor.sendMessage(Component.literal("Added bounty on ").formatted(ChatFormatting.GREEN)
             .append(target.getName().getString())
-            .append(Text.literal("! Total reward: ").formatted(Formatting.WHITE))
-            .append(Text.literal(bounty.getTotalReward() + " coins").formatted(Formatting.GOLD)), false);
+            .append(Component.literal("! Total reward: ").formatted(ChatFormatting.WHITE))
+            .append(Component.literal(bounty.getTotalReward() + " coins").formatted(ChatFormatting.GOLD)), false);
         
         // Notify target if online
-        target.sendMessage(Text.literal("A bounty has been placed on your head! Reward: ").formatted(Formatting.RED)
-            .append(Text.literal(bounty.getTotalReward() + " coins").formatted(Formatting.GOLD)), false);
+        target.sendMessage(Component.literal("A bounty has been placed on your head! Reward: ").formatted(ChatFormatting.RED)
+            .append(Component.literal(bounty.getTotalReward() + " coins").formatted(ChatFormatting.GOLD)), false);
         
         return true;
     }
     
-    public static boolean claimBounty(ServerPlayerEntity killer, ServerPlayerEntity target) {
+    public static boolean claimBounty(ServerPlayer killer, ServerPlayer target) {
         Bounty bounty = bounties.get(target.getUuid());
         
         if (bounty == null) {
@@ -135,12 +135,12 @@ public class BountyManager {
         if (bounty.claim(killer)) {
             // Announce
             killer.getServer().getPlayerManager().broadcast(
-                Text.literal("").formatted(Formatting.GOLD)
+                Component.literal("").formatted(ChatFormatting.GOLD)
                     .append(killer.getName().getString())
-                    .append(Text.literal(" claimed the bounty on "))
+                    .append(Component.literal(" claimed the bounty on "))
                     .append(target.getName().getString())
-                    .append(Text.literal(" for "))
-                    .append(Text.literal(bounty.getTotalReward() + " coins!").formatted(Formatting.GREEN)),
+                    .append(Component.literal(" for "))
+                    .append(Component.literal(bounty.getTotalReward() + " coins!").formatted(ChatFormatting.GREEN)),
                 false);
             
             // Remove bounty
@@ -164,7 +164,7 @@ public class BountyManager {
         return bounties.containsKey(playerUuid);
     }
     
-    public static void onPlayerDeath(ServerPlayerEntity player, ServerPlayerEntity killer) {
+    public static void onPlayerDeath(ServerPlayer player, ServerPlayer killer) {
         if (killer != null && !killer.getUuid().equals(player.getUuid())) {
             claimBounty(killer, player);
         }

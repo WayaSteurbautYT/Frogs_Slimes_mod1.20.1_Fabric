@@ -1,20 +1,21 @@
 package com.wayacreate.frogslimegamemode.client;
 
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.TitleScreen;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.TitleScreen;
+import com.wayacreate.frogslimegamemode.client.gui.GuiCopy;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 public class ModTitleScreen extends TitleScreen {
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         // Render the vanilla background
         this.renderBackground(context);
 
         // Draw custom title with Minecraft-style formatting
-        TextRenderer textRenderer = this.textRenderer;
+        Font textRenderer = this.textRenderer;
         int centerX = this.width / 2;
         int centerY = this.height / 2;
 
@@ -22,11 +23,11 @@ public class ModTitleScreen extends TitleScreen {
         // The vanilla title is typically at around (centerX, centerY - 30) with scale 2.0
 
         // Main title - "FROGS & SLIMES" in gold with 3D shadow effect
-        Text titleText = Text.literal("FROGS & SLIMES")
-            .formatted(Formatting.GOLD, Formatting.BOLD);
+        Component titleText = Component.literal("LDLIB2")
+            .formatted(ChatFormatting.GOLD, ChatFormatting.BOLD);
 
-        float titleScale = 1.8f;
-        int titleY = centerY - 100;
+        float titleScale = Math.max(1.1f, Math.min(1.65f, this.width / 360.0f));
+        int titleY = Math.max(26, this.height / 6);
         int titleWidth = textRenderer.getWidth(titleText);
 
         context.getMatrices().push();
@@ -44,11 +45,11 @@ public class ModTitleScreen extends TitleScreen {
         context.getMatrices().pop();
 
         // Subtitle - "GAMEMODE" in green with shadow
-        Text subtitleText = Text.literal("GAMEMODE")
-            .formatted(Formatting.GREEN, Formatting.BOLD);
+        Component subtitleText = Component.literal("YOGA LAYOUT UI")
+            .formatted(ChatFormatting.GREEN, ChatFormatting.BOLD);
 
-        float subtitleScale = 1.3f;
-        int subtitleY = titleY + 35;
+        float subtitleScale = Math.max(0.9f, Math.min(1.2f, this.width / 440.0f));
+        int subtitleY = titleY + Math.max(24, (int) (24 * titleScale));
         int subtitleWidth = textRenderer.getWidth(subtitleText);
 
         context.getMatrices().push();
@@ -64,8 +65,8 @@ public class ModTitleScreen extends TitleScreen {
         context.getMatrices().pop();
 
         // Author text - "by WayaCreate" in gray
-        Text authorText = Text.literal("by WayaCreate")
-            .formatted(Formatting.GRAY);
+        Component authorText = Component.literal("by WayaCreate")
+            .formatted(ChatFormatting.GRAY);
 
         float authorScale = 0.9f;
         int authorY = subtitleY + 20;
@@ -78,10 +79,10 @@ public class ModTitleScreen extends TitleScreen {
         context.getMatrices().pop();
 
         // Gamemode status indicator
-        Text statusText = Text.literal("Frog & Slime Gamemode Loaded")
-            .formatted(Formatting.AQUA, Formatting.ITALIC);
+        Component statusText = Component.literal(GuiCopy.PRIMARY)
+            .formatted(ChatFormatting.AQUA, ChatFormatting.ITALIC);
 
-        float statusScale = 0.8f;
+        float statusScale = Math.max(0.65f, Math.min(0.85f, this.width / 700.0f));
         int statusY = authorY + 20;
         int statusWidth = textRenderer.getWidth(statusText);
 
@@ -92,8 +93,8 @@ public class ModTitleScreen extends TitleScreen {
         context.getMatrices().pop();
 
         // Version text at bottom
-        Text versionText = Text.literal("v1.0.0 - Fabric 1.20.1")
-            .formatted(Formatting.DARK_GRAY);
+        Component versionText = Component.literal("v1.0.0 - Fabric 1.20.1")
+            .formatted(ChatFormatting.DARK_GRAY);
 
         context.drawCenteredTextWithShadow(textRenderer, versionText, centerX, this.height - 30, 0x555555);
 
@@ -108,8 +109,8 @@ public class ModTitleScreen extends TitleScreen {
 
         // Move all buttons down and adjust horizontal position if needed
         this.children().forEach(widget -> {
-            if (widget instanceof net.minecraft.client.gui.widget.ClickableWidget) {
-                net.minecraft.client.gui.widget.ClickableWidget button = (net.minecraft.client.gui.widget.ClickableWidget) widget;
+            if (widget instanceof net.minecraft.client.gui.components.AbstractWidget) {
+                net.minecraft.client.gui.components.AbstractWidget button = (net.minecraft.client.gui.components.AbstractWidget) widget;
                 button.setY(button.getY() + 40);
 
                 // Ensure buttons are within screen bounds horizontally

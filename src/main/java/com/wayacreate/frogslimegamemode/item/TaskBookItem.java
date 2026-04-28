@@ -2,36 +2,36 @@ package com.wayacreate.frogslimegamemode.item;
 
 import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
 import com.wayacreate.frogslimegamemode.network.ModNetworking;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
-import net.minecraft.util.TypedActionResult;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.level.Level;
 
 public class TaskBookItem extends Item {
-    public TaskBookItem(Settings settings) {
+    public TaskBookItem(Properties settings) {
         super(settings);
     }
 
     @Override
-    public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
-        if (!world.isClient && user instanceof ServerPlayerEntity serverPlayer) {
+    public InteractionResultHolder<ItemStack> use(Level world, Player user, InteractionHand hand) {
+        if (!world.isClient && user instanceof ServerPlayer serverPlayer) {
             if (!GamemodeManager.isInGamemode(user)) {
-                user.sendMessage(Text.literal("You must be in Frog & Slime Gamemode to use this book!")
-                    .formatted(Formatting.RED), false);
-                user.sendMessage(Text.literal("Use /frogslime enable to activate the route.")
-                    .formatted(Formatting.GRAY), false);
-                return TypedActionResult.success(user.getStackInHand(hand));
+                user.sendMessage(Component.literal("You must be in Frog & Slime Gamemode to use this book!")
+                    .formatted(ChatFormatting.RED), false);
+                user.sendMessage(Component.literal("Use /frogslime enable to activate the route.")
+                    .formatted(ChatFormatting.GRAY), false);
+                return InteractionResultHolder.success(user.getStackInHand(hand));
             }
 
             ModNetworking.openTasksScreen(serverPlayer);
-            user.sendMessage(Text.literal("Journey menu opened. Sneak-right-click your guide book if you need the full route again.")
-                .formatted(Formatting.YELLOW), true);
+            user.sendMessage(Component.literal("Journey menu opened. Sneak-right-click your guide book if you need the full route again.")
+                .formatted(ChatFormatting.YELLOW), true);
         }
-        return TypedActionResult.success(user.getStackInHand(hand));
+        return InteractionResultHolder.success(user.getStackInHand(hand));
     }
 }

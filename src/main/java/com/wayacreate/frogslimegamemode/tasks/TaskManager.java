@@ -5,12 +5,12 @@ import com.wayacreate.frogslimegamemode.entity.FrogHelperEntity;
 import com.wayacreate.frogslimegamemode.entity.SlimeHelperEntity;
 import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
 import com.wayacreate.frogslimegamemode.network.ModNetworking;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.world.World;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -36,7 +36,7 @@ public class TaskManager {
         }
     }
     
-    public static void syncDerivedTasks(PlayerEntity player) {
+    public static void syncDerivedTasks(Player player) {
         if (!GamemodeManager.isInGamemode(player)) {
             return;
         }
@@ -46,7 +46,7 @@ public class TaskManager {
         setTaskProgress(player, TaskType.UNLOCK_ABILITIES, GamemodeManager.getData(player).getPlayerAbilities().size());
         setTaskProgress(player, TaskType.EVOLVE_HELPER, getHighestHelperEvolution(player));
 
-        if (player instanceof ServerPlayerEntity serverPlayer) {
+        if (player instanceof ServerPlayer serverPlayer) {
             int abilityCount = GamemodeManager.getData(player).getPlayerAbilities().size();
             if (abilityCount >= 1) {
                 AchievementManager.unlockAchievement(serverPlayer, "ability_unlock");
@@ -56,22 +56,22 @@ public class TaskManager {
             }
         }
 
-        if (player.getWorld().getRegistryKey() == World.NETHER) {
+        if (player.getWorld().getRegistryKey() == Level.NETHER) {
             setTaskProgress(player, TaskType.REACH_NETHER, 1);
-            if (player instanceof ServerPlayerEntity serverPlayer) {
+            if (player instanceof ServerPlayer serverPlayer) {
                 AchievementManager.unlockAchievement(serverPlayer, "reach_nether");
             }
         }
 
-        if (player.getWorld().getRegistryKey() == World.END) {
+        if (player.getWorld().getRegistryKey() == Level.END) {
             setTaskProgress(player, TaskType.REACH_END, 1);
-            if (player instanceof ServerPlayerEntity serverPlayer) {
+            if (player instanceof ServerPlayer serverPlayer) {
                 AchievementManager.unlockAchievement(serverPlayer, "end_reached");
             }
         }
     }
 
-    public static void advanceTask(PlayerEntity player, TaskType task, int amount) {
+    public static void advanceTask(Player player, TaskType task, int amount) {
         if (!GamemodeManager.isInGamemode(player) || amount <= 0) {
             return;
         }
@@ -81,11 +81,11 @@ public class TaskManager {
         setTaskProgress(player, task, nextValue);
     }
 
-    public static void completeTask(PlayerEntity player, TaskType task) {
+    public static void completeTask(Player player, TaskType task) {
         setTaskProgress(player, task, task.getRequiredAmount());
     }
 
-    public static void setTaskProgress(PlayerEntity player, TaskType task, int progress) {
+    public static void setTaskProgress(Player player, TaskType task, int progress) {
         if (!GamemodeManager.isInGamemode(player)) {
             return;
         }
@@ -103,12 +103,12 @@ public class TaskManager {
         }
     }
 
-    private static void onTaskCompleted(PlayerEntity player, TaskType task) {
-        player.sendMessage(Text.literal("Objective Complete: ")
-            .formatted(Formatting.GREEN, Formatting.BOLD)
-            .append(Text.literal(task.getDisplayName()).formatted(task.getColor(), Formatting.BOLD)), false);
+    private static void onTaskCompleted(Player player, TaskType task) {
+        player.sendMessage(Component.literal("Objective Complete: ")
+            .formatted(ChatFormatting.GREEN, ChatFormatting.BOLD)
+            .append(Component.literal(task.getDisplayName()).formatted(task.getColor(), ChatFormatting.BOLD)), false);
 
-        if (player instanceof ServerPlayerEntity serverPlayer) {
+        if (player instanceof ServerPlayer serverPlayer) {
             ModNetworking.sendTotemAnimation(
                 serverPlayer,
                 "Objective Complete!",
@@ -118,26 +118,26 @@ public class TaskManager {
         }
     }
     
-    public static void getTaskProgress(PlayerEntity player) {
+    public static void getTaskProgress(Player player) {
         if (!GamemodeManager.isInGamemode(player)) {
             return;
         }
         
         var data = GamemodeManager.getData(player);
-        player.sendMessage(Text.literal("=== Task Progress ===")
-            .formatted(Formatting.GOLD, Formatting.BOLD), false);
+        player.sendMessage(Component.literal("=== Task Progress ===")
+            .formatted(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
         
         for (TaskType task : TaskType.values()) {
             int progress = data.getTaskProgress(task);
             int required = task.getRequiredAmount();
             boolean complete = data.isTaskComplete(task);
             
-            player.sendMessage(Text.literal(task.getDisplayName() + ": " + progress + "/" + required)
-                .formatted(complete ? Formatting.GREEN : Formatting.WHITE), false);
+            player.sendMessage(Component.literal(task.getDisplayName() + ": " + progress + "/" + required)
+                .formatted(complete ? ChatFormatting.GREEN : ChatFormatting.WHITE), false);
         }
     }
 
-    public static float getOverallProgress(PlayerEntity player) {
+    public static float getOverallProgress(Player player) {
         if (!GamemodeManager.isInGamemode(player)) {
             return 0.0f;
         }
@@ -150,7 +150,7 @@ public class TaskManager {
         return total / TaskType.values().length;
     }
 
-    public static int getCompletedTaskCount(PlayerEntity player) {
+    public static int getCompletedTaskCount(Player player) {
         if (!GamemodeManager.isInGamemode(player)) {
             return 0;
         }
@@ -165,7 +165,7 @@ public class TaskManager {
         return completed;
     }
 
-    public static List<TaskType> getActiveObjectives(PlayerEntity player, int limit) {
+    public static List<TaskType> getActiveObjectives(Player player, int limit) {
         List<TaskType> tasks = new ArrayList<>();
         if (!GamemodeManager.isInGamemode(player)) {
             return tasks;
@@ -182,7 +182,7 @@ public class TaskManager {
         return tasks.size() > limit ? tasks.subList(0, limit) : tasks;
     }
 
-    public static int getHighestHelperEvolution(PlayerEntity player) {
+    public static int getHighestHelperEvolution(Player player) {
         int highest = 0;
 
         var frogs = player.getWorld().getEntitiesByClass(

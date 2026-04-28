@@ -1,13 +1,13 @@
 package com.wayacreate.frogslimegamemode.economy;
 
 import com.wayacreate.frogslimegamemode.screen.TradeScreenHandler;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.SimpleInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 import java.util.UUID;
 
@@ -17,20 +17,20 @@ public class TradeSession {
     public static final int ACCEPT_SLOT_REQUESTER = 13;
     public static final int ACCEPT_SLOT_TARGET = 17;
 
-    private final ServerPlayerEntity requester;
-    private final ServerPlayerEntity target;
-    private final SimpleInventory inventory = new SimpleInventory(27);
+    private final ServerPlayer requester;
+    private final ServerPlayer target;
+    private final SimpleContainer inventory = new SimpleContainer(27);
     private boolean requesterAccepted;
     private boolean targetAccepted;
     private boolean closed;
 
-    public TradeSession(ServerPlayerEntity requester, ServerPlayerEntity target) {
+    public TradeSession(ServerPlayer requester, ServerPlayer target) {
         this.requester = requester;
         this.target = target;
         refreshDisplay();
     }
 
-    public SimpleInventory getInventory() {
+    public SimpleContainer getInventory() {
         return inventory;
     }
 
@@ -62,7 +62,7 @@ public class TradeSession {
         refreshDisplay();
     }
 
-    public void toggleAccept(PlayerEntity player) {
+    public void toggleAccept(Player player) {
         if (closed) {
             return;
         }
@@ -81,7 +81,7 @@ public class TradeSession {
         }
     }
 
-    public void onClosed(PlayerEntity player) {
+    public void onClosed(Player player) {
         if (closed) {
             return;
         }
@@ -90,10 +90,10 @@ public class TradeSession {
         returnOfferTo(requester, inventory.removeStack(OFFER_SLOT_REQUESTER));
         returnOfferTo(target, inventory.removeStack(OFFER_SLOT_TARGET));
 
-        requester.sendMessage(Text.literal("Trade cancelled.")
-            .formatted(Formatting.YELLOW), false);
-        target.sendMessage(Text.literal("Trade cancelled.")
-            .formatted(Formatting.YELLOW), false);
+        requester.sendMessage(Component.literal("Trade cancelled.")
+            .formatted(ChatFormatting.YELLOW), false);
+        target.sendMessage(Component.literal("Trade cancelled.")
+            .formatted(ChatFormatting.YELLOW), false);
 
         closePartnerScreen(player);
     }
@@ -117,43 +117,43 @@ public class TradeSession {
 
         EconomyManager.recordTrade(requester, target);
 
-        requester.sendMessage(Text.literal("Trade completed with " + target.getName().getString() + "!")
-            .formatted(Formatting.GREEN), false);
-        target.sendMessage(Text.literal("Trade completed with " + requester.getName().getString() + "!")
-            .formatted(Formatting.GREEN), false);
+        requester.sendMessage(Component.literal("Trade completed with " + target.getName().getString() + "!")
+            .formatted(ChatFormatting.GREEN), false);
+        target.sendMessage(Component.literal("Trade completed with " + requester.getName().getString() + "!")
+            .formatted(ChatFormatting.GREEN), false);
 
         closeScreens();
     }
 
     public void refreshDisplay() {
-        setReadonlySlot(4, infoStack("Trading", "Place your offer, then click your wool to accept.", Items.PAPER, Formatting.AQUA));
+        setReadonlySlot(4, infoStack("Trading", "Place your offer, then click your wool to accept.", Items.PAPER, ChatFormatting.AQUA));
         setReadonlySlot(ACCEPT_SLOT_REQUESTER, requesterAccepted
-            ? infoStack("Accepted", "Waiting for " + target.getName().getString(), Items.LIME_WOOL, Formatting.GREEN)
-            : infoStack("Accept Trade", "Click when your offer is ready.", Items.RED_WOOL, Formatting.RED));
+            ? infoStack("Accepted", "Waiting for " + target.getName().getString(), Items.LIME_WOOL, ChatFormatting.GREEN)
+            : infoStack("Accept Trade", "Click when your offer is ready.", Items.RED_WOOL, ChatFormatting.RED));
         setReadonlySlot(ACCEPT_SLOT_TARGET, targetAccepted
-            ? infoStack("Accepted", "Waiting for " + requester.getName().getString(), Items.LIME_WOOL, Formatting.GREEN)
-            : infoStack("Accept Trade", "Click when your offer is ready.", Items.RED_WOOL, Formatting.RED));
+            ? infoStack("Accepted", "Waiting for " + requester.getName().getString(), Items.LIME_WOOL, ChatFormatting.GREEN)
+            : infoStack("Accept Trade", "Click when your offer is ready.", Items.RED_WOOL, ChatFormatting.RED));
     }
 
     private void setReadonlySlot(int slotIndex, ItemStack stack) {
         inventory.setStack(slotIndex, stack);
     }
 
-    private ItemStack infoStack(String title, String subtitle, net.minecraft.item.Item item, Formatting color) {
+    private ItemStack infoStack(String title, String subtitle, net.minecraft.world.item.Item item, ChatFormatting color) {
         ItemStack stack = new ItemStack(item);
-        stack.setCustomName(Text.literal(title).formatted(color, Formatting.BOLD));
+        stack.setCustomName(Component.literal(title).formatted(color, ChatFormatting.BOLD));
         stack.getOrCreateNbt().putString("TradeInfo", subtitle);
         return stack;
     }
 
-    private void returnOfferTo(ServerPlayerEntity player, ItemStack stack) {
+    private void returnOfferTo(ServerPlayer player, ItemStack stack) {
         if (!stack.isEmpty()) {
             player.getInventory().offerOrDrop(stack);
         }
     }
 
-    private void closePartnerScreen(PlayerEntity closer) {
-        if (!(closer instanceof ServerPlayerEntity)) {
+    private void closePartnerScreen(Player closer) {
+        if (!(closer instanceof ServerPlayer)) {
             return;
         }
 

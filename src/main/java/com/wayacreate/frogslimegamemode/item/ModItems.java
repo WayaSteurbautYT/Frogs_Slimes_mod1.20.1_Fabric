@@ -3,227 +3,142 @@ package com.wayacreate.frogslimegamemode.item;
 import com.wayacreate.frogslimegamemode.FrogSlimeGamemode;
 import com.wayacreate.frogslimegamemode.block.ModBlocks;
 import com.wayacreate.frogslimegamemode.entity.ModEntities;
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
-import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.SpawnEggItem;
-import net.minecraft.item.ToolMaterials;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.SpawnEggItem;
+import net.minecraft.world.item.Tiers;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
+import net.neoforged.neoforge.registries.RegisterEvent;
 
 public class ModItems {
-    public static Item FROG_HELPER_SPAWN_EGG;
-    public static Item SLIME_HELPER_SPAWN_EGG;
-    public static Item EVOLUTION_STONE;
-    public static Item SLIME_FOOD;
-    public static Item FROG_FOOD;
-    public static Item FINAL_EVOLUTION_CRYSTAL;
-    public static Item TASK_BOOK;
+    public static final Item FROG_HELPER_SPAWN_EGG =
+        new SpawnEggItem(ModEntities.FROG_HELPER, 0x6B8E23, 0x9ACD32, new Item.Properties());
+    public static final Item SLIME_HELPER_SPAWN_EGG =
+        new SpawnEggItem(ModEntities.SLIME_HELPER, 0x51A03E, 0x7FFF00, new Item.Properties());
+    public static final Item EVOLUTION_STONE = new EvolutionStoneItem(new Item.Properties().maxCount(16));
+    public static final Item SLIME_FOOD = new SlimeFoodItem(new Item.Properties().maxCount(64).food(SlimeFoodItem.SLIME_FOOD_COMPONENT));
+    public static final Item FROG_FOOD = new FrogFoodItem(new Item.Properties().maxCount(64).food(FrogFoodItem.FROG_FOOD_COMPONENT));
+    public static final Item FINAL_EVOLUTION_CRYSTAL = new FinalEvolutionCrystal(new Item.Properties().maxCount(1));
+    public static final Item TASK_BOOK = new TaskBookItem(new Item.Properties().maxCount(1));
     
     // YouTuber swords with funny twists
-    public static Item DREAM_SWORD;
-    public static Item TECHNOBLADE_SWORD;
-    public static Item GRIAN_SWORD;
-    public static Item MUMBO_JUMBO_SWORD;
+    public static final Item DREAM_SWORD = new YouTuberSwordItem("Dream", Tiers.NETHERITE, 3, -2.4f, new Item.Properties().maxCount(1));
+    public static final Item TECHNOBLADE_SWORD = new YouTuberSwordItem("Technoblade", Tiers.NETHERITE, 5, -2.2f, new Item.Properties().maxCount(1));
+    public static final Item GRIAN_SWORD = new YouTuberSwordItem("Grian", Tiers.DIAMOND, 3, -2.4f, new Item.Properties().maxCount(1));
+    public static final Item MUMBO_JUMBO_SWORD = new YouTuberSwordItem("Mumbo Jumbo", Tiers.DIAMOND, 3, -2.4f, new Item.Properties().maxCount(1));
     
     // Funny armor pieces
-    public static Item MUSTARD_HELMET;
-    public static Item ORPHAN_SHIELD;
-    public static Item PRANKSTER_CHESTPLATE;
+    public static final Item MUSTARD_HELMET = new MustardHelmetItem(new Item.Properties().maxCount(1));
+    public static final Item ORPHAN_SHIELD = new OrphanShieldItem(new Item.Properties().maxCount(1));
+    public static final Item PRANKSTER_CHESTPLATE = new PranksterChestplateItem(new Item.Properties().maxCount(1));
     
     // Role items for helpers (using vanilla sticks with NBT)
     // These are created as pre-configured sticks
-    public static Item MINER_ROLE;
-    public static Item LUMBERJACK_ROLE;
-    public static Item COMBAT_ROLE;
-    public static Item BUILDER_ROLE;
-    public static Item FARMER_ROLE;
+    public static final Item MINER_ROLE = new RoleItem(new Item.Properties().maxCount(1), "Miner");
+    public static final Item LUMBERJACK_ROLE = new RoleItem(new Item.Properties().maxCount(1), "Lumberjack");
+    public static final Item COMBAT_ROLE = new RoleItem(new Item.Properties().maxCount(1), "Combat Specialist");
+    public static final Item BUILDER_ROLE = new RoleItem(new Item.Properties().maxCount(1), "Builder");
+    public static final Item FARMER_ROLE = new RoleItem(new Item.Properties().maxCount(1), "Farmer");
     
     // Manhunt items
-    public static Item MANHUNT_COMPASS;
-    public static Item HUNTER_TRACKER;
-    public static Item SPEEDRUNNER_BOOTS;
-    public static Item HUNTER_NET;
-    public static Item ESCAPE_PEARL;
+    public static final Item MANHUNT_COMPASS = new ManhuntCompassItem(new Item.Properties().maxCount(1));
+    public static final Item HUNTER_TRACKER = new HunterTrackerItem(new Item.Properties().maxCount(1));
+    public static final Item SPEEDRUNNER_BOOTS = new SpeedrunnerBootsItem(new Item.Properties().maxCount(1));
+    public static final Item HUNTER_NET = new HunterNetItem(new Item.Properties().maxCount(16));
+    public static final Item ESCAPE_PEARL = new EscapePearlItem(new Item.Properties().maxCount(16));
     
     // Ability drop item (placeholder for crafting)
-    public static Item ABILITY_DROP;
+    public static final Item ABILITY_DROP = new AbilityDropItem(new Item.Properties().maxCount(64).maxDamage(0));
     
     // Mob ability item (final crafted ability)
-    public static Item MOB_ABILITY;
+    public static final Item MOB_ABILITY = new MobAbilityItem(new Item.Properties().maxCount(64).maxDamage(0));
     
     // Ability stick - beginner-friendly crafting component
-    public static Item ABILITY_STICK;
+    public static final Item ABILITY_STICK = new Item(new Item.Properties().maxCount(64));
     
     // Block items
-    public static Item FROG_CRAFTING_TABLE_ITEM;
-    public static Item FROG_POTION_STAND_ITEM;
-    public static Item ABILITY_CRAFTING_TABLE_ITEM;
-    
-    public static final RegistryKey<ItemGroup> FROG_SLIME_GROUP = RegistryKey.of(RegistryKeys.ITEM_GROUP,
-        new Identifier(FrogSlimeGamemode.MOD_ID, "frog_slime_group"));
-    
-    public static ItemGroup FROG_SLIME_ITEM_GROUP;
-    
-    private static Item registerItem(String name, Item item) {
-        return Registry.register(Registries.ITEM, new Identifier(FrogSlimeGamemode.MOD_ID, name), item);
+    public static final Item FROG_CRAFTING_TABLE_ITEM = new BlockItem(ModBlocks.FROG_CRAFTING_TABLE, new Item.Properties());
+    public static final Item FROG_POTION_STAND_ITEM = new BlockItem(ModBlocks.FROG_POTION_STAND, new Item.Properties());
+    public static final Item ABILITY_CRAFTING_TABLE_ITEM = new BlockItem(ModBlocks.ABILITY_CRAFTING_TABLE, new Item.Properties());
+
+    public static void register(IEventBus modBus) {
+        modBus.addListener(ModItems::onRegisterItems);
+        modBus.addListener(ModItems::onBuildCreativeTabContents);
     }
-    
-    public static void register() {
-        FrogSlimeGamemode.LOGGER.info("Registering items for " + FrogSlimeGamemode.MOD_ID);
-        
-        // Register spawn eggs after entities are registered
-        FROG_HELPER_SPAWN_EGG = registerItem("frog_helper_spawn_egg",
-            new SpawnEggItem(ModEntities.FROG_HELPER, 0x6B8E23, 0x9ACD32, new FabricItemSettings()));
-        
-        SLIME_HELPER_SPAWN_EGG = registerItem("slime_helper_spawn_egg",
-            new SpawnEggItem(ModEntities.SLIME_HELPER, 0x51A03E, 0x7FFF00, new FabricItemSettings()));
-        
-        EVOLUTION_STONE = registerItem("evolution_stone",
-            new EvolutionStoneItem(new FabricItemSettings().maxCount(16)));
-        
-        SLIME_FOOD = registerItem("slime_food",
-            new SlimeFoodItem(new FabricItemSettings().maxCount(64).food(SlimeFoodItem.SLIME_FOOD_COMPONENT)));
-        
-        FROG_FOOD = registerItem("frog_food",
-            new FrogFoodItem(new FabricItemSettings().maxCount(64).food(FrogFoodItem.FROG_FOOD_COMPONENT)));
-        
-        FINAL_EVOLUTION_CRYSTAL = registerItem("final_evolution_crystal",
-            new FinalEvolutionCrystal(new FabricItemSettings().maxCount(1)));
-        
-        TASK_BOOK = registerItem("task_book",
-            new TaskBookItem(new FabricItemSettings().maxCount(1)));
-        
-        // YouTuber swords with funny twists
-        DREAM_SWORD = registerItem("dream_sword",
-            new YouTuberSwordItem("Dream", ToolMaterials.NETHERITE, 3, -2.4f, new FabricItemSettings().maxCount(1)));
-        
-        TECHNOBLADE_SWORD = registerItem("technoblade_sword",
-            new YouTuberSwordItem("Technoblade", ToolMaterials.NETHERITE, 5, -2.2f, new FabricItemSettings().maxCount(1)));
-        
-        GRIAN_SWORD = registerItem("grian_sword",
-            new YouTuberSwordItem("Grian", ToolMaterials.DIAMOND, 3, -2.4f, new FabricItemSettings().maxCount(1)));
-        
-        MUMBO_JUMBO_SWORD = registerItem("mumbo_jumbo_sword",
-            new YouTuberSwordItem("Mumbo Jumbo", ToolMaterials.DIAMOND, 3, -2.4f, new FabricItemSettings().maxCount(1)));
-        
-        // Funny armor pieces
-        MUSTARD_HELMET = registerItem("mustard_helmet",
-            new MustardHelmetItem(new FabricItemSettings().maxCount(1)));
-        
-        // Orphan Shield - custom item with custom texture
-        ORPHAN_SHIELD = registerItem("orphan_shield",
-            new OrphanShieldItem(new FabricItemSettings().maxCount(1)));
-        
-        PRANKSTER_CHESTPLATE = registerItem("prankster_chestplate",
-            new PranksterChestplateItem(new FabricItemSettings().maxCount(1)));
-        
-        // Role items for helpers
-        MINER_ROLE = registerItem("miner_role",
-            new RoleItem(new FabricItemSettings().maxCount(1), "Miner"));
-        
-        LUMBERJACK_ROLE = registerItem("lumberjack_role",
-            new RoleItem(new FabricItemSettings().maxCount(1), "Lumberjack"));
-        
-        COMBAT_ROLE = registerItem("combat_role",
-            new RoleItem(new FabricItemSettings().maxCount(1), "Combat Specialist"));
-        
-        BUILDER_ROLE = registerItem("builder_role",
-            new RoleItem(new FabricItemSettings().maxCount(1), "Builder"));
-        
-        FARMER_ROLE = registerItem("farmer_role",
-            new RoleItem(new FabricItemSettings().maxCount(1), "Farmer"));
-        
-        // Manhunt items
-        MANHUNT_COMPASS = registerItem("manhunt_compass",
-            new ManhuntCompassItem(new FabricItemSettings().maxCount(1)));
-        
-        HUNTER_TRACKER = registerItem("hunter_tracker",
-            new HunterTrackerItem(new FabricItemSettings().maxCount(1)));
-        
-        SPEEDRUNNER_BOOTS = registerItem("speedrunner_boots",
-            new SpeedrunnerBootsItem(new FabricItemSettings().maxCount(1)));
-        
-        HUNTER_NET = registerItem("hunter_net",
-            new HunterNetItem(new FabricItemSettings().maxCount(16)));
-        
-        ESCAPE_PEARL = registerItem("escape_pearl",
-            new EscapePearlItem(new FabricItemSettings().maxCount(16)));
-        
-        // Ability drop item (placeholder for crafting)
-        ABILITY_DROP = registerItem("ability_drop",
-            new AbilityDropItem(new FabricItemSettings().maxCount(64).maxDamage(0)));
-        
-        // Mob ability item (final crafted ability)
-        MOB_ABILITY = registerItem("mob_ability",
-            new MobAbilityItem(new FabricItemSettings().maxCount(64).maxDamage(0)));
-        
-        // Ability stick - beginner-friendly crafting component
-        ABILITY_STICK = registerItem("ability_stick",
-            new Item(new FabricItemSettings().maxCount(64)));
-        
-        // Block items (register after blocks are registered)
-        FROG_CRAFTING_TABLE_ITEM = registerItem("frog_crafting_table",
-            new BlockItem(ModBlocks.FROG_CRAFTING_TABLE, new FabricItemSettings()));
-        
-        FROG_POTION_STAND_ITEM = registerItem("frog_potion_stand",
-            new BlockItem(ModBlocks.FROG_POTION_STAND, new FabricItemSettings()));
-        
-        ABILITY_CRAFTING_TABLE_ITEM = registerItem("ability_crafting_table",
-            new BlockItem(ModBlocks.ABILITY_CRAFTING_TABLE, new FabricItemSettings()));
-        
-        // Register item group
-        FROG_SLIME_ITEM_GROUP = Registry.register(Registries.ITEM_GROUP,
-            FROG_SLIME_GROUP,
-            FabricItemGroup.builder()
-                .icon(() -> new ItemStack(SLIME_HELPER_SPAWN_EGG))
-                .displayName(Text.literal("Frog & Slime Gamemode"))
-                .entries((context, entries) -> {
-                    entries.add(FROG_HELPER_SPAWN_EGG);
-                    entries.add(SLIME_HELPER_SPAWN_EGG);
-                    entries.add(EVOLUTION_STONE);
-                    entries.add(SLIME_FOOD);
-                    entries.add(FROG_FOOD);
-                    entries.add(FINAL_EVOLUTION_CRYSTAL);
-                    entries.add(TASK_BOOK);
-                    // YouTuber swords
-                    entries.add(DREAM_SWORD);
-                    entries.add(TECHNOBLADE_SWORD);
-                    entries.add(GRIAN_SWORD);
-                    entries.add(MUMBO_JUMBO_SWORD);
-                    // Funny armor
-                    entries.add(MUSTARD_HELMET);
-                    entries.add(ORPHAN_SHIELD);
-                    entries.add(PRANKSTER_CHESTPLATE);
-                    // Role items
-                    entries.add(MINER_ROLE);
-                    entries.add(LUMBERJACK_ROLE);
-                    entries.add(COMBAT_ROLE);
-                    entries.add(BUILDER_ROLE);
-                    entries.add(FARMER_ROLE);
-                    // Manhunt
-                    entries.add(MANHUNT_COMPASS);
-                    entries.add(HUNTER_TRACKER);
-                    entries.add(SPEEDRUNNER_BOOTS);
-                    entries.add(HUNTER_NET);
-                    entries.add(ESCAPE_PEARL);
-                    // Ability drops
-                    entries.add(ABILITY_DROP);
-                    entries.add(MOB_ABILITY);
-                    entries.add(ABILITY_STICK);
-                    // Block items
-                    entries.add(FROG_CRAFTING_TABLE_ITEM);
-                    entries.add(FROG_POTION_STAND_ITEM);
-                    entries.add(ABILITY_CRAFTING_TABLE_ITEM);
-                })
-                .build()
-        );
+
+    private static void onRegisterItems(RegisterEvent event) {
+        FrogSlimeGamemode.LOGGER.info("Registering items for {}", FrogSlimeGamemode.MOD_ID);
+
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "frog_helper_spawn_egg"), () -> FROG_HELPER_SPAWN_EGG);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "slime_helper_spawn_egg"), () -> SLIME_HELPER_SPAWN_EGG);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "evolution_stone"), () -> EVOLUTION_STONE);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "slime_food"), () -> SLIME_FOOD);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "frog_food"), () -> FROG_FOOD);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "final_evolution_crystal"), () -> FINAL_EVOLUTION_CRYSTAL);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "task_book"), () -> TASK_BOOK);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "dream_sword"), () -> DREAM_SWORD);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "technoblade_sword"), () -> TECHNOBLADE_SWORD);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "grian_sword"), () -> GRIAN_SWORD);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "mumbo_jumbo_sword"), () -> MUMBO_JUMBO_SWORD);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "mustard_helmet"), () -> MUSTARD_HELMET);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "orphan_shield"), () -> ORPHAN_SHIELD);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "prankster_chestplate"), () -> PRANKSTER_CHESTPLATE);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "miner_role"), () -> MINER_ROLE);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "lumberjack_role"), () -> LUMBERJACK_ROLE);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "combat_role"), () -> COMBAT_ROLE);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "builder_role"), () -> BUILDER_ROLE);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "farmer_role"), () -> FARMER_ROLE);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "manhunt_compass"), () -> MANHUNT_COMPASS);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "hunter_tracker"), () -> HUNTER_TRACKER);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "speedrunner_boots"), () -> SPEEDRUNNER_BOOTS);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "hunter_net"), () -> HUNTER_NET);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "escape_pearl"), () -> ESCAPE_PEARL);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "ability_drop"), () -> ABILITY_DROP);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "mob_ability"), () -> MOB_ABILITY);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "ability_stick"), () -> ABILITY_STICK);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "frog_crafting_table"), () -> FROG_CRAFTING_TABLE_ITEM);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "frog_potion_stand"), () -> FROG_POTION_STAND_ITEM);
+        event.register(net.minecraft.core.registries.Registries.ITEM, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "ability_crafting_table"), () -> ABILITY_CRAFTING_TABLE_ITEM);
+    }
+
+    private static void onBuildCreativeTabContents(BuildCreativeModeTabContentsEvent event) {
+        if (event.getTabKey() != CreativeModeTabs.INGREDIENTS) {
+            return;
+        }
+
+        event.accept(FROG_HELPER_SPAWN_EGG);
+        event.accept(SLIME_HELPER_SPAWN_EGG);
+        event.accept(EVOLUTION_STONE);
+        event.accept(SLIME_FOOD);
+        event.accept(FROG_FOOD);
+        event.accept(FINAL_EVOLUTION_CRYSTAL);
+        event.accept(TASK_BOOK);
+        event.accept(DREAM_SWORD);
+        event.accept(TECHNOBLADE_SWORD);
+        event.accept(GRIAN_SWORD);
+        event.accept(MUMBO_JUMBO_SWORD);
+        event.accept(MUSTARD_HELMET);
+        event.accept(ORPHAN_SHIELD);
+        event.accept(PRANKSTER_CHESTPLATE);
+        event.accept(MINER_ROLE);
+        event.accept(LUMBERJACK_ROLE);
+        event.accept(COMBAT_ROLE);
+        event.accept(BUILDER_ROLE);
+        event.accept(FARMER_ROLE);
+        event.accept(MANHUNT_COMPASS);
+        event.accept(HUNTER_TRACKER);
+        event.accept(SPEEDRUNNER_BOOTS);
+        event.accept(HUNTER_NET);
+        event.accept(ESCAPE_PEARL);
+        event.accept(ABILITY_DROP);
+        event.accept(MOB_ABILITY);
+        event.accept(ABILITY_STICK);
+        event.accept(FROG_CRAFTING_TABLE_ITEM);
+        event.accept(FROG_POTION_STAND_ITEM);
+        event.accept(ABILITY_CRAFTING_TABLE_ITEM);
     }
 }

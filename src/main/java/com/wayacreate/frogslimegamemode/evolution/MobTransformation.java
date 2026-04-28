@@ -1,27 +1,27 @@
 package com.wayacreate.frogslimegamemode.evolution;
 
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 import java.util.Objects;
 
 public enum MobTransformation {
-    FROG("frog", "Frog", Formatting.GREEN),
-    SLIME("slime", "Slime", Formatting.GREEN),
-    ENDERMAN("enderman", "Ender Frog", Formatting.DARK_PURPLE),
-    BLAZE("blaze", "Blaze Frog", Formatting.GOLD),
-    WITCH("witch", "Witch Frog", Formatting.LIGHT_PURPLE),
-    IRON_GOLEM("iron_golem", "Iron Frog", Formatting.GRAY),
-    SNOW_GOLEM("snow_golem", "Frost Frog", Formatting.AQUA),
-    VILLAGER("villager", "Merchant Frog", Formatting.YELLOW),
-    PIGLIN("piglin", "Piglin Frog", Formatting.GOLD),
-    WARDEN("warden", "Warden Frog", Formatting.DARK_BLUE);
+    FROG("frog", "Frog", ChatFormatting.GREEN),
+    SLIME("slime", "Slime", ChatFormatting.GREEN),
+    ENDERMAN("enderman", "Ender Frog", ChatFormatting.DARK_PURPLE),
+    BLAZE("blaze", "Blaze Frog", ChatFormatting.GOLD),
+    WITCH("witch", "Witch Frog", ChatFormatting.LIGHT_PURPLE),
+    IRON_GOLEM("iron_golem", "Iron Frog", ChatFormatting.GRAY),
+    SNOW_GOLEM("snow_golem", "Frost Frog", ChatFormatting.AQUA),
+    VILLAGER("villager", "Merchant Frog", ChatFormatting.YELLOW),
+    PIGLIN("piglin", "Piglin Frog", ChatFormatting.GOLD),
+    WARDEN("warden", "Warden Frog", ChatFormatting.DARK_BLUE);
     
     private final String id;
     private final String displayName;
-    private final Formatting color;
+    private final ChatFormatting color;
     
-    MobTransformation(String id, String displayName, Formatting color) {
+    MobTransformation(String id, String displayName, ChatFormatting color) {
         this.id = id;
         this.displayName = displayName;
         this.color = color;
@@ -35,12 +35,12 @@ public enum MobTransformation {
         return displayName;
     }
     
-    public Formatting getColor() {
+    public ChatFormatting getColor() {
         return color;
     }
     
-    public Text getFormattedName() {
-        return Text.literal(displayName).formatted(color, Formatting.BOLD);
+    public Component getFormattedName() {
+        return Component.literal(displayName).formatted(color, ChatFormatting.BOLD);
     }
     
     public static MobTransformation fromId(String id) {

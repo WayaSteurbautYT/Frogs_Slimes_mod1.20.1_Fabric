@@ -1,9 +1,9 @@
 package com.wayacreate.frogslimegamemode.gamemode;
 
 import com.wayacreate.frogslimegamemode.FrogSlimeGamemode;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,46 +21,46 @@ public class EconomyManager {
         playerBalances.put(uuid, amount);
     }
     
-    public static void addCoins(ServerPlayerEntity player, int amount) {
+    public static void addCoins(ServerPlayer player, int amount) {
         UUID uuid = player.getUuid();
         int currentBalance = getBalance(uuid);
         int newBalance = currentBalance + amount;
         playerBalances.put(uuid, newBalance);
         
-        player.sendMessage(Text.literal("+" + amount + " coins")
-            .formatted(Formatting.GOLD), false);
+        player.sendMessage(Component.literal("+" + amount + " coins")
+            .formatted(ChatFormatting.GOLD), false);
         
         FrogSlimeGamemode.LOGGER.info("Player " + player.getName().getString() + " received " + amount + " coins. New balance: " + newBalance);
     }
     
-    public static boolean removeCoins(ServerPlayerEntity player, int amount) {
+    public static boolean removeCoins(ServerPlayer player, int amount) {
         UUID uuid = player.getUuid();
         int currentBalance = getBalance(uuid);
         
         if (currentBalance < amount) {
-            player.sendMessage(Text.literal("Not enough coins! You have " + currentBalance + " but need " + amount)
-                .formatted(Formatting.RED), false);
+            player.sendMessage(Component.literal("Not enough coins! You have " + currentBalance + " but need " + amount)
+                .formatted(ChatFormatting.RED), false);
             return false;
         }
         
         int newBalance = currentBalance - amount;
         playerBalances.put(uuid, newBalance);
         
-        player.sendMessage(Text.literal("-" + amount + " coins")
-            .formatted(Formatting.RED), false);
+        player.sendMessage(Component.literal("-" + amount + " coins")
+            .formatted(ChatFormatting.RED), false);
         
         FrogSlimeGamemode.LOGGER.info("Player " + player.getName().getString() + " spent " + amount + " coins. New balance: " + newBalance);
         return true;
     }
     
-    public static void sendCoins(ServerPlayerEntity sender, ServerPlayerEntity receiver, int amount) {
+    public static void sendCoins(ServerPlayer sender, ServerPlayer receiver, int amount) {
         if (removeCoins(sender, amount)) {
             addCoins(receiver, amount);
             
-            sender.sendMessage(Text.literal("Sent " + amount + " coins to " + receiver.getName().getString())
-                .formatted(Formatting.GREEN), false);
-            receiver.sendMessage(Text.literal("Received " + amount + " coins from " + sender.getName().getString())
-                .formatted(Formatting.GREEN), false);
+            sender.sendMessage(Component.literal("Sent " + amount + " coins to " + receiver.getName().getString())
+                .formatted(ChatFormatting.GREEN), false);
+            receiver.sendMessage(Component.literal("Received " + amount + " coins from " + sender.getName().getString())
+                .formatted(ChatFormatting.GREEN), false);
             
             // Track trades
             incrementTrade(sender.getUuid());
@@ -68,10 +68,10 @@ public class EconomyManager {
         }
     }
     
-    public static void checkBalance(ServerPlayerEntity player) {
+    public static void checkBalance(ServerPlayer player) {
         int balance = getBalance(player.getUuid());
-        player.sendMessage(Text.literal("Balance: " + balance + " coins")
-            .formatted(Formatting.GOLD), false);
+        player.sendMessage(Component.literal("Balance: " + balance + " coins")
+            .formatted(ChatFormatting.GOLD), false);
     }
     
     private static void incrementTrade(UUID uuid) {

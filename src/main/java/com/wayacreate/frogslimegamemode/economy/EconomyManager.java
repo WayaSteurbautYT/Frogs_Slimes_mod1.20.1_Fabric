@@ -1,6 +1,6 @@
 package com.wayacreate.frogslimegamemode.economy;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -10,19 +10,19 @@ public class EconomyManager {
     private static final Map<UUID, Integer> totalTrades = new HashMap<>();
     private static final int STARTING_BALANCE = 100;
     
-    public static int getBalance(ServerPlayerEntity player) {
+    public static int getBalance(ServerPlayer player) {
         return playerBalances.getOrDefault(player.getUuid(), STARTING_BALANCE);
     }
     
-    public static void setBalance(ServerPlayerEntity player, int amount) {
+    public static void setBalance(ServerPlayer player, int amount) {
         playerBalances.put(player.getUuid(), Math.max(0, amount));
     }
     
-    public static void addBalance(ServerPlayerEntity player, int amount) {
+    public static void addBalance(ServerPlayer player, int amount) {
         setBalance(player, getBalance(player) + amount);
     }
     
-    public static boolean removeBalance(ServerPlayerEntity player, int amount) {
+    public static boolean removeBalance(ServerPlayer player, int amount) {
         int current = getBalance(player);
         if (current < amount) {
             return false;
@@ -31,7 +31,7 @@ public class EconomyManager {
         return true;
     }
     
-    public static boolean transfer(ServerPlayerEntity from, ServerPlayerEntity to, int amount) {
+    public static boolean transfer(ServerPlayer from, ServerPlayer to, int amount) {
         if (!removeBalance(from, amount)) {
             return false;
         }
@@ -45,7 +45,7 @@ public class EconomyManager {
         return totalTrades.getOrDefault(uuid, 0);
     }
 
-    public static void recordTrade(ServerPlayerEntity first, ServerPlayerEntity second) {
+    public static void recordTrade(ServerPlayer first, ServerPlayer second) {
         incrementTrade(first.getUuid());
         incrementTrade(second.getUuid());
     }

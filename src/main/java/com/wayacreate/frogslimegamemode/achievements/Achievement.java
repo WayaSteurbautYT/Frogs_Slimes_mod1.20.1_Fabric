@@ -1,15 +1,15 @@
 package com.wayacreate.frogslimegamemode.achievements;
 
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 public class Achievement {
     private final String id;
     private final String name;
     private final String description;
-    private final Formatting color;
+    private final ChatFormatting color;
     
-    public Achievement(String id, String name, String description, Formatting color) {
+    public Achievement(String id, String name, String description, ChatFormatting color) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -28,15 +28,15 @@ public class Achievement {
         return description;
     }
     
-    public Formatting getColor() {
+    public ChatFormatting getColor() {
         return color;
     }
     
-    public Text getFormattedName() {
-        return Text.literal(name).formatted(color, Formatting.BOLD);
+    public Component getFormattedName() {
+        return Component.literal(name).formatted(color, ChatFormatting.BOLD);
     }
     
-    public Text getFormattedDescription() {
-        return Text.literal(description).formatted(Formatting.GRAY);
+    public Component getFormattedDescription() {
+        return Component.literal(description).formatted(ChatFormatting.GRAY);
     }
 }

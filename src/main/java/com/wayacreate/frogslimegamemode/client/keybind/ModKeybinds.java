@@ -1,107 +1,104 @@
 package com.wayacreate.frogslimegamemode.client.keybind;
 
+import com.wayacreate.frogslimegamemode.client.gui.CollectionsScreen;
 import com.wayacreate.frogslimegamemode.client.gui.FrogSlimeGamemodeScreen;
 import com.wayacreate.frogslimegamemode.client.gui.SkillsScreen;
-import com.wayacreate.frogslimegamemode.client.gui.CollectionsScreen;
-import com.wayacreate.frogslimegamemode.network.ModNetworking;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
+import com.wayacreate.frogslimegamemode.network.ModNetworkingClient;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.KeyMapping;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.neoforged.neoforge.common.NeoForge;
 import org.lwjgl.glfw.GLFW;
 
 public class ModKeybinds {
-    public static KeyBinding openGuiKey;
-    public static KeyBinding openSkillsKey;
-    public static KeyBinding openCollectionsKey;
-    public static KeyBinding useAbilityKey;
-    public static KeyBinding switchAbilityKey;
-    public static KeyBinding consumeAbilityKey;
-    
-    public static void register() {
-        openGuiKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-            "key.frogslimegamemode.open_gui",
-            InputUtil.Type.KEYSYM,
-            GLFW.GLFW_KEY_G,
-            "category.frogslimegamemode"
-        ));
-        
-        openSkillsKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-            "key.frogslimegamemode.open_skills",
-            InputUtil.Type.KEYSYM,
-            GLFW.GLFW_KEY_K,
-            "category.frogslimegamemode"
-        ));
-        
-        openCollectionsKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-            "key.frogslimegamemode.open_collections",
-            InputUtil.Type.KEYSYM,
-            GLFW.GLFW_KEY_C,
-            "category.frogslimegamemode"
-        ));
-        
-        useAbilityKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-            "key.frogslimegamemode.use_ability",
-            InputUtil.Type.KEYSYM,
-            GLFW.GLFW_KEY_R,
-            "category.frogslimegamemode"
-        ));
-        
-        switchAbilityKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-            "key.frogslimegamemode.switch_ability",
-            InputUtil.Type.KEYSYM,
-            GLFW.GLFW_KEY_TAB,
-            "category.frogslimegamemode"
-        ));
-        
-        consumeAbilityKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-            "key.frogslimegamemode.consume_ability",
-            InputUtil.Type.KEYSYM,
-            GLFW.GLFW_KEY_X,
-            "category.frogslimegamemode"
-        ));
-        
-        ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (openGuiKey.wasPressed()) {
-                if (client.player != null) {
-                    ClientPlayNetworking.send(ModNetworking.REQUEST_PROGRESS_SNAPSHOT,
-                        net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create());
-                    client.setScreen(new FrogSlimeGamemodeScreen(client.player));
-                }
-            }
-            if (openSkillsKey.wasPressed()) {
-                if (client.player != null) {
-                    ClientPlayNetworking.send(ModNetworking.REQUEST_PROGRESS_SNAPSHOT,
-                        net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create());
-                }
-                client.setScreen(new SkillsScreen());
-            }
-            if (openCollectionsKey.wasPressed()) {
-                if (client.player != null) {
-                    ClientPlayNetworking.send(ModNetworking.REQUEST_PROGRESS_SNAPSHOT,
-                        net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create());
-                }
-                client.setScreen(new CollectionsScreen());
-            }
-            if (useAbilityKey.wasPressed()) {
-                if (client.player != null) {
-                    ClientPlayNetworking.send(ModNetworking.USE_ABILITY, 
-                        net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create());
-                }
-            }
-            if (switchAbilityKey.wasPressed()) {
-                if (client.player != null) {
-                    ClientPlayNetworking.send(ModNetworking.SWITCH_ABILITY, 
-                        net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create());
-                }
-            }
-            if (consumeAbilityKey.wasPressed()) {
-                if (client.player != null) {
-                    ClientPlayNetworking.send(ModNetworking.CONSUME_ABILITY_ITEM, 
-                        net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create());
-                }
-            }
-        });
+    public static final KeyMapping openGuiKey = new KeyMapping(
+        "key.frogslimegamemode.open_gui",
+        InputConstants.Type.KEYSYM,
+        GLFW.GLFW_KEY_G,
+        "category.frogslimegamemode"
+    );
+    public static final KeyMapping openSkillsKey = new KeyMapping(
+        "key.frogslimegamemode.open_skills",
+        InputConstants.Type.KEYSYM,
+        GLFW.GLFW_KEY_K,
+        "category.frogslimegamemode"
+    );
+    public static final KeyMapping openCollectionsKey = new KeyMapping(
+        "key.frogslimegamemode.open_collections",
+        InputConstants.Type.KEYSYM,
+        GLFW.GLFW_KEY_C,
+        "category.frogslimegamemode"
+    );
+    public static final KeyMapping useAbilityKey = new KeyMapping(
+        "key.frogslimegamemode.use_ability",
+        InputConstants.Type.KEYSYM,
+        GLFW.GLFW_KEY_R,
+        "category.frogslimegamemode"
+    );
+    public static final KeyMapping switchAbilityKey = new KeyMapping(
+        "key.frogslimegamemode.switch_ability",
+        InputConstants.Type.KEYSYM,
+        GLFW.GLFW_KEY_TAB,
+        "category.frogslimegamemode"
+    );
+    public static final KeyMapping consumeAbilityKey = new KeyMapping(
+        "key.frogslimegamemode.consume_ability",
+        InputConstants.Type.KEYSYM,
+        GLFW.GLFW_KEY_X,
+        "category.frogslimegamemode"
+    );
+
+    private ModKeybinds() {
+    }
+
+    public static void register(IEventBus modBus) {
+        modBus.addListener(ModKeybinds::onRegisterKeyMappings);
+        NeoForge.EVENT_BUS.addListener(ModKeybinds::onClientTick);
+    }
+
+    private static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
+        event.register(openGuiKey);
+        event.register(openSkillsKey);
+        event.register(openCollectionsKey);
+        event.register(useAbilityKey);
+        event.register(switchAbilityKey);
+        event.register(consumeAbilityKey);
+    }
+
+    private static void onClientTick(ClientTickEvent.Post event) {
+        Minecraft client = Minecraft.getInstance();
+        if (client.player == null) {
+            return;
+        }
+
+        while (openGuiKey.wasPressed()) {
+            ModNetworkingClient.requestProgressSnapshot();
+            client.setScreen(new FrogSlimeGamemodeScreen(client.player));
+        }
+
+        while (openSkillsKey.wasPressed()) {
+            ModNetworkingClient.requestProgressSnapshot();
+            client.setScreen(new SkillsScreen());
+        }
+
+        while (openCollectionsKey.wasPressed()) {
+            ModNetworkingClient.requestProgressSnapshot();
+            client.setScreen(new CollectionsScreen());
+        }
+
+        while (useAbilityKey.wasPressed()) {
+            ModNetworkingClient.sendUseAbility();
+        }
+
+        while (switchAbilityKey.wasPressed()) {
+            ModNetworkingClient.sendSwitchAbility();
+        }
+
+        while (consumeAbilityKey.wasPressed()) {
+            ModNetworkingClient.sendConsumeAbilityItem();
+        }
     }
 }

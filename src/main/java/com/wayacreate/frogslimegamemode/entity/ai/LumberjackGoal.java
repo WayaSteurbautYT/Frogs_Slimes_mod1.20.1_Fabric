@@ -1,17 +1,17 @@
 package com.wayacreate.frogslimegamemode.entity.ai;
 
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.passive.TameableEntity;
-import net.minecraft.block.Blocks;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 public class LumberjackGoal extends Goal {
-    private final TameableEntity entity;
-    private final World world;
+    private final TamableAnimal entity;
+    private final Level world;
     private int cooldown;
     
-    public LumberjackGoal(TameableEntity entity) {
+    public LumberjackGoal(TamableAnimal entity) {
         this.entity = entity;
         this.world = entity.getWorld();
         this.cooldown = 0;
@@ -72,7 +72,7 @@ public class LumberjackGoal extends Goal {
         }
     }
     
-    private boolean isLog(net.minecraft.block.Block block) {
+    private boolean isLog(net.minecraft.world.level.block.Block block) {
         return block == Blocks.OAK_LOG ||
                block == Blocks.SPRUCE_LOG ||
                block == Blocks.BIRCH_LOG ||

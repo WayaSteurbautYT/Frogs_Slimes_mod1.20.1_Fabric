@@ -3,14 +3,14 @@ package com.wayacreate.frogslimegamemode.abilities;
 import com.wayacreate.frogslimegamemode.eating.MobAbility;
 import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
 import com.wayacreate.frogslimegamemode.network.ModNetworking;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,18 +20,18 @@ public class PlayerAbilityManager {
     private static final Map<UUID, Integer> currentAbilityIndex = new HashMap<>();
     private static final Map<UUID, Integer> abilityCooldowns = new HashMap<>();
     
-    public static void switchToNextAbility(ServerPlayerEntity player) {
+    public static void switchToNextAbility(ServerPlayer player) {
         if (!GamemodeManager.isInGamemode(player)) {
-            player.sendMessage(Text.literal("You're not in the gamemode!")
-                .formatted(Formatting.RED), true);
+            player.sendSystemMessage(Component.literal("You're not in the gamemode!")
+                .withStyle(ChatFormatting.RED), true);
             return;
         }
         
         var abilities = GamemodeManager.getData(player).getPlayerAbilities();
         
         if (abilities.isEmpty()) {
-            player.sendMessage(Text.literal("You have no abilities yet!")
-                .formatted(Formatting.RED), true);
+            player.sendSystemMessage(Component.literal("You have no abilities yet!")
+                .withStyle(ChatFormatting.RED), true);
             return;
         }
         
@@ -42,32 +42,32 @@ public class PlayerAbilityManager {
         
         MobAbility ability = MobAbility.getAbility(abilities.get(newIndex));
         if (ability != null) {
-            player.sendMessage(Text.literal("Switched to: ")
-                .formatted(Formatting.GREEN)
+            player.sendSystemMessage(Component.literal("Switched to: ")
+                .withStyle(ChatFormatting.GREEN)
                 .append(ability.getFormattedName()), true);
             
-            ModNetworking.showTitle(player, ability.getName(), ability.getDescription(), Formatting.LIGHT_PURPLE);
+            ModNetworking.showTitle(player, ability.getName(), ability.getDescription(), ChatFormatting.LIGHT_PURPLE);
         }
     }
     
-    public static void useCurrentAbility(ServerPlayerEntity player) {
+    public static void useCurrentAbility(ServerPlayer player) {
         if (!GamemodeManager.isInGamemode(player)) {
-            player.sendMessage(Text.literal("You're not in the gamemode!")
-                .formatted(Formatting.RED), true);
+            player.sendSystemMessage(Component.literal("You're not in the gamemode!")
+                .withStyle(ChatFormatting.RED), true);
             return;
         }
         
         UUID uuid = player.getUuid();
         if (abilityCooldowns.getOrDefault(uuid, 0) > 0) {
-            player.sendMessage(Text.literal("Ability on cooldown: " + abilityCooldowns.get(uuid) + "s")
-                .formatted(Formatting.RED), true);
+            player.sendSystemMessage(Component.literal("Ability on cooldown: " + abilityCooldowns.get(uuid) + "s")
+                .withStyle(ChatFormatting.RED), true);
             return;
         }
         
         var abilities = GamemodeManager.getData(player).getPlayerAbilities();
         if (abilities.isEmpty()) {
-            player.sendMessage(Text.literal("You have no abilities yet!")
-                .formatted(Formatting.RED), true);
+            player.sendSystemMessage(Component.literal("You have no abilities yet!")
+                .withStyle(ChatFormatting.RED), true);
             return;
         }
         
@@ -76,8 +76,8 @@ public class PlayerAbilityManager {
         
         if (ability != null) {
             if (ability.getActiveAbility() == MobAbility.AbilityType.NONE) {
-                player.sendMessage(Text.literal("This ability has no active effect!")
-                    .formatted(Formatting.YELLOW), true);
+                player.sendSystemMessage(Component.literal("This ability has no active effect!")
+                    .withStyle(ChatFormatting.YELLOW), true);
                 return;
             }
             
@@ -88,16 +88,16 @@ public class PlayerAbilityManager {
             ModNetworking.sendTotemAnimation(player, 
                 "Ability Used!", 
                 ability.getName() + " - " + ability.getDescription(), 
-                Formatting.LIGHT_PURPLE);
+                ChatFormatting.LIGHT_PURPLE);
             
-            player.sendMessage(Text.literal("Used: ")
-                .formatted(Formatting.GREEN)
+            player.sendSystemMessage(Component.literal("Used: ")
+                .withStyle(ChatFormatting.GREEN)
                 .append(ability.getFormattedName()), true);
         }
     }
     
-    private static void executeAbility(ServerPlayerEntity player, MobAbility ability) {
-        ServerWorld world = (ServerWorld) player.getWorld();
+    private static void executeAbility(ServerPlayer player, MobAbility ability) {
+        ServerLevel world = player.serverLevel();
         
         switch (ability.getActiveAbility()) {
             case TELEPORT -> executeTeleport(player, world);
@@ -140,28 +140,28 @@ public class PlayerAbilityManager {
         }
     }
     
-    private static void executeTeleport(ServerPlayerEntity player, ServerWorld world) {
-        Vec3d lookDir = player.getRotationVector();
+    private static void executeTeleport(ServerPlayer player, ServerLevel world) {
+        Vec3 lookDir = player.getLookAngle();
         double teleportDistance = 8.0;
-        Vec3d newPos = player.getPos().add(lookDir.multiply(teleportDistance));
+        Vec3 newPos = player.position().add(lookDir.scale(teleportDistance));
         
-        player.teleport(newPos.x, newPos.y, newPos.z);
+        player.teleportTo(newPos.x, newPos.y, newPos.z);
         
         for (int i = 0; i < 20; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.PORTAL,
+            world.sendParticles(ParticleTypes.PORTAL,
                 player.getX() + px, player.getY() + py, player.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
     }
     
-    private static void executeFireball(ServerPlayerEntity player, ServerWorld world) {
-        Vec3d lookDir = player.getRotationVector();
+    private static void executeFireball(ServerPlayer player, ServerLevel world) {
+        Vec3 lookDir = player.getLookAngle();
         
         for (int i = 0; i < 5; i++) {
-            world.spawnParticles(ParticleTypes.FLAME,
+            world.sendParticles(ParticleTypes.FLAME,
                 player.getX() + lookDir.x * i,
                 player.getY() + 1.5,
                 player.getZ() + lookDir.z * i,
@@ -169,19 +169,19 @@ public class PlayerAbilityManager {
         }
         
         // Damage entities in front of player
-        world.getOtherEntities(player, player.getBoundingBox().expand(10)).forEach(entity -> {
+        world.getEntities(player, player.getBoundingBox().inflate(10)).forEach(entity -> {
             if (entity.distanceTo(player) < 10) {
-                entity.damage(world.getDamageSources().magic(), 8.0f);
-                entity.setFireTicks(60);
+                entity.hurt(world.damageSources().magic(), 8.0f);
+                entity.setRemainingFireTicks(60);
             }
         });
     }
     
-    private static void executeIceSummon(ServerPlayerEntity player, ServerWorld world) {
+    private static void executeIceSummon(ServerPlayer player, ServerLevel world) {
         for (int i = 0; i < 20; i++) {
             double offsetX = (world.random.nextDouble() - 0.5) * 5;
             double offsetZ = (world.random.nextDouble() - 0.5) * 5;
-            world.spawnParticles(ParticleTypes.SNOWFLAKE,
+            world.sendParticles(ParticleTypes.SNOWFLAKE,
                 player.getX() + offsetX,
                 player.getY() + 1,
                 player.getZ() + offsetZ,
@@ -189,19 +189,19 @@ public class PlayerAbilityManager {
         }
         
         // Slow nearby entities
-        world.getOtherEntities(player, player.getBoundingBox().expand(5)).forEach(entity -> {
-            if (entity instanceof net.minecraft.entity.LivingEntity living) {
-                living.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 100, 2));
+        world.getEntities(player, player.getBoundingBox().inflate(5)).forEach(entity -> {
+            if (entity instanceof net.minecraft.world.entity.LivingEntity living) {
+                living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 2));
             }
         });
     }
     
-    private static void executePoisonCloud(ServerPlayerEntity player, ServerWorld world) {
+    private static void executePoisonCloud(ServerPlayer player, ServerLevel world) {
         for (int i = 0; i < 30; i++) {
             double offsetX = (world.random.nextDouble() - 0.5) * 5;
             double offsetY = world.random.nextDouble() * 2;
             double offsetZ = (world.random.nextDouble() - 0.5) * 5;
-            world.spawnParticles(ParticleTypes.EFFECT,
+            world.sendParticles(ParticleTypes.EFFECT,
                 player.getX() + offsetX,
                 player.getY() + offsetY,
                 player.getZ() + offsetZ,
@@ -209,62 +209,62 @@ public class PlayerAbilityManager {
         }
         
         // Poison nearby entities
-        world.getOtherEntities(player, player.getBoundingBox().expand(5)).forEach(entity -> {
-            if (entity instanceof net.minecraft.entity.LivingEntity living) {
-                living.addStatusEffect(new StatusEffectInstance(StatusEffects.POISON, 150, 1));
+        world.getEntities(player, player.getBoundingBox().inflate(5)).forEach(entity -> {
+            if (entity instanceof net.minecraft.world.entity.LivingEntity living) {
+                living.addEffect(new MobEffectInstance(MobEffects.POISON, 150, 1));
             }
         });
     }
     
-    private static void executeLightningStrike(ServerPlayerEntity player, ServerWorld world) {
-        Vec3d lookDir = player.getRotationVector();
-        Vec3d targetPos = player.getPos().add(lookDir.multiply(15));
+    private static void executeLightningStrike(ServerPlayer player, ServerLevel world) {
+        Vec3 lookDir = player.getLookAngle();
+        Vec3 targetPos = player.position().add(lookDir.scale(15));
         
-        world.spawnParticles(ParticleTypes.ELECTRIC_SPARK,
+        world.sendParticles(ParticleTypes.ELECTRIC_SPARK,
             targetPos.x, targetPos.y + 2, targetPos.z,
             15, 0.5, 0.5, 0.5, 0.1);
         
         // Strike lightning at target position
-        net.minecraft.entity.LightningEntity lightning = net.minecraft.entity.EntityType.LIGHTNING_BOLT.create(world);
+        net.minecraft.world.entity.LightningBolt lightning = net.minecraft.world.entity.EntityType.LIGHTNING_BOLT.create(world);
         if (lightning != null) {
-            lightning.setPosition(targetPos);
-            world.spawnEntity(lightning);
+            lightning.setPos(targetPos);
+            world.addFreshEntity(lightning);
         }
         
         // Damage entities in area
-        world.getOtherEntities(player, player.getBoundingBox().expand(15)).forEach(entity -> {
+        world.getEntities(player, player.getBoundingBox().inflate(15)).forEach(entity -> {
             if (entity.distanceTo(player) < 15) {
-                entity.damage(world.getDamageSources().magic(), 12.0f);
+                entity.hurt(world.damageSources().magic(), 12.0f);
             }
         });
     }
     
-    private static void executeLeapAttack(ServerPlayerEntity player, ServerWorld world) {
-        Vec3d lookDir = player.getRotationVector();
-        Vec3d velocity = lookDir.multiply(1.5).add(0, 0.8, 0);
+    private static void executeLeapAttack(ServerPlayer player, ServerLevel world) {
+        Vec3 lookDir = player.getLookAngle();
+        Vec3 velocity = lookDir.scale(1.5).add(0, 0.8, 0);
         
-        player.addVelocity(velocity);
-        player.velocityModified = true;
+        player.push(velocity.x, velocity.y, velocity.z);
+        player.hasImpulse = true;
         
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.CLOUD,
+            world.sendParticles(ParticleTypes.CLOUD,
                 player.getX() + px, player.getY() + py, player.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
         // Give jump boost
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.JUMP_BOOST, 200, 3));
+        player.addEffect(new MobEffectInstance(MobEffects.JUMP, 200, 3));
     }
     
-    private static void executeSonicBoom(ServerPlayerEntity player, ServerWorld world) {
+    private static void executeSonicBoom(ServerPlayer player, ServerLevel world) {
         for (int i = 0; i < 40; i++) {
             double angle = (i / 40.0) * Math.PI * 2;
             double offsetX = Math.cos(angle) * 4;
             double offsetZ = Math.sin(angle) * 4;
-            world.spawnParticles(ParticleTypes.SONIC_BOOM,
+            world.sendParticles(ParticleTypes.SONIC_BOOM,
                 player.getX() + offsetX,
                 player.getY() + 1,
                 player.getZ() + offsetZ,
@@ -272,172 +272,172 @@ public class PlayerAbilityManager {
         }
         
         // Knockback and damage nearby entities
-        world.getOtherEntities(player, player.getBoundingBox().expand(6)).forEach(entity -> {
+        world.getEntities(player, player.getBoundingBox().inflate(6)).forEach(entity -> {
             if (entity.distanceTo(player) < 6) {
-                entity.damage(world.getDamageSources().magic(), 10.0f);
-                Vec3d knockbackDir = entity.getPos().subtract(player.getPos()).normalize();
-                entity.addVelocity(knockbackDir.x * 2.0, 0.5, knockbackDir.z * 2.0);
-                entity.velocityModified = true;
+                entity.hurt(world.damageSources().magic(), 10.0f);
+                Vec3 knockbackDir = entity.position().subtract(player.position()).normalize();
+                entity.push(knockbackDir.x * 2.0, 0.5, knockbackDir.z * 2.0);
+                entity.hasImpulse = true;
             }
         });
     }
     
-    private static void executeWebShot(ServerPlayerEntity player, ServerWorld world) {
-        Vec3d lookDir = player.getRotationVector();
-        Vec3d targetPos = player.getPos().add(lookDir.multiply(12));
+    private static void executeWebShot(ServerPlayer player, ServerLevel world) {
+        Vec3 lookDir = player.getLookAngle();
+        Vec3 targetPos = player.position().add(lookDir.scale(12));
         
-        world.spawnParticles(ParticleTypes.ITEM_SNOWBALL,
+        world.sendParticles(ParticleTypes.ITEM_SNOWBALL,
             targetPos.x, targetPos.y + 1, targetPos.z,
             15, 0.3, 0.3, 0.3, 0.02);
         
         // Web nearby entities
-        world.getOtherEntities(player, player.getBoundingBox().expand(12)).forEach(entity -> {
-            if (entity.distanceTo(player) < 12 && entity instanceof net.minecraft.entity.LivingEntity living) {
-                living.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 200, 3));
-                living.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 200, 1));
+        world.getEntities(player, player.getBoundingBox().inflate(12)).forEach(entity -> {
+            if (entity.distanceTo(player) < 12 && entity instanceof net.minecraft.world.entity.LivingEntity living) {
+                living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 200, 3));
+                living.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 200, 1));
             }
         });
     }
     
-    private static void executeThorns(ServerPlayerEntity player, ServerWorld world) {
+    private static void executeThorns(ServerPlayer player, ServerLevel world) {
         for (int i = 0; i < 20; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.DAMAGE_INDICATOR,
+            world.sendParticles(ParticleTypes.DAMAGE_INDICATOR,
                 player.getX() + px, player.getY() + py, player.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
         // Damage attacking entities
-        world.getOtherEntities(player, player.getBoundingBox().expand(3)).forEach(entity -> {
+        world.getEntities(player, player.getBoundingBox().inflate(3)).forEach(entity -> {
             if (entity.distanceTo(player) < 3) {
-                entity.damage(world.getDamageSources().thorns(player), 6.0f);
+                entity.hurt(world.damageSources().thorns(player), 6.0f);
             }
         });
         
         // Give thorns effect
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 200, 1));
+        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 200, 1));
     }
     
-    private static void executeProjectileShot(ServerPlayerEntity player, ServerWorld world) {
-        Vec3d lookDir = player.getRotationVector();
-        Vec3d targetPos = player.getPos().add(lookDir.multiply(15));
+    private static void executeProjectileShot(ServerPlayer player, ServerLevel world) {
+        Vec3 lookDir = player.getLookAngle();
+        Vec3 targetPos = player.position().add(lookDir.scale(15));
         
-        world.spawnParticles(ParticleTypes.SPLASH,
+        world.sendParticles(ParticleTypes.SPLASH,
             targetPos.x, targetPos.y + 1, targetPos.z,
             10, 0.2, 0.2, 0.2, 0.01);
         
         // Damage entities in line of sight
-        world.getOtherEntities(player, player.getBoundingBox().expand(15)).forEach(entity -> {
+        world.getEntities(player, player.getBoundingBox().inflate(15)).forEach(entity -> {
             if (entity.distanceTo(player) < 15) {
-                entity.damage(world.getDamageSources().mobAttack(player), 6.0f);
+                entity.hurt(world.damageSources().mobAttack(player), 6.0f);
             }
         });
     }
     
-    private static void executeExplosion(ServerPlayerEntity player, ServerWorld world) {
-        Vec3d lookDir = player.getRotationVector();
-        Vec3d targetPos = player.getPos().add(lookDir.multiply(8));
+    private static void executeExplosion(ServerPlayer player, ServerLevel world) {
+        Vec3 lookDir = player.getLookAngle();
+        Vec3 targetPos = player.position().add(lookDir.scale(8));
         
-        world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER,
+        world.sendParticles(ParticleTypes.EXPLOSION_EMITTER,
             targetPos.x, targetPos.y + 1, targetPos.z,
             1, 0.0, 0.0, 0.0, 0.0);
         
         // Damage entities in area
-        world.getOtherEntities(player, player.getBoundingBox().expand(8)).forEach(entity -> {
+        world.getEntities(player, player.getBoundingBox().inflate(8)).forEach(entity -> {
             if (entity.distanceTo(player) < 8) {
-                entity.damage(world.getDamageSources().magic(), 10.0f);
+                entity.hurt(world.damageSources().magic(), 10.0f);
             }
         });
     }
     
-    private static void executeHealing(ServerPlayerEntity player, ServerWorld world) {
+    private static void executeHealing(ServerPlayer player, ServerLevel world) {
         for (int i = 0; i < 20; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.HEART,
+            world.sendParticles(ParticleTypes.HEART,
                 player.getX() + px, player.getY() + py, player.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
         player.heal(8.0f);
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 200, 1));
+        player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 200, 1));
     }
     
-    private static void executeInvisibility(ServerPlayerEntity player, ServerWorld world) {
+    private static void executeInvisibility(ServerPlayer player, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.EFFECT,
+            world.sendParticles(ParticleTypes.EFFECT,
                 player.getX() + px, player.getY() + py, player.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, 300, 0));
+        player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 300, 0));
     }
     
-    private static void executeFireResistance(ServerPlayerEntity player, ServerWorld world) {
+    private static void executeFireResistance(ServerPlayer player, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.FLAME,
+            world.sendParticles(ParticleTypes.FLAME,
                 player.getX() + px, player.getY() + py, player.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.FIRE_RESISTANCE, 600, 0));
-        player.extinguish();
+        player.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 600, 0));
+        player.clearFire();
     }
     
-    private static void executeWaterBreath(ServerPlayerEntity player, ServerWorld world) {
+    private static void executeWaterBreath(ServerPlayer player, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.BUBBLE,
+            world.sendParticles(ParticleTypes.BUBBLE,
                 player.getX() + px, player.getY() + py, player.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.WATER_BREATHING, 600, 0));
+        player.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 600, 0));
     }
     
-    private static void executeNightVision(ServerPlayerEntity player, ServerWorld world) {
+    private static void executeNightVision(ServerPlayer player, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.END_ROD,
+            world.sendParticles(ParticleTypes.END_ROD,
                 player.getX() + px, player.getY() + py, player.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.NIGHT_VISION, 600, 0));
+        player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 600, 0));
     }
     
-    private static void executeSpeedBoost(ServerPlayerEntity player, ServerWorld world) {
+    private static void executeSpeedBoost(ServerPlayer player, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.CLOUD,
+            world.sendParticles(ParticleTypes.CLOUD,
                 player.getX() + px, player.getY() + py, player.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, 400, 2));
+        player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 400, 2));
     }
     
-    private static void executeKnockbackWave(ServerPlayerEntity player, ServerWorld world) {
+    private static void executeKnockbackWave(ServerPlayer player, ServerLevel world) {
         for (int i = 0; i < 30; i++) {
             double angle = (i / 30.0) * Math.PI * 2;
             double offsetX = Math.cos(angle) * 5;
             double offsetZ = Math.sin(angle) * 5;
-            world.spawnParticles(ParticleTypes.EXPLOSION,
+            world.sendParticles(ParticleTypes.EXPLOSION,
                 player.getX() + offsetX,
                 player.getY() + 1,
                 player.getZ() + offsetZ,
@@ -445,254 +445,254 @@ public class PlayerAbilityManager {
         }
         
         // Knockback all nearby entities
-        world.getOtherEntities(player, player.getBoundingBox().expand(8)).forEach(entity -> {
+        world.getEntities(player, player.getBoundingBox().inflate(8)).forEach(entity -> {
             if (entity.distanceTo(player) < 8) {
-                Vec3d knockbackDir = entity.getPos().subtract(player.getPos()).normalize();
-                entity.addVelocity(knockbackDir.x * 3.0, 0.8, knockbackDir.z * 3.0);
-                entity.velocityModified = true;
+                Vec3 knockbackDir = entity.position().subtract(player.position()).normalize();
+                entity.push(knockbackDir.x * 3.0, 0.8, knockbackDir.z * 3.0);
+                entity.hasImpulse = true;
             }
         });
     }
     
-    private static void executeLifeSteal(ServerPlayerEntity player, ServerWorld world) {
+    private static void executeLifeSteal(ServerPlayer player, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.DAMAGE_INDICATOR,
+            world.sendParticles(ParticleTypes.DAMAGE_INDICATOR,
                 player.getX() + px, player.getY() + py, player.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
         // Damage nearby entities and heal player
-        world.getOtherEntities(player, player.getBoundingBox().expand(5)).forEach(entity -> {
-            if (entity.distanceTo(player) < 5 && entity instanceof net.minecraft.entity.LivingEntity living) {
-                living.damage(world.getDamageSources().magic(), 5.0f);
+        world.getEntities(player, player.getBoundingBox().inflate(5)).forEach(entity -> {
+            if (entity.distanceTo(player) < 5 && entity instanceof net.minecraft.world.entity.LivingEntity living) {
+                living.hurt(world.damageSources().magic(), 5.0f);
                 player.heal(3.0f);
             }
         });
     }
     
-    private static void executeShieldBash(ServerPlayerEntity player, ServerWorld world) {
-        Vec3d lookDir = player.getRotationVector();
+    private static void executeShieldBash(ServerPlayer player, ServerLevel world) {
+        Vec3 lookDir = player.getLookAngle();
         
         for (int i = 0; i < 20; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.CLOUD,
+            world.sendParticles(ParticleTypes.CLOUD,
                 player.getX() + px, player.getY() + py, player.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
         // Dash forward and damage
-        Vec3d velocity = lookDir.multiply(2.0);
-        player.addVelocity(velocity);
-        player.velocityModified = true;
+        Vec3 velocity = lookDir.scale(2.0);
+        player.push(velocity.x, velocity.y, velocity.z);
+        player.hasImpulse = true;
         
-        world.getOtherEntities(player, player.getBoundingBox().expand(3)).forEach(entity -> {
+        world.getEntities(player, player.getBoundingBox().inflate(3)).forEach(entity -> {
             if (entity.distanceTo(player) < 3) {
-                entity.damage(world.getDamageSources().playerAttack(player), 8.0f);
-                Vec3d knockbackDir = entity.getPos().subtract(player.getPos()).normalize();
-                entity.addVelocity(knockbackDir.x * 2.5, 0.5, knockbackDir.z * 2.5);
-                entity.velocityModified = true;
+                entity.hurt(world.damageSources().playerAttack(player), 8.0f);
+                Vec3 knockbackDir = entity.position().subtract(player.position()).normalize();
+                entity.push(knockbackDir.x * 2.5, 0.5, knockbackDir.z * 2.5);
+                entity.hasImpulse = true;
             }
         });
     }
     
-    private static void executeLevitation(ServerPlayerEntity player, ServerWorld world) {
+    private static void executeLevitation(ServerPlayer player, ServerLevel world) {
         for (int i = 0; i < 20; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.DRAGON_BREATH,
+            world.sendParticles(ParticleTypes.DRAGON_BREATH,
                 player.getX() + px, player.getY() + py, player.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        player.addVelocity(0, 1.5, 0);
-        player.velocityModified = true;
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 200, 0));
+        player.push(0, 1.5, 0);
+        player.hasImpulse = true;
+        player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 200, 0));
     }
     
-    private static void executeUndeadHealing(ServerPlayerEntity player, ServerWorld world) {
+    private static void executeUndeadHealing(ServerPlayer player, ServerLevel world) {
         for (int i = 0; i < 20; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.DAMAGE_INDICATOR,
+            world.sendParticles(ParticleTypes.DAMAGE_INDICATOR,
                 player.getX() + px, player.getY() + py, player.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
         // Heal player and give regeneration
         player.heal(10.0f);
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 400, 2));
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, 400, 1));
+        player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 400, 2));
+        player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 400, 1));
     }
     
-    private static void executeRegeneration(ServerPlayerEntity player, ServerWorld world) {
+    private static void executeRegeneration(ServerPlayer player, ServerLevel world) {
         for (int i = 0; i < 25; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.HEART,
+            world.sendParticles(ParticleTypes.HEART,
                 player.getX() + px, player.getY() + py, player.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
         player.heal(12.0f);
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 600, 2));
+        player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 600, 2));
     }
     
-    private static void executeStrengthBoost(ServerPlayerEntity player, ServerWorld world) {
+    private static void executeStrengthBoost(ServerPlayer player, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.ENCHANT,
+            world.sendParticles(ParticleTypes.ENCHANT,
                 player.getX() + px, player.getY() + py, player.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.STRENGTH, 600, 2));
+        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 600, 2));
     }
     
-    private static void executeResistanceBoost(ServerPlayerEntity player, ServerWorld world) {
+    private static void executeResistanceBoost(ServerPlayer player, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.TOTEM_OF_UNDYING,
+            world.sendParticles(ParticleTypes.TOTEM_OF_UNDYING,
                 player.getX() + px, player.getY() + py, player.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 600, 1));
+        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 600, 1));
     }
     
-    private static void executeFortune(ServerPlayerEntity player, ServerWorld world) {
+    private static void executeFortune(ServerPlayer player, ServerLevel world) {
         for (int i = 0; i < 10; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.ENCHANT,
+            world.sendParticles(ParticleTypes.ENCHANT,
                 player.getX() + px, player.getY() + py, player.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
         // Fortune is passive - give a short luck effect
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.LUCK, 300, 1));
+        player.addEffect(new MobEffectInstance(MobEffects.LUCK, 300, 1));
     }
     
-    private static void executeLooting(ServerPlayerEntity player, ServerWorld world) {
+    private static void executeLooting(ServerPlayer player, ServerLevel world) {
         for (int i = 0; i < 10; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.ENCHANT,
+            world.sendParticles(ParticleTypes.ENCHANT,
                 player.getX() + px, player.getY() + py, player.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.LUCK, 300, 2));
+        player.addEffect(new MobEffectInstance(MobEffects.LUCK, 300, 2));
     }
     
-    private static void executeSaturation(ServerPlayerEntity player, ServerWorld world) {
+    private static void executeSaturation(ServerPlayer player, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.HAPPY_VILLAGER,
+            world.sendParticles(ParticleTypes.HAPPY_VILLAGER,
                 player.getX() + px, player.getY() + py, player.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.SATURATION, 400, 1));
+        player.addEffect(new MobEffectInstance(MobEffects.SATURATION, 400, 1));
     }
     
-    private static void executeHaste(ServerPlayerEntity player, ServerWorld world) {
+    private static void executeHaste(ServerPlayer player, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.SPLASH,
+            world.sendParticles(ParticleTypes.SPLASH,
                 player.getX() + px, player.getY() + py, player.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.HASTE, 600, 2));
+        player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 600, 2));
     }
     
-    private static void executeMiningFatigueCure(ServerPlayerEntity player, ServerWorld world) {
+    private static void executeMiningFatigueCure(ServerPlayer player, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.MYCELIUM,
+            world.sendParticles(ParticleTypes.MYCELIUM,
                 player.getX() + px, player.getY() + py, player.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        player.removeStatusEffect(StatusEffects.MINING_FATIGUE);
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.HASTE, 200, 1));
+        player.removeEffect(MobEffects.DIG_SLOWDOWN);
+        player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 200, 1));
     }
     
-    private static void executeWitherCure(ServerPlayerEntity player, ServerWorld world) {
+    private static void executeWitherCure(ServerPlayer player, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.DRIPPING_HONEY,
+            world.sendParticles(ParticleTypes.DRIPPING_HONEY,
                 player.getX() + px, player.getY() + py, player.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        player.removeStatusEffect(StatusEffects.WITHER);
+        player.removeEffect(MobEffects.WITHER);
         player.heal(5.0f);
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 200, 1));
+        player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 200, 1));
     }
     
-    private static void executeBlindnessCure(ServerPlayerEntity player, ServerWorld world) {
+    private static void executeBlindnessCure(ServerPlayer player, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.END_ROD,
+            world.sendParticles(ParticleTypes.END_ROD,
                 player.getX() + px, player.getY() + py, player.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        player.removeStatusEffect(StatusEffects.BLINDNESS);
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.NIGHT_VISION, 300, 0));
+        player.removeEffect(MobEffects.BLINDNESS);
+        player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 300, 0));
     }
     
-    private static void executePoisonCure(ServerPlayerEntity player, ServerWorld world) {
+    private static void executePoisonCure(ServerPlayer player, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.HEART,
+            world.sendParticles(ParticleTypes.HEART,
                 player.getX() + px, player.getY() + py, player.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        player.removeStatusEffect(StatusEffects.POISON);
+        player.removeEffect(MobEffects.POISON);
         player.heal(4.0f);
     }
     
-    private static void executeTongueGrab(ServerPlayerEntity player, ServerWorld world) {
-        Vec3d lookDir = player.getRotationVector();
+    private static void executeTongueGrab(ServerPlayer player, ServerLevel world) {
+        Vec3 lookDir = player.getLookAngle();
         double grabRange = 10.0;
         
         // Find the closest entity in front of the player
-        net.minecraft.entity.Entity target = null;
+        net.minecraft.world.entity.Entity target = null;
         double closestDistance = grabRange;
         
-        for (net.minecraft.entity.Entity entity : world.getOtherEntities(player, player.getBoundingBox().expand(grabRange))) {
-            if (entity instanceof net.minecraft.entity.LivingEntity) {
-                Vec3d toEntity = entity.getPos().subtract(player.getPos()).normalize();
-                double dotProduct = lookDir.dotProduct(toEntity);
+        for (net.minecraft.world.entity.Entity entity : world.getEntities(player, player.getBoundingBox().inflate(grabRange))) {
+            if (entity instanceof net.minecraft.world.entity.LivingEntity) {
+                Vec3 toEntity = entity.position().subtract(player.position()).normalize();
+                double dotProduct = lookDir.dot(toEntity);
                 
                 // Check if entity is in front of player (within 45 degree cone)
                 if (dotProduct > 0.7) {
@@ -707,14 +707,14 @@ public class PlayerAbilityManager {
         
         if (target != null) {
             // Pull target towards player
-            Vec3d direction = player.getPos().subtract(target.getPos()).normalize();
+            Vec3 direction = player.position().subtract(target.position()).normalize();
             double pullStrength = 1.5;
-            target.addVelocity(direction.x * pullStrength, 0.5, direction.z * pullStrength);
-            target.velocityModified = true;
+            target.push(direction.x * pullStrength, 0.5, direction.z * pullStrength);
+            target.hasImpulse = true;
             
             // Damage target slightly
-            if (target instanceof net.minecraft.entity.LivingEntity livingTarget) {
-                livingTarget.damage(world.getDamageSources().mobAttack(player), 2.0f);
+            if (target instanceof net.minecraft.world.entity.LivingEntity livingTarget) {
+                livingTarget.hurt(world.damageSources().mobAttack(player), 2.0f);
             }
             
             // Send tongue animation packet to client
@@ -723,41 +723,41 @@ public class PlayerAbilityManager {
             // Spawn particles on server
             for (int i = 0; i < 20; i++) {
                 double t = i / 20.0;
-                Vec3d particlePos = player.getPos().add(0, 1.0, 0).add(
-                    target.getPos().subtract(player.getPos()).multiply(t)
+                Vec3 particlePos = player.position().add(0, 1.0, 0).add(
+                    target.position().subtract(player.position()).scale(t)
                 );
-                world.spawnParticles(ParticleTypes.ITEM_SLIME,
+                world.sendParticles(ParticleTypes.ITEM_SLIME,
                     particlePos.x, particlePos.y, particlePos.z,
                     1, 0.0, 0.0, 0.0, 0.0);
             }
         } else {
             // No target found, just spawn particles in front
-            Vec3d targetPos = player.getPos().add(lookDir.multiply(grabRange));
+            Vec3 targetPos = player.position().add(lookDir.scale(grabRange));
             for (int i = 0; i < 15; i++) {
                 double t = i / 15.0;
-                Vec3d particlePos = player.getPos().add(0, 1.0, 0).add(
-                    targetPos.subtract(player.getPos()).multiply(t)
+                Vec3 particlePos = player.position().add(0, 1.0, 0).add(
+                    targetPos.subtract(player.position()).scale(t)
                 );
-                world.spawnParticles(ParticleTypes.ITEM_SLIME,
+                world.sendParticles(ParticleTypes.ITEM_SLIME,
                     particlePos.x, particlePos.y, particlePos.z,
                     1, 0.0, 0.0, 0.0, 0.0);
             }
         }
     }
-    
+
     public static void tick() {
         // Decrease cooldowns
         abilityCooldowns.replaceAll((uuid, cooldown) -> Math.max(0, cooldown - 1));
     }
-    
-    public static MobAbility getCurrentAbility(ServerPlayerEntity player) {
+
+    public static MobAbility getCurrentAbility(ServerPlayer player) {
         var abilities = GamemodeManager.getData(player).getPlayerAbilities();
         if (abilities.isEmpty()) return null;
-        
+
         int index = currentAbilityIndex.getOrDefault(player.getUuid(), 0);
         return MobAbility.getAbility(abilities.get(index));
     }
-    
+
     public static void resetPlayer(UUID uuid) {
         currentAbilityIndex.remove(uuid);
         abilityCooldowns.remove(uuid);

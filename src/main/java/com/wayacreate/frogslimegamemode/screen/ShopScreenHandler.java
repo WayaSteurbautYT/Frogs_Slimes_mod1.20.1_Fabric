@@ -2,42 +2,42 @@ package com.wayacreate.frogslimegamemode.screen;
 
 import com.wayacreate.frogslimegamemode.economy.ShopItem;
 import com.wayacreate.frogslimegamemode.economy.ShopManager;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.SimpleInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.ScreenHandlerType;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ShopScreenHandler extends ScreenHandler {
+public class ShopScreenHandler extends AbstractContainerMenu {
     private static final int ROWS = 6;
     private static final int TOP_INVENTORY_SIZE = ROWS * 9;
     private static final int FIRST_PLAYER_SLOT = TOP_INVENTORY_SIZE;
 
-    private final SimpleInventory inventory;
+    private final SimpleContainer inventory;
     private final Map<Integer, ShopItem> displayedListings = new HashMap<>();
 
-    public ShopScreenHandler(int syncId, PlayerInventory playerInventory) {
-        super(ScreenHandlerType.GENERIC_9X6, syncId);
-        this.inventory = new SimpleInventory(TOP_INVENTORY_SIZE);
+    public ShopScreenHandler(int syncId, Inventory playerInventory) {
+        super(MenuType.GENERIC_9X6, syncId);
+        this.inventory = new SimpleContainer(TOP_INVENTORY_SIZE);
 
         buildSlots(playerInventory);
         refreshListings();
     }
 
     @Override
-    public void onSlotClick(int slotIndex, int button, SlotActionType actionType, PlayerEntity player) {
+    public void onSlotClick(int slotIndex, int button, ClickType actionType, Player player) {
         if (slotIndex >= 0 && slotIndex < TOP_INVENTORY_SIZE) {
-            if (player instanceof ServerPlayerEntity serverPlayer) {
+            if (player instanceof ServerPlayer serverPlayer) {
                 ShopItem listing = displayedListings.get(slotIndex);
                 if (listing != null) {
                     ShopManager.buyItem(serverPlayer, listing);
@@ -52,16 +52,16 @@ public class ShopScreenHandler extends ScreenHandler {
     }
 
     @Override
-    public ItemStack quickMove(PlayerEntity player, int slot) {
+    public ItemStack quickMove(Player player, int slot) {
         return ItemStack.EMPTY;
     }
 
     @Override
-    public boolean canUse(PlayerEntity player) {
+    public boolean canUse(Player player) {
         return true;
     }
 
-    private void buildSlots(PlayerInventory playerInventory) {
+    private void buildSlots(Inventory playerInventory) {
         for (int row = 0; row < ROWS; row++) {
             for (int column = 0; column < 9; column++) {
                 int slotIndex = column + row * 9;
@@ -94,10 +94,10 @@ public class ShopScreenHandler extends ScreenHandler {
         for (int i = 0; i < limit; i++) {
             ShopItem listing = listings.get(i);
             ItemStack displayStack = listing.getItem();
-            displayStack.setCustomName(Text.literal("")
-                .append(displayStack.getName().copy().formatted(Formatting.WHITE))
-                .append(Text.literal(" - " + listing.getPrice() + "c")
-                    .formatted(Formatting.GOLD, Formatting.BOLD))
+            displayStack.setCustomName(Component.literal("")
+                .append(displayStack.getName().copy().formatted(ChatFormatting.WHITE))
+                .append(Component.literal(" - " + listing.getPrice() + "c")
+                    .formatted(ChatFormatting.GOLD, ChatFormatting.BOLD))
             );
 
             inventory.setStack(i, displayStack);
@@ -106,7 +106,7 @@ public class ShopScreenHandler extends ScreenHandler {
     }
 
     private static final class DisplaySlot extends Slot {
-        private DisplaySlot(SimpleInventory inventory, int index, int x, int y) {
+        private DisplaySlot(SimpleContainer inventory, int index, int x, int y) {
             super(inventory, index, x, y);
         }
 
@@ -116,7 +116,7 @@ public class ShopScreenHandler extends ScreenHandler {
         }
 
         @Override
-        public boolean canTakeItems(PlayerEntity playerEntity) {
+        public boolean canTakeItems(Player playerEntity) {
             return false;
         }
     }

@@ -2,10 +2,10 @@ package com.wayacreate.frogslimegamemode.client.gui;
 
 import com.wayacreate.frogslimegamemode.client.state.ProgressionClientState;
 import com.wayacreate.frogslimegamemode.progression.ProgressionUnlock;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -17,41 +17,42 @@ public class CollectionsScreen extends Screen {
     private int currentCategory;
 
     public CollectionsScreen() {
-        super(Text.literal("Unlock Library"));
+        super(Component.literal(GuiCopy.PRIMARY));
     }
 
     @Override
     protected void init() {
         for (int i = 0; i < CATEGORIES.length; i++) {
             int index = i;
-            this.addDrawableChild(ButtonWidget.builder(Text.literal(CATEGORIES[i]), button -> currentCategory = index)
+            this.addDrawableChild(Button.builder(Component.literal(CATEGORIES[i]), button -> currentCategory = index)
                 .dimensions(28 + i * 92, 36, 84, 20)
                 .build());
         }
 
-        this.addDrawableChild(ButtonWidget.builder(Text.literal("Close"), button -> this.close())
+        this.addDrawableChild(Button.builder(Component.literal("Close"), button -> this.close())
             .dimensions(this.width - 108, this.height - 36, 80, 20)
             .build());
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         MenuStyle.drawFrame(context, this.width, this.height);
         MenuStyle.drawHeader(
             context,
             this.textRenderer,
-            "Unlock Library",
-            "Level and evolution gates for the full route",
-            this.width
+            GuiCopy.PRIMARY,
+            GuiCopy.SECONDARY,
+            MenuStyle.getContentMargin(this.width, this.height),
+            this.width - MenuStyle.getContentMargin(this.width, this.height) * 2
         );
 
-        MenuStyle.drawPanel(context, 28, 72, this.width - 56, this.height - 118, currentCategory % 2 == 1);
+        MenuStyle.drawPanel(context, 28, MenuStyle.getContentTop(), this.width - 56, this.height - MenuStyle.getContentTop() - MenuStyle.getBottomInset(this.height) - 12, currentCategory % 2 == 1);
         renderUnlocks(context);
 
         super.render(context, mouseX, mouseY, delta);
     }
 
-    private void renderUnlocks(DrawContext context) {
+    private void renderUnlocks(GuiGraphics context) {
         List<ProgressionUnlock.Unlock> unlocks = getUnlocksForCurrentCategory();
         int unlocked = 0;
         for (ProgressionUnlock.Unlock unlock : unlocks) {
@@ -64,7 +65,7 @@ public class CollectionsScreen extends Screen {
         int y = 88;
         context.drawTextWithShadow(
             this.textRenderer,
-            Text.literal(CATEGORIES[currentCategory] + " unlocked: " + unlocked + "/" + unlocks.size()),
+            Component.literal(CATEGORIES[currentCategory] + " unlocked: " + unlocked + "/" + unlocks.size()),
             x,
             y,
             MenuStyle.ACCENT_GOLD
@@ -85,21 +86,21 @@ public class CollectionsScreen extends Screen {
             MenuStyle.drawPanel(context, boxX, boxY, columnWidth, 30, (row + column) % 2 == 1);
             context.drawTextWithShadow(
                 this.textRenderer,
-                Text.literal(unlock.getName()),
+                Component.literal(unlock.getName()),
                 boxX + 8,
                 boxY + 6,
                 unlockedEntry ? MenuStyle.POSITIVE : MenuStyle.TEXT
             );
             context.drawTextWithShadow(
                 this.textRenderer,
-                Text.literal("Lv " + unlock.getRequiredLevel() + " / Evo " + unlock.getRequiredEvolutionStage()),
+                Component.literal("Lv " + unlock.getRequiredLevel() + " / Evo " + unlock.getRequiredEvolutionStage()),
                 boxX + 8,
                 boxY + 17,
                 MenuStyle.ACCENT
             );
             context.drawTextWithShadow(
                 this.textRenderer,
-                Text.literal(unlockedEntry ? "Ready" : "Locked"),
+                Component.literal(unlockedEntry ? "Ready" : "Locked"),
                 boxX + columnWidth - 36,
                 boxY + 11,
                 unlockedEntry ? MenuStyle.POSITIVE : MenuStyle.DANGER
@@ -108,7 +109,7 @@ public class CollectionsScreen extends Screen {
 
         context.drawTextWithShadow(
             this.textRenderer,
-            Text.literal("Current level " + ProgressionClientState.getLevel() + " | Evolution stage " + ProgressionClientState.getHighestEvolutionStage()),
+            Component.literal("Current level " + ProgressionClientState.getLevel() + " | Evolution stage " + ProgressionClientState.getHighestEvolutionStage() + " | " + GuiCopy.PRIMARY),
             x,
             this.height - 72,
             MenuStyle.MUTED

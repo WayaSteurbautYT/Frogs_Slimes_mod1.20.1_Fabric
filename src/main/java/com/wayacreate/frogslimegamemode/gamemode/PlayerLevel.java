@@ -2,16 +2,16 @@ package com.wayacreate.frogslimegamemode.gamemode;
 
 import com.wayacreate.frogslimegamemode.FrogSlimeGamemode;
 import com.wayacreate.frogslimegamemode.progression.ProgressionUnlock;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class PlayerLevel {
-    private static final Map<ServerPlayerEntity, PlayerLevelData> playerLevels = new HashMap<>();
+    private static final Map<ServerPlayer, PlayerLevelData> playerLevels = new HashMap<>();
     
     public static class PlayerLevelData {
         private int level;
@@ -42,7 +42,7 @@ public class PlayerLevel {
         }
     }
     
-    public static void addXP(ServerPlayerEntity player, double amount) {
+    public static void addXP(ServerPlayer player, double amount) {
         PlayerLevelData data = playerLevels.computeIfAbsent(player, k -> new PlayerLevelData());
         int oldLevel = data.getLevel();
         data.addXP(amount);
@@ -52,22 +52,22 @@ public class PlayerLevel {
         }
     }
     
-    private static void onLevelUp(ServerPlayerEntity player, int newLevel) {
-        player.sendMessage(Text.literal("Level Up! You are now level " + newLevel)
-            .formatted(Formatting.GOLD, Formatting.BOLD), true);
+    private static void onLevelUp(ServerPlayer player, int newLevel) {
+        player.sendMessage(Component.literal("Level Up! You are now level " + newLevel)
+            .formatted(ChatFormatting.GOLD, ChatFormatting.BOLD), true);
         
         // Check for new unlocks
         List<ProgressionUnlock.Unlock> newUnlocks = ProgressionUnlock.getUnlocksForLevel(newLevel);
         if (!newUnlocks.isEmpty()) {
-            player.sendMessage(Text.literal("New unlocks available!")
-                .formatted(Formatting.AQUA, Formatting.BOLD), true);
+            player.sendMessage(Component.literal("New unlocks available!")
+                .formatted(ChatFormatting.AQUA, ChatFormatting.BOLD), true);
             
             for (ProgressionUnlock.Unlock unlock : newUnlocks) {
                 if (unlock.getRequiredLevel() == newLevel) {
-                    player.sendMessage(Text.literal("• ")
+                    player.sendMessage(Component.literal("• ")
                         .append(unlock.getFormattedName())
-                        .append(Text.literal(": " + unlock.getDescription())
-                            .formatted(Formatting.GRAY)), true);
+                        .append(Component.literal(": " + unlock.getDescription())
+                            .formatted(ChatFormatting.GRAY)), true);
                 }
             }
         }
@@ -75,22 +75,22 @@ public class PlayerLevel {
         FrogSlimeGamemode.LOGGER.info("Player " + player.getName().getString() + " reached level " + newLevel);
     }
     
-    public static int getLevel(ServerPlayerEntity player) {
+    public static int getLevel(ServerPlayer player) {
         PlayerLevelData data = playerLevels.get(player);
         return data != null ? data.getLevel() : 1;
     }
     
-    public static double getXP(ServerPlayerEntity player) {
+    public static double getXP(ServerPlayer player) {
         PlayerLevelData data = playerLevels.get(player);
         return data != null ? data.getXP() : 0;
     }
     
-    public static double getXPToNextLevel(ServerPlayerEntity player) {
+    public static double getXPToNextLevel(ServerPlayer player) {
         PlayerLevelData data = playerLevels.get(player);
         return data != null ? data.getXPToNextLevel() : 100;
     }
     
-    public static List<ProgressionUnlock.Unlock> getAvailableUnlocks(ServerPlayerEntity player, int evolutionStage) {
+    public static List<ProgressionUnlock.Unlock> getAvailableUnlocks(ServerPlayer player, int evolutionStage) {
         int level = getLevel(player);
         return ProgressionUnlock.getUnlocksForLevel(level);
     }

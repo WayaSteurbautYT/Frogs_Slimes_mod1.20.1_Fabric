@@ -1,17 +1,17 @@
 package com.wayacreate.frogslimegamemode.entity.ai;
 
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.passive.TameableEntity;
-import net.minecraft.block.Blocks;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 public class MiningGoal extends Goal {
-    private final TameableEntity entity;
-    private final World world;
+    private final TamableAnimal entity;
+    private final Level world;
     private int cooldown;
     
-    public MiningGoal(TameableEntity entity) {
+    public MiningGoal(TamableAnimal entity) {
         this.entity = entity;
         this.world = entity.getWorld();
         this.cooldown = 0;
@@ -72,7 +72,7 @@ public class MiningGoal extends Goal {
         }
     }
     
-    private boolean isOre(net.minecraft.block.Block block) {
+    private boolean isOre(net.minecraft.world.level.block.Block block) {
         return block == Blocks.COAL_ORE || 
                block == Blocks.IRON_ORE || 
                block == Blocks.GOLD_ORE || 

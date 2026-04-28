@@ -1,8 +1,8 @@
 package com.wayacreate.frogslimegamemode.mixin;
 
 import com.wayacreate.frogslimegamemode.client.ModTitleScreen;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.TitleScreen;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.TitleScreen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -20,7 +20,7 @@ public class TitleScreenMixin {
     private void onInit(CallbackInfo ci) {
         // Only replace if this is the vanilla TitleScreen, not ModTitleScreen
         if (!Objects.equals(this.getClass().getName(), ModTitleScreen.class.getName())) {
-            MinecraftClient client = MinecraftClient.getInstance();
+            Minecraft client = Minecraft.getInstance();
             client.setScreen(new ModTitleScreen());
             ci.cancel();
         }

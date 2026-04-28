@@ -1,66 +1,66 @@
 package com.wayacreate.frogslimegamemode.entity;
 
 import com.wayacreate.frogslimegamemode.FrogSlimeGamemode;
-import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SpawnGroup;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
+import net.neoforged.neoforge.registries.RegisterEvent;
 
 public class ModEntities {
-    public static EntityType<FrogHelperEntity> FROG_HELPER;
-    public static EntityType<SlimeHelperEntity> SLIME_HELPER;
-    public static EntityType<GiantSlimeBossEntity> GIANT_SLIME_BOSS;
-    public static EntityType<FrogKingEntity> FROG_KING;
-    public static EntityType<SlimeEndermanEntity> SLIME_ENDERMAN;
-    
-    private static <T extends Entity> EntityType<T> registerEntity(String name, EntityType<T> entityType) {
-        return Registry.register(Registries.ENTITY_TYPE, new Identifier(FrogSlimeGamemode.MOD_ID, name), entityType);
+    public static final EntityType<FrogHelperEntity> FROG_HELPER =
+        EntityType.Builder.create(FrogHelperEntity::new, MobCategory.CREATURE)
+            .setDimensions(0.8f, 0.8f)
+            .maxTrackingRange(8)
+            .build("frog_helper");
+
+    public static final EntityType<SlimeHelperEntity> SLIME_HELPER =
+        EntityType.Builder.create(SlimeHelperEntity::new, MobCategory.CREATURE)
+            .setDimensions(1.0f, 1.0f)
+            .maxTrackingRange(8)
+            .build("slime_helper");
+
+    public static final EntityType<GiantSlimeBossEntity> GIANT_SLIME_BOSS =
+        EntityType.Builder.create(GiantSlimeBossEntity::new, MobCategory.MONSTER)
+            .setDimensions(8.0f, 8.0f)
+            .maxTrackingRange(16)
+            .build("giant_slime_boss");
+
+    public static final EntityType<FrogKingEntity> FROG_KING =
+        EntityType.Builder.create(FrogKingEntity::new, MobCategory.MONSTER)
+            .setDimensions(2.0f, 2.0f)
+            .maxTrackingRange(12)
+            .build("frog_king");
+
+    public static final EntityType<SlimeEndermanEntity> SLIME_ENDERMAN =
+        EntityType.Builder.create(SlimeEndermanEntity::new, MobCategory.MONSTER)
+            .setDimensions(2.5f, 3.0f)
+            .maxTrackingRange(16)
+            .build("slime_enderman");
+
+    public static void register(IEventBus modBus) {
+        modBus.addListener(ModEntities::onRegister);
+        modBus.addListener(ModEntities::onRegisterAttributes);
     }
-    
-    public static void register() {
-        FROG_HELPER = registerEntity("frog_helper",
-            EntityType.Builder.create(FrogHelperEntity::new, SpawnGroup.CREATURE)
-                .setDimensions(0.8f, 0.8f)
-                .maxTrackingRange(8)
-                .build("frog_helper")
-        );
-        
-        SLIME_HELPER = registerEntity("slime_helper",
-            EntityType.Builder.create(SlimeHelperEntity::new, SpawnGroup.CREATURE)
-                .setDimensions(1.0f, 1.0f)
-                .maxTrackingRange(8)
-                .build("slime_helper")
-        );
-        
-        GIANT_SLIME_BOSS = registerEntity("giant_slime_boss",
-            EntityType.Builder.create(GiantSlimeBossEntity::new, SpawnGroup.MONSTER)
-                .setDimensions(8.0f, 8.0f)
-                .maxTrackingRange(16)
-                .build("giant_slime_boss")
-        );
-        
-        FROG_KING = registerEntity("frog_king",
-            EntityType.Builder.create(FrogKingEntity::new, SpawnGroup.MONSTER)
-                .setDimensions(2.0f, 2.0f)
-                .maxTrackingRange(12)
-                .build("frog_king")
-        );
-        
-        SLIME_ENDERMAN = registerEntity("slime_enderman",
-            EntityType.Builder.create(SlimeEndermanEntity::new, SpawnGroup.MONSTER)
-                .setDimensions(2.5f, 3.0f)
-                .maxTrackingRange(16)
-                .build("slime_enderman")
-        );
-        
-        FabricDefaultAttributeRegistry.register(FROG_HELPER, FrogHelperEntity.createAttributes());
-        FabricDefaultAttributeRegistry.register(SLIME_HELPER, SlimeHelperEntity.createAttributes());
-        FabricDefaultAttributeRegistry.register(GIANT_SLIME_BOSS, GiantSlimeBossEntity.createAttributes());
-        FabricDefaultAttributeRegistry.register(FROG_KING, FrogKingEntity.createAttributes());
-        FabricDefaultAttributeRegistry.register(SLIME_ENDERMAN, SlimeEndermanEntity.createAttributes());
+
+    private static void onRegister(RegisterEvent event) {
+        event.register(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "frog_helper"), () -> FROG_HELPER);
+        event.register(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "slime_helper"), () -> SLIME_HELPER);
+        event.register(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "giant_slime_boss"), () -> GIANT_SLIME_BOSS);
+        event.register(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "frog_king"), () -> FROG_KING);
+        event.register(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(FrogSlimeGamemode.MOD_ID, "slime_enderman"), () -> SLIME_ENDERMAN);
+
         FrogSlimeGamemode.LOGGER.info("Registered 5 entity types");
+    }
+
+    private static void onRegisterAttributes(EntityAttributeCreationEvent event) {
+        event.put(FROG_HELPER, FrogHelperEntity.createAttributes());
+        event.put(SLIME_HELPER, SlimeHelperEntity.createAttributes());
+        event.put(GIANT_SLIME_BOSS, GiantSlimeBossEntity.createAttributes());
+        event.put(FROG_KING, FrogKingEntity.createAttributes());
+        event.put(SLIME_ENDERMAN, SlimeEndermanEntity.createAttributes());
     }
 }

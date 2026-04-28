@@ -1,11 +1,11 @@
 package com.wayacreate.frogslimegamemode.eating;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -85,31 +85,31 @@ public class MobAbility {
     public AbilityType getActiveAbility() { return activeAbility; }
     public int getAbilityCooldown() { return abilityCooldown; }
     
-    public Text getFormattedName() {
-        return Text.literal(name).formatted(Formatting.LIGHT_PURPLE, Formatting.BOLD);
+    public Component getFormattedName() {
+        return Component.literal(name).formatted(ChatFormatting.LIGHT_PURPLE, ChatFormatting.BOLD);
     }
     
-    public Text getFormattedDescription() {
-        return Text.literal(description).formatted(Formatting.GRAY);
+    public Component getFormattedDescription() {
+        return Component.literal(description).formatted(ChatFormatting.GRAY);
     }
     
     /**
      * Apply passive ability effects to a player
      */
-    public void applyToPlayer(PlayerEntity player) {
+    public void applyToPlayer(Player player) {
         // Apply speed bonus
         if (speedBonus > 0) {
-            player.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, 100, (int)(speedBonus * 2), false, false));
+            player.addStatusEffect(new MobEffectInstance(MobEffects.SPEED, 100, (int)(speedBonus * 2), false, false));
         }
         
         // Apply health bonus (absorption)
         if (healthBonus > 0) {
-            player.addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, 100, (int)(healthBonus / 5), false, false));
+            player.addStatusEffect(new MobEffectInstance(MobEffects.ABSORPTION, 100, (int)(healthBonus / 5), false, false));
         }
         
         // Apply damage bonus (strength)
         if (damageBonus > 0) {
-            player.addStatusEffect(new StatusEffectInstance(StatusEffects.STRENGTH, 100, (int)(damageBonus / 3), false, false));
+            player.addStatusEffect(new MobEffectInstance(MobEffects.STRENGTH, 100, (int)(damageBonus / 3), false, false));
         }
         
         // Apply knockback resistance
@@ -207,7 +207,7 @@ public class MobAbility {
         register(new MobAbility("derpy_derp", "Derpy Derp", "Hah you suck! - Really you got the worse ability", -2.0, -0.1, -5.0, 0.0, AbilityType.NONE, 0));
         
         // More mob abilities inspired by games/movies
-        register(new MobAbility("basalt_giant", "Earthquake Stomp", "World of Warcraft inspired - Ground tremor", 7.0, 0.1, 25.0, 0.5, AbilityType.KNOCKBACK_WAVE, 350));
+        register(new MobAbility("basalt_giant", "Earthquake Stomp", "Level of Warcraft inspired - Ground tremor", 7.0, 0.1, 25.0, 0.5, AbilityType.KNOCKBACK_WAVE, 350));
         register(new MobAbility("piglin_beast", "Dark Souls Fury", "Dark Souls inspired - Relentless assault", 8.0, 0.2, 20.0, 0.4, AbilityType.LIFE_STEAL, 400));
         register(new MobAbility("sculk_crawler", "Xenomorph Strike", "Alien inspired - Silent predator", 6.0, 0.3, 10.0, 0.2, AbilityType.INVISIBILITY, 250));
         register(new MobAbility("ancient_guardian", "Gondor Shield", "LOTR inspired - Tower defense", 6.0, 0.0, 30.0, 0.6, AbilityType.THORNS, 380));

@@ -1,16 +1,16 @@
 package com.wayacreate.frogslimegamemode.integration;
 
-import net.minecraft.entity.passive.TameableEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 /**
  * Baritone integration for helper schematic building.
  * Used by HelperCommand to manage schematic building tasks.
  */
 public class BaritoneIntegration {
-    private static final java.util.Map<TameableEntity, String> activeBuilds = new java.util.HashMap<>();
-    private static final java.util.Map<TameableEntity, Integer> buildProgress = new java.util.HashMap<>();
+    private static final java.util.Map<TamableAnimal, String> activeBuilds = new java.util.HashMap<>();
+    private static final java.util.Map<TamableAnimal, Integer> buildProgress = new java.util.HashMap<>();
     
     /**
      * Check if Baritone is available on the server
@@ -29,11 +29,11 @@ public class BaritoneIntegration {
      * @param helper The helper entity
      * @param schematicName The name of the schematic to build
      */
-    public static void setSchematicBuild(TameableEntity helper, String schematicName) {
+    public static void setSchematicBuild(TamableAnimal helper, String schematicName) {
         if (!isBaritoneAvailable()) {
-            if (helper.getOwner() instanceof net.minecraft.entity.player.PlayerEntity player) {
-                player.sendMessage(Text.literal("Baritone is not installed on this server!")
-                    .formatted(Formatting.RED), true);
+            if (helper.getOwner() instanceof net.minecraft.world.entity.player.Player player) {
+                player.sendMessage(Component.literal("Baritone is not installed on this server!")
+                    .formatted(ChatFormatting.RED), true);
             }
             return;
         }
@@ -48,15 +48,15 @@ public class BaritoneIntegration {
             if (baritoneApi != null) {
                 // Schematic loading would go here
                 // For now, we simulate the build process
-                if (helper.getOwner() instanceof net.minecraft.entity.player.PlayerEntity player) {
-                    player.sendMessage(Text.literal("Started building schematic: " + schematicName)
-                        .formatted(Formatting.GREEN), true);
+                if (helper.getOwner() instanceof net.minecraft.world.entity.player.Player player) {
+                    player.sendMessage(Component.literal("Started building schematic: " + schematicName)
+                        .formatted(ChatFormatting.GREEN), true);
                 }
             }
         } catch (Exception e) {
-            if (helper.getOwner() instanceof net.minecraft.entity.player.PlayerEntity player) {
-                player.sendMessage(Text.literal("Failed to load schematic: " + e.getMessage())
-                    .formatted(Formatting.RED), true);
+            if (helper.getOwner() instanceof net.minecraft.world.entity.player.Player player) {
+                player.sendMessage(Component.literal("Failed to load schematic: " + e.getMessage())
+                    .formatted(ChatFormatting.RED), true);
             }
         }
     }
@@ -65,7 +65,7 @@ public class BaritoneIntegration {
      * Stop a helper from building
      * @param helper The helper entity
      */
-    public static void stopBuilding(TameableEntity helper) {
+    public static void stopBuilding(TamableAnimal helper) {
         if (!isBaritoneAvailable()) {
             return;
         }
@@ -77,10 +77,10 @@ public class BaritoneIntegration {
         // Stop Baritone process if available
         try {
             Object baritoneApi = Class.forName("baritone.api.BaritoneAPI").getMethod("getProvider").invoke(null);
-            if (baritoneApi != null && helper.getOwner() instanceof net.minecraft.entity.player.PlayerEntity player) {
+            if (baritoneApi != null && helper.getOwner() instanceof net.minecraft.world.entity.player.Player player) {
                 // Would call Baritone's stop command here
-                player.sendMessage(Text.literal("Stopped schematic building")
-                    .formatted(Formatting.YELLOW), true);
+                player.sendMessage(Component.literal("Stopped schematic building")
+                    .formatted(ChatFormatting.YELLOW), true);
             }
         } catch (Exception e) {
             // Ignore if Baritone API call fails
@@ -92,7 +92,7 @@ public class BaritoneIntegration {
      * @param helper The helper entity
      * @return Progress percentage (0-100)
      */
-    public static int getBuildProgress(TameableEntity helper) {
+    public static int getBuildProgress(TamableAnimal helper) {
         if (!isBaritoneAvailable()) {
             return 0;
         }
@@ -107,15 +107,15 @@ public class BaritoneIntegration {
      * @param helper The helper entity
      * @param progress The new progress value (0-100)
      */
-    public static void updateBuildProgress(TameableEntity helper, int progress) {
+    public static void updateBuildProgress(TamableAnimal helper, int progress) {
         if (activeBuilds.containsKey(helper)) {
             buildProgress.put(helper, Math.min(100, Math.max(0, progress)));
             
             // Notify owner if build is complete
-            if (progress >= 100 && helper.getOwner() instanceof net.minecraft.entity.player.PlayerEntity player) {
+            if (progress >= 100 && helper.getOwner() instanceof net.minecraft.world.entity.player.Player player) {
                 String schematic = activeBuilds.get(helper);
-                player.sendMessage(Text.literal("Completed building schematic: " + schematic)
-                    .formatted(Formatting.GREEN), true);
+                player.sendMessage(Component.literal("Completed building schematic: " + schematic)
+                    .formatted(ChatFormatting.GREEN), true);
                 activeBuilds.remove(helper);
             }
         }
@@ -126,7 +126,7 @@ public class BaritoneIntegration {
      * @param helper The helper entity
      * @return true if building, false otherwise
      */
-    public static boolean isBuilding(TameableEntity helper) {
+    public static boolean isBuilding(TamableAnimal helper) {
         return activeBuilds.containsKey(helper);
     }
     
@@ -135,7 +135,7 @@ public class BaritoneIntegration {
      * @param helper The helper entity
      * @return The schematic name, or null if not building
      */
-    public static String getCurrentSchematic(TameableEntity helper) {
+    public static String getCurrentSchematic(TamableAnimal helper) {
         return activeBuilds.get(helper);
     }
 }

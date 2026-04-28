@@ -1,16 +1,16 @@
 package com.wayacreate.frogslimegamemode.abilities;
 
 import com.wayacreate.frogslimegamemode.eating.MobAbility;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.phys.Vec3;
 
 public class HelperAbilityManager {
     
-    public static void executeAbility(Entity helper, MobAbility ability, ServerWorld world) {
+    public static void executeAbility(Entity helper, MobAbility ability, ServerLevel world) {
         switch (ability.getActiveAbility()) {
             case TELEPORT -> executeTeleport(helper, world);
             case FIREBALL -> executeFireball(helper, world);
@@ -52,585 +52,585 @@ public class HelperAbilityManager {
         }
     }
     
-    private static void executeTeleport(Entity helper, ServerWorld world) {
-        Vec3d lookDir = helper.getRotationVector();
+    private static void executeTeleport(Entity helper, ServerLevel world) {
+        Vec3 lookDir = helper.getLookAngle();
         double teleportDistance = 8.0;
-        Vec3d newPos = helper.getPos().add(lookDir.multiply(teleportDistance));
+        Vec3 newPos = helper.position().add(lookDir.scale(teleportDistance));
         
-        helper.teleport(newPos.x, newPos.y, newPos.z);
+        helper.teleportTo(newPos.x, newPos.y, newPos.z);
         
         for (int i = 0; i < 20; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.PORTAL,
+            world.sendParticles(ParticleTypes.PORTAL,
                 helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
     }
     
-    private static void executeFireball(Entity helper, ServerWorld world) {
-        Vec3d lookDir = helper.getRotationVector();
+    private static void executeFireball(Entity helper, ServerLevel world) {
+        Vec3 lookDir = helper.getLookAngle();
         
         for (int i = 0; i < 5; i++) {
-            world.spawnParticles(ParticleTypes.FLAME,
+            world.sendParticles(ParticleTypes.FLAME,
                 helper.getX() + lookDir.x * i,
                 helper.getY() + 1.5,
                 helper.getZ() + lookDir.z * i,
                 3, 0.1, 0.1, 0.1, 0.02);
         }
         
-        world.getOtherEntities(helper, helper.getBoundingBox().expand(10)).forEach(entity -> {
+        world.getEntities(helper, helper.getBoundingBox().inflate(10)).forEach(entity -> {
             if (entity.distanceTo(helper) < 10) {
-                entity.damage(world.getDamageSources().magic(), 8.0f);
-                entity.setFireTicks(60);
+                entity.hurt(world.damageSources().magic(), 8.0f);
+                entity.setRemainingFireTicks(60);
             }
         });
     }
     
-    private static void executeIceSummon(Entity helper, ServerWorld world) {
+    private static void executeIceSummon(Entity helper, ServerLevel world) {
         for (int i = 0; i < 20; i++) {
             double offsetX = (world.random.nextDouble() - 0.5) * 5;
             double offsetZ = (world.random.nextDouble() - 0.5) * 5;
-            world.spawnParticles(ParticleTypes.SNOWFLAKE,
+            world.sendParticles(ParticleTypes.SNOWFLAKE,
                 helper.getX() + offsetX,
                 helper.getY() + 1,
                 helper.getZ() + offsetZ,
                 2, 0.0, 0.1, 0.0, 0.01);
         }
         
-        world.getOtherEntities(helper, helper.getBoundingBox().expand(5)).forEach(entity -> {
-            if (entity instanceof net.minecraft.entity.LivingEntity living) {
-                living.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 100, 2));
+        world.getEntities(helper, helper.getBoundingBox().inflate(5)).forEach(entity -> {
+            if (entity instanceof net.minecraft.world.entity.LivingEntity living) {
+                living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 2));
             }
         });
     }
     
-    private static void executePoisonCloud(Entity helper, ServerWorld world) {
+    private static void executePoisonCloud(Entity helper, ServerLevel world) {
         for (int i = 0; i < 30; i++) {
             double offsetX = (world.random.nextDouble() - 0.5) * 5;
             double offsetY = world.random.nextDouble() * 2;
             double offsetZ = (world.random.nextDouble() - 0.5) * 5;
-            world.spawnParticles(ParticleTypes.EFFECT,
+            world.sendParticles(ParticleTypes.EFFECT,
                 helper.getX() + offsetX,
                 helper.getY() + offsetY,
                 helper.getZ() + offsetZ,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        world.getOtherEntities(helper, helper.getBoundingBox().expand(5)).forEach(entity -> {
-            if (entity instanceof net.minecraft.entity.LivingEntity living) {
-                living.addStatusEffect(new StatusEffectInstance(StatusEffects.POISON, 150, 1));
+        world.getEntities(helper, helper.getBoundingBox().inflate(5)).forEach(entity -> {
+            if (entity instanceof net.minecraft.world.entity.LivingEntity living) {
+                living.addEffect(new MobEffectInstance(MobEffects.POISON, 150, 1));
             }
         });
     }
     
-    private static void executeLightningStrike(Entity helper, ServerWorld world) {
-        Vec3d lookDir = helper.getRotationVector();
-        Vec3d targetPos = helper.getPos().add(lookDir.multiply(15));
+    private static void executeLightningStrike(Entity helper, ServerLevel world) {
+        Vec3 lookDir = helper.getLookAngle();
+        Vec3 targetPos = helper.position().add(lookDir.scale(15));
         
-        world.spawnParticles(ParticleTypes.ELECTRIC_SPARK,
+        world.sendParticles(ParticleTypes.ELECTRIC_SPARK,
             targetPos.x, targetPos.y + 2, targetPos.z,
             15, 0.5, 0.5, 0.5, 0.1);
         
-        net.minecraft.entity.LightningEntity lightning = net.minecraft.entity.EntityType.LIGHTNING_BOLT.create(world);
+        net.minecraft.world.entity.LightningBolt lightning = net.minecraft.world.entity.EntityType.LIGHTNING_BOLT.create(world);
         if (lightning != null) {
-            lightning.setPosition(targetPos);
-            world.spawnEntity(lightning);
+            lightning.setPos(targetPos);
+            world.addFreshEntity(lightning);
         }
         
-        world.getOtherEntities(helper, helper.getBoundingBox().expand(15)).forEach(entity -> {
+        world.getEntities(helper, helper.getBoundingBox().inflate(15)).forEach(entity -> {
             if (entity.distanceTo(helper) < 15) {
-                entity.damage(world.getDamageSources().magic(), 12.0f);
+                entity.hurt(world.damageSources().magic(), 12.0f);
             }
         });
     }
     
-    private static void executeLeapAttack(Entity helper, ServerWorld world) {
-        Vec3d lookDir = helper.getRotationVector();
-        Vec3d velocity = lookDir.multiply(1.5).add(0, 0.8, 0);
+    private static void executeLeapAttack(Entity helper, ServerLevel world) {
+        Vec3 lookDir = helper.getLookAngle();
+        Vec3 velocity = lookDir.scale(1.5).add(0, 0.8, 0);
         
-        helper.addVelocity(velocity);
-        helper.velocityModified = true;
+        helper.push(velocity.x, velocity.y, velocity.z);
+        helper.hasImpulse = true;
         
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.CLOUD,
+            world.sendParticles(ParticleTypes.CLOUD,
                 helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        if (helper instanceof net.minecraft.entity.LivingEntity living) {
-            living.addStatusEffect(new StatusEffectInstance(StatusEffects.JUMP_BOOST, 200, 3));
+        if (helper instanceof net.minecraft.world.entity.LivingEntity living) {
+            living.addEffect(new MobEffectInstance(MobEffects.JUMP, 200, 3));
         }
     }
     
-    private static void executeSonicBoom(Entity helper, ServerWorld world) {
+    private static void executeSonicBoom(Entity helper, ServerLevel world) {
         for (int i = 0; i < 40; i++) {
             double angle = (i / 40.0) * Math.PI * 2;
             double offsetX = Math.cos(angle) * 4;
             double offsetZ = Math.sin(angle) * 4;
-            world.spawnParticles(ParticleTypes.SONIC_BOOM,
+            world.sendParticles(ParticleTypes.SONIC_BOOM,
                 helper.getX() + offsetX,
                 helper.getY() + 1,
                 helper.getZ() + offsetZ,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        world.getOtherEntities(helper, helper.getBoundingBox().expand(6)).forEach(entity -> {
+        world.getEntities(helper, helper.getBoundingBox().inflate(6)).forEach(entity -> {
             if (entity.distanceTo(helper) < 6) {
-                entity.damage(world.getDamageSources().magic(), 10.0f);
-                Vec3d knockbackDir = entity.getPos().subtract(helper.getPos()).normalize();
-                entity.addVelocity(knockbackDir.x * 2.0, 0.5, knockbackDir.z * 2.0);
-                entity.velocityModified = true;
+                entity.hurt(world.damageSources().magic(), 10.0f);
+                Vec3 knockbackDir = entity.position().subtract(helper.position()).normalize();
+                entity.push(knockbackDir.x * 2.0, 0.5, knockbackDir.z * 2.0);
+                entity.hasImpulse = true;
             }
         });
     }
     
-    private static void executeWebShot(Entity helper, ServerWorld world) {
-        Vec3d lookDir = helper.getRotationVector();
-        Vec3d targetPos = helper.getPos().add(lookDir.multiply(12));
+    private static void executeWebShot(Entity helper, ServerLevel world) {
+        Vec3 lookDir = helper.getLookAngle();
+        Vec3 targetPos = helper.position().add(lookDir.scale(12));
         
-        world.spawnParticles(ParticleTypes.ITEM_SNOWBALL,
+        world.sendParticles(ParticleTypes.ITEM_SNOWBALL,
             targetPos.x, targetPos.y + 1, targetPos.z,
             15, 0.3, 0.3, 0.3, 0.02);
         
-        world.getOtherEntities(helper, helper.getBoundingBox().expand(12)).forEach(entity -> {
-            if (entity.distanceTo(helper) < 12 && entity instanceof net.minecraft.entity.LivingEntity living) {
-                living.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 200, 3));
-                living.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 200, 1));
+        world.getEntities(helper, helper.getBoundingBox().inflate(12)).forEach(entity -> {
+            if (entity.distanceTo(helper) < 12 && entity instanceof net.minecraft.world.entity.LivingEntity living) {
+                living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 200, 3));
+                living.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 200, 1));
             }
         });
     }
     
-    private static void executeThorns(Entity helper, ServerWorld world) {
+    private static void executeThorns(Entity helper, ServerLevel world) {
         for (int i = 0; i < 20; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.DAMAGE_INDICATOR,
+            world.sendParticles(ParticleTypes.DAMAGE_INDICATOR,
                 helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        world.getOtherEntities(helper, helper.getBoundingBox().expand(3)).forEach(entity -> {
+        world.getEntities(helper, helper.getBoundingBox().inflate(3)).forEach(entity -> {
             if (entity.distanceTo(helper) < 3) {
-                entity.damage(world.getDamageSources().thorns(helper), 6.0f);
+                entity.hurt(world.damageSources().thorns(helper), 6.0f);
             }
         });
         
-        if (helper instanceof net.minecraft.entity.LivingEntity living) {
-            living.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 200, 1));
+        if (helper instanceof net.minecraft.world.entity.LivingEntity living) {
+            living.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 200, 1));
         }
     }
     
-    private static void executeProjectileShot(Entity helper, ServerWorld world) {
-        Vec3d lookDir = helper.getRotationVector();
-        Vec3d targetPos = helper.getPos().add(lookDir.multiply(15));
+    private static void executeProjectileShot(Entity helper, ServerLevel world) {
+        Vec3 lookDir = helper.getLookAngle();
+        Vec3 targetPos = helper.position().add(lookDir.scale(15));
         
-        world.spawnParticles(ParticleTypes.SPLASH,
+        world.sendParticles(ParticleTypes.SPLASH,
             targetPos.x, targetPos.y + 1, targetPos.z,
             10, 0.2, 0.2, 0.2, 0.01);
         
-        world.getOtherEntities(helper, helper.getBoundingBox().expand(15)).forEach(entity -> {
+        world.getEntities(helper, helper.getBoundingBox().inflate(15)).forEach(entity -> {
             if (entity.distanceTo(helper) < 15) {
-                entity.damage(world.getDamageSources().magic(), 6.0f);
+                entity.hurt(world.damageSources().magic(), 6.0f);
             }
         });
     }
     
-    private static void executeExplosion(Entity helper, ServerWorld world) {
-        Vec3d lookDir = helper.getRotationVector();
-        Vec3d targetPos = helper.getPos().add(lookDir.multiply(8));
+    private static void executeExplosion(Entity helper, ServerLevel world) {
+        Vec3 lookDir = helper.getLookAngle();
+        Vec3 targetPos = helper.position().add(lookDir.scale(8));
         
-        world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER,
+        world.sendParticles(ParticleTypes.EXPLOSION_EMITTER,
             targetPos.x, targetPos.y + 1, targetPos.z,
             1, 0.0, 0.0, 0.0, 0.0);
         
-        world.getOtherEntities(helper, helper.getBoundingBox().expand(8)).forEach(entity -> {
+        world.getEntities(helper, helper.getBoundingBox().inflate(8)).forEach(entity -> {
             if (entity.distanceTo(helper) < 8) {
-                entity.damage(world.getDamageSources().magic(), 10.0f);
+                entity.hurt(world.damageSources().magic(), 10.0f);
             }
         });
     }
     
-    private static void executeHealing(Entity helper, ServerWorld world) {
+    private static void executeHealing(Entity helper, ServerLevel world) {
         for (int i = 0; i < 20; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.HEART,
+            world.sendParticles(ParticleTypes.HEART,
                 helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        if (helper instanceof net.minecraft.entity.LivingEntity living) {
+        if (helper instanceof net.minecraft.world.entity.LivingEntity living) {
             living.heal(8.0f);
-            living.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 200, 1));
+            living.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 200, 1));
         }
     }
     
-    private static void executeInvisibility(Entity helper, ServerWorld world) {
+    private static void executeInvisibility(Entity helper, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.EFFECT,
+            world.sendParticles(ParticleTypes.EFFECT,
                 helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        if (helper instanceof net.minecraft.entity.LivingEntity living) {
-            living.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, 300, 0));
+        if (helper instanceof net.minecraft.world.entity.LivingEntity living) {
+            living.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 300, 0));
         }
     }
     
-    private static void executeFireResistance(Entity helper, ServerWorld world) {
+    private static void executeFireResistance(Entity helper, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.FLAME,
+            world.sendParticles(ParticleTypes.FLAME,
                 helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        if (helper instanceof net.minecraft.entity.LivingEntity living) {
-            living.addStatusEffect(new StatusEffectInstance(StatusEffects.FIRE_RESISTANCE, 600, 0));
-            living.extinguish();
+        if (helper instanceof net.minecraft.world.entity.LivingEntity living) {
+            living.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 600, 0));
+            living.clearFire();
         }
     }
     
-    private static void executeWaterBreath(Entity helper, ServerWorld world) {
+    private static void executeWaterBreath(Entity helper, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.BUBBLE,
+            world.sendParticles(ParticleTypes.BUBBLE,
                 helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        if (helper instanceof net.minecraft.entity.LivingEntity living) {
-            living.addStatusEffect(new StatusEffectInstance(StatusEffects.WATER_BREATHING, 600, 0));
+        if (helper instanceof net.minecraft.world.entity.LivingEntity living) {
+            living.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 600, 0));
         }
     }
     
-    private static void executeNightVision(Entity helper, ServerWorld world) {
+    private static void executeNightVision(Entity helper, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.END_ROD,
+            world.sendParticles(ParticleTypes.END_ROD,
                 helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        if (helper instanceof net.minecraft.entity.LivingEntity living) {
-            living.addStatusEffect(new StatusEffectInstance(StatusEffects.NIGHT_VISION, 600, 0));
+        if (helper instanceof net.minecraft.world.entity.LivingEntity living) {
+            living.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 600, 0));
         }
     }
     
-    private static void executeSpeedBoost(Entity helper, ServerWorld world) {
+    private static void executeSpeedBoost(Entity helper, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.CLOUD,
+            world.sendParticles(ParticleTypes.CLOUD,
                 helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        if (helper instanceof net.minecraft.entity.LivingEntity living) {
-            living.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, 400, 2));
+        if (helper instanceof net.minecraft.world.entity.LivingEntity living) {
+            living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 400, 2));
         }
     }
     
-    private static void executeKnockbackWave(Entity helper, ServerWorld world) {
+    private static void executeKnockbackWave(Entity helper, ServerLevel world) {
         for (int i = 0; i < 30; i++) {
             double angle = (i / 30.0) * Math.PI * 2;
             double offsetX = Math.cos(angle) * 5;
             double offsetZ = Math.sin(angle) * 5;
-            world.spawnParticles(ParticleTypes.EXPLOSION,
+            world.sendParticles(ParticleTypes.EXPLOSION,
                 helper.getX() + offsetX,
                 helper.getY() + 1,
                 helper.getZ() + offsetZ,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        world.getOtherEntities(helper, helper.getBoundingBox().expand(8)).forEach(entity -> {
+        world.getEntities(helper, helper.getBoundingBox().inflate(8)).forEach(entity -> {
             if (entity.distanceTo(helper) < 8) {
-                Vec3d knockbackDir = entity.getPos().subtract(helper.getPos()).normalize();
-                entity.addVelocity(knockbackDir.x * 3.0, 0.8, knockbackDir.z * 3.0);
-                entity.velocityModified = true;
+                Vec3 knockbackDir = entity.position().subtract(helper.position()).normalize();
+                entity.push(knockbackDir.x * 3.0, 0.8, knockbackDir.z * 3.0);
+                entity.hasImpulse = true;
             }
         });
     }
     
-    private static void executeLifeSteal(Entity helper, ServerWorld world) {
+    private static void executeLifeSteal(Entity helper, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.DAMAGE_INDICATOR,
+            world.sendParticles(ParticleTypes.DAMAGE_INDICATOR,
                 helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        world.getOtherEntities(helper, helper.getBoundingBox().expand(5)).forEach(entity -> {
-            if (entity.distanceTo(helper) < 5 && entity instanceof net.minecraft.entity.LivingEntity living && helper instanceof net.minecraft.entity.LivingEntity helperLiving) {
-                living.damage(world.getDamageSources().magic(), 5.0f);
+        world.getEntities(helper, helper.getBoundingBox().inflate(5)).forEach(entity -> {
+            if (entity.distanceTo(helper) < 5 && entity instanceof net.minecraft.world.entity.LivingEntity living && helper instanceof net.minecraft.world.entity.LivingEntity helperLiving) {
+                living.hurt(world.damageSources().magic(), 5.0f);
                 helperLiving.heal(3.0f);
             }
         });
     }
     
-    private static void executeShieldBash(Entity helper, ServerWorld world) {
-        Vec3d lookDir = helper.getRotationVector();
+    private static void executeShieldBash(Entity helper, ServerLevel world) {
+        Vec3 lookDir = helper.getLookAngle();
         
         for (int i = 0; i < 20; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.CLOUD,
+            world.sendParticles(ParticleTypes.CLOUD,
                 helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        Vec3d velocity = lookDir.multiply(2.0);
-        helper.addVelocity(velocity);
-        helper.velocityModified = true;
+        Vec3 velocity = lookDir.scale(2.0);
+        helper.push(velocity.x, velocity.y, velocity.z);
+        helper.hasImpulse = true;
         
-        world.getOtherEntities(helper, helper.getBoundingBox().expand(3)).forEach(entity -> {
+        world.getEntities(helper, helper.getBoundingBox().inflate(3)).forEach(entity -> {
             if (entity.distanceTo(helper) < 3) {
-                entity.damage(world.getDamageSources().magic(), 8.0f);
-                Vec3d knockbackDir = entity.getPos().subtract(helper.getPos()).normalize();
-                entity.addVelocity(knockbackDir.x * 2.5, 0.5, knockbackDir.z * 2.5);
-                entity.velocityModified = true;
+                entity.hurt(world.damageSources().magic(), 8.0f);
+                Vec3 knockbackDir = entity.position().subtract(helper.position()).normalize();
+                entity.push(knockbackDir.x * 2.5, 0.5, knockbackDir.z * 2.5);
+                entity.hasImpulse = true;
             }
         });
     }
     
-    private static void executeLevitation(Entity helper, ServerWorld world) {
+    private static void executeLevitation(Entity helper, ServerLevel world) {
         for (int i = 0; i < 20; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.DRAGON_BREATH,
+            world.sendParticles(ParticleTypes.DRAGON_BREATH,
                 helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        helper.addVelocity(0, 1.5, 0);
-        helper.velocityModified = true;
+        helper.push(0, 1.5, 0);
+        helper.hasImpulse = true;
         
-        if (helper instanceof net.minecraft.entity.LivingEntity living) {
-            living.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 200, 0));
+        if (helper instanceof net.minecraft.world.entity.LivingEntity living) {
+            living.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 200, 0));
         }
     }
     
-    private static void executeUndeadHealing(Entity helper, ServerWorld world) {
+    private static void executeUndeadHealing(Entity helper, ServerLevel world) {
         for (int i = 0; i < 20; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.DAMAGE_INDICATOR,
+            world.sendParticles(ParticleTypes.DAMAGE_INDICATOR,
                 helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        if (helper instanceof net.minecraft.entity.LivingEntity living) {
+        if (helper instanceof net.minecraft.world.entity.LivingEntity living) {
             living.heal(10.0f);
-            living.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 400, 2));
-            living.addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, 400, 1));
+            living.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 400, 2));
+            living.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 400, 1));
         }
     }
     
-    private static void executeRegeneration(Entity helper, ServerWorld world) {
+    private static void executeRegeneration(Entity helper, ServerLevel world) {
         for (int i = 0; i < 25; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.HEART,
+            world.sendParticles(ParticleTypes.HEART,
                 helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        if (helper instanceof net.minecraft.entity.LivingEntity living) {
+        if (helper instanceof net.minecraft.world.entity.LivingEntity living) {
             living.heal(12.0f);
-            living.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 600, 2));
+            living.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 600, 2));
         }
     }
     
-    private static void executeStrengthBoost(Entity helper, ServerWorld world) {
+    private static void executeStrengthBoost(Entity helper, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.ENCHANT,
+            world.sendParticles(ParticleTypes.ENCHANT,
                 helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        if (helper instanceof net.minecraft.entity.LivingEntity living) {
-            living.addStatusEffect(new StatusEffectInstance(StatusEffects.STRENGTH, 600, 2));
+        if (helper instanceof net.minecraft.world.entity.LivingEntity living) {
+            living.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 600, 2));
         }
     }
     
-    private static void executeResistanceBoost(Entity helper, ServerWorld world) {
+    private static void executeResistanceBoost(Entity helper, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.TOTEM_OF_UNDYING,
+            world.sendParticles(ParticleTypes.TOTEM_OF_UNDYING,
                 helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        if (helper instanceof net.minecraft.entity.LivingEntity living) {
-            living.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 600, 1));
+        if (helper instanceof net.minecraft.world.entity.LivingEntity living) {
+            living.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 600, 1));
         }
     }
     
-    private static void executeFortune(Entity helper, ServerWorld world) {
+    private static void executeFortune(Entity helper, ServerLevel world) {
         for (int i = 0; i < 10; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.ENCHANT,
+            world.sendParticles(ParticleTypes.ENCHANT,
                 helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        if (helper instanceof net.minecraft.entity.LivingEntity living) {
-            living.addStatusEffect(new StatusEffectInstance(StatusEffects.LUCK, 300, 1));
+        if (helper instanceof net.minecraft.world.entity.LivingEntity living) {
+            living.addEffect(new MobEffectInstance(MobEffects.LUCK, 300, 1));
         }
     }
     
-    private static void executeLooting(Entity helper, ServerWorld world) {
+    private static void executeLooting(Entity helper, ServerLevel world) {
         for (int i = 0; i < 10; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.ENCHANT,
+            world.sendParticles(ParticleTypes.ENCHANT,
                 helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        if (helper instanceof net.minecraft.entity.LivingEntity living) {
-            living.addStatusEffect(new StatusEffectInstance(StatusEffects.LUCK, 300, 2));
+        if (helper instanceof net.minecraft.world.entity.LivingEntity living) {
+            living.addEffect(new MobEffectInstance(MobEffects.LUCK, 300, 2));
         }
     }
     
-    private static void executeSaturation(Entity helper, ServerWorld world) {
+    private static void executeSaturation(Entity helper, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.HAPPY_VILLAGER,
+            world.sendParticles(ParticleTypes.HAPPY_VILLAGER,
                 helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        if (helper instanceof net.minecraft.entity.LivingEntity living) {
-            living.addStatusEffect(new StatusEffectInstance(StatusEffects.SATURATION, 400, 1));
+        if (helper instanceof net.minecraft.world.entity.LivingEntity living) {
+            living.addEffect(new MobEffectInstance(MobEffects.SATURATION, 400, 1));
         }
     }
     
-    private static void executeHaste(Entity helper, ServerWorld world) {
+    private static void executeHaste(Entity helper, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.SPLASH,
+            world.sendParticles(ParticleTypes.SPLASH,
                 helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        if (helper instanceof net.minecraft.entity.LivingEntity living) {
-            living.addStatusEffect(new StatusEffectInstance(StatusEffects.HASTE, 600, 2));
+        if (helper instanceof net.minecraft.world.entity.LivingEntity living) {
+            living.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 600, 2));
         }
     }
     
-    private static void executeMiningFatigueCure(Entity helper, ServerWorld world) {
+    private static void executeMiningFatigueCure(Entity helper, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.MYCELIUM,
+            world.sendParticles(ParticleTypes.MYCELIUM,
                 helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        if (helper instanceof net.minecraft.entity.LivingEntity living) {
-            living.removeStatusEffect(StatusEffects.MINING_FATIGUE);
-            living.addStatusEffect(new StatusEffectInstance(StatusEffects.HASTE, 200, 1));
+        if (helper instanceof net.minecraft.world.entity.LivingEntity living) {
+            living.removeEffect(MobEffects.DIG_SLOWDOWN);
+            living.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 200, 1));
         }
     }
     
-    private static void executeWitherCure(Entity helper, ServerWorld world) {
+    private static void executeWitherCure(Entity helper, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.DRIPPING_HONEY,
+            world.sendParticles(ParticleTypes.DRIPPING_HONEY,
                 helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        if (helper instanceof net.minecraft.entity.LivingEntity living) {
-            living.removeStatusEffect(StatusEffects.WITHER);
+        if (helper instanceof net.minecraft.world.entity.LivingEntity living) {
+            living.removeEffect(MobEffects.WITHER);
             living.heal(5.0f);
-            living.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 200, 1));
+            living.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 200, 1));
         }
     }
     
-    private static void executeBlindnessCure(Entity helper, ServerWorld world) {
+    private static void executeBlindnessCure(Entity helper, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.END_ROD,
+            world.sendParticles(ParticleTypes.END_ROD,
                 helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        if (helper instanceof net.minecraft.entity.LivingEntity living) {
-            living.removeStatusEffect(StatusEffects.BLINDNESS);
-            living.addStatusEffect(new StatusEffectInstance(StatusEffects.NIGHT_VISION, 300, 0));
+        if (helper instanceof net.minecraft.world.entity.LivingEntity living) {
+            living.removeEffect(MobEffects.BLINDNESS);
+            living.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 300, 0));
         }
     }
     
-    private static void executePoisonCure(Entity helper, ServerWorld world) {
+    private static void executePoisonCure(Entity helper, ServerLevel world) {
         for (int i = 0; i < 15; i++) {
             double px = (world.random.nextDouble() - 0.5) * 2;
             double py = world.random.nextDouble() * 2;
             double pz = (world.random.nextDouble() - 0.5) * 2;
-            world.spawnParticles(ParticleTypes.HEART,
+            world.sendParticles(ParticleTypes.HEART,
                 helper.getX() + px, helper.getY() + py, helper.getZ() + pz,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        if (helper instanceof net.minecraft.entity.LivingEntity living) {
-            living.removeStatusEffect(StatusEffects.POISON);
+        if (helper instanceof net.minecraft.world.entity.LivingEntity living) {
+            living.removeEffect(MobEffects.POISON);
             living.heal(4.0f);
         }
     }
     
-    private static void executeTongueGrab(Entity helper, ServerWorld world) {
-        Vec3d lookDir = helper.getRotationVector();
+    private static void executeTongueGrab(Entity helper, ServerLevel world) {
+        Vec3 lookDir = helper.getLookAngle();
         double grabRange = 10.0;
         
         // Find the closest entity in front of the helper
-        net.minecraft.entity.Entity target = null;
+        net.minecraft.world.entity.Entity target = null;
         double closestDistance = grabRange;
         
-        for (net.minecraft.entity.Entity entity : world.getOtherEntities(helper, helper.getBoundingBox().expand(grabRange))) {
-            if (entity instanceof net.minecraft.entity.LivingEntity) {
-                Vec3d toEntity = entity.getPos().subtract(helper.getPos()).normalize();
-                double dotProduct = lookDir.dotProduct(toEntity);
+        for (net.minecraft.world.entity.Entity entity : world.getEntities(helper, helper.getBoundingBox().inflate(grabRange))) {
+            if (entity instanceof net.minecraft.world.entity.LivingEntity) {
+                Vec3 toEntity = entity.position().subtract(helper.position()).normalize();
+                double dotProduct = lookDir.dot(toEntity);
                 
                 // Check if entity is in front of helper (within 45 degree cone)
                 if (dotProduct > 0.7) {
@@ -645,44 +645,44 @@ public class HelperAbilityManager {
         
         if (target != null) {
             // Pull target towards helper
-            Vec3d direction = helper.getPos().subtract(target.getPos()).normalize();
+            Vec3 direction = helper.position().subtract(target.position()).normalize();
             double pullStrength = 1.5;
-            target.addVelocity(direction.x * pullStrength, 0.5, direction.z * pullStrength);
-            target.velocityModified = true;
+            target.push(direction.x * pullStrength, 0.5, direction.z * pullStrength);
+            target.hasImpulse = true;
             
             // Damage target slightly
-            if (target instanceof net.minecraft.entity.LivingEntity livingTarget) {
-                if (helper instanceof net.minecraft.entity.LivingEntity livingHelper) {
-                    livingTarget.damage(world.getDamageSources().mobAttack(livingHelper), 2.0f);
+            if (target instanceof net.minecraft.world.entity.LivingEntity livingTarget) {
+                if (helper instanceof net.minecraft.world.entity.LivingEntity livingHelper) {
+                    livingTarget.hurt(world.damageSources().mobAttack(livingHelper), 2.0f);
                 } else {
-                    livingTarget.damage(world.getDamageSources().magic(), 2.0f);
+                    livingTarget.hurt(world.damageSources().magic(), 2.0f);
                 }
             }
             
             // Spawn tongue particles
             for (int i = 0; i < 20; i++) {
                 double t = i / 20.0;
-                Vec3d particlePos = helper.getPos().add(0, 0.5, 0).add(
-                    target.getPos().subtract(helper.getPos()).multiply(t)
+                Vec3 particlePos = helper.position().add(0, 0.5, 0).add(
+                    target.position().subtract(helper.position()).scale(t)
                 );
-                world.spawnParticles(ParticleTypes.ITEM_SLIME,
+                world.sendParticles(ParticleTypes.ITEM_SLIME,
                     particlePos.x, particlePos.y, particlePos.z,
                     1, 0.0, 0.0, 0.0, 0.0);
             }
             
             // Spawn heart particles at target
-            world.spawnParticles(ParticleTypes.HEART,
+            world.sendParticles(ParticleTypes.HEART,
                 target.getX(), target.getY() + 1, target.getZ(),
                 3, 0.0, 0.0, 0.0, 0.0);
         } else {
             // No target found, just spawn particles in front
-            Vec3d targetPos = helper.getPos().add(lookDir.multiply(grabRange));
+            Vec3 targetPos = helper.position().add(lookDir.scale(grabRange));
             for (int i = 0; i < 15; i++) {
                 double t = i / 15.0;
-                Vec3d particlePos = helper.getPos().add(0, 0.5, 0).add(
-                    targetPos.subtract(helper.getPos()).multiply(t)
+                Vec3 particlePos = helper.position().add(0, 0.5, 0).add(
+                    targetPos.subtract(helper.position()).scale(t)
                 );
-                world.spawnParticles(ParticleTypes.ITEM_SLIME,
+                world.sendParticles(ParticleTypes.ITEM_SLIME,
                     particlePos.x, particlePos.y, particlePos.z,
                     1, 0.0, 0.0, 0.0, 0.0);
             }

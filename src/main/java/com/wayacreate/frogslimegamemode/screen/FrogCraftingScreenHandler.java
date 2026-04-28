@@ -1,21 +1,21 @@
 package com.wayacreate.frogslimegamemode.screen;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.screen.CraftingScreenHandler;
-import net.minecraft.screen.ScreenHandlerContext;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.CraftingMenu;
+import net.minecraft.world.inventory.ContainerLevelAccess;
 
-public class FrogCraftingScreenHandler extends CraftingScreenHandler {
-    public FrogCraftingScreenHandler(int syncId, PlayerInventory playerInventory) {
-        this(syncId, playerInventory, ScreenHandlerContext.EMPTY);
+public class FrogCraftingScreenHandler extends CraftingMenu {
+    public FrogCraftingScreenHandler(int syncId, Inventory playerInventory) {
+        this(syncId, playerInventory, ContainerLevelAccess.EMPTY);
     }
 
-    public FrogCraftingScreenHandler(int syncId, PlayerInventory playerInventory, ScreenHandlerContext context) {
+    public FrogCraftingScreenHandler(int syncId, Inventory playerInventory, ContainerLevelAccess context) {
         super(syncId, playerInventory, context);
     }
 
     @Override
-    public boolean canUse(PlayerEntity player) {
+    public boolean canUse(Player player) {
         return true;
     }
 }

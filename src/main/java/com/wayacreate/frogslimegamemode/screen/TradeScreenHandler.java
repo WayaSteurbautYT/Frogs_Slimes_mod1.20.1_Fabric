@@ -1,25 +1,25 @@
 package com.wayacreate.frogslimegamemode.screen;
 
 import com.wayacreate.frogslimegamemode.economy.TradeSession;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.ScreenHandlerType;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.screen.slot.SlotActionType;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.inventory.ClickType;
 
 import java.util.UUID;
 
-public class TradeScreenHandler extends ScreenHandler {
+public class TradeScreenHandler extends AbstractContainerMenu {
     private static final int TOP_SIZE = 27;
 
     private final TradeSession session;
     private final UUID viewerUuid;
 
-    public TradeScreenHandler(int syncId, PlayerInventory playerInventory, TradeSession session, UUID viewerUuid) {
-        super(ScreenHandlerType.GENERIC_9X3, syncId);
+    public TradeScreenHandler(int syncId, Inventory playerInventory, TradeSession session, UUID viewerUuid) {
+        super(MenuType.GENERIC_9X3, syncId);
         this.session = session;
         this.viewerUuid = viewerUuid;
 
@@ -27,7 +27,7 @@ public class TradeScreenHandler extends ScreenHandler {
     }
 
     @Override
-    public void onSlotClick(int slotIndex, int button, SlotActionType actionType, PlayerEntity player) {
+    public void onSlotClick(int slotIndex, int button, ClickType actionType, Player player) {
         if (slotIndex >= 0 && slotIndex < TOP_SIZE) {
             if (session.isViewerAcceptSlot(viewerUuid, slotIndex)) {
                 session.toggleAccept(player);
@@ -49,22 +49,22 @@ public class TradeScreenHandler extends ScreenHandler {
     }
 
     @Override
-    public void onClosed(PlayerEntity player) {
+    public void onClosed(Player player) {
         super.onClosed(player);
         session.onClosed(player);
     }
 
     @Override
-    public ItemStack quickMove(PlayerEntity player, int slot) {
+    public ItemStack quickMove(Player player, int slot) {
         return ItemStack.EMPTY;
     }
 
     @Override
-    public boolean canUse(PlayerEntity player) {
+    public boolean canUse(Player player) {
         return true;
     }
 
-    private void buildSlots(PlayerInventory playerInventory, Inventory tradeInventory) {
+    private void buildSlots(Inventory playerInventory, Inventory tradeInventory) {
         for (int row = 0; row < 3; row++) {
             for (int column = 0; column < 9; column++) {
                 int slotIndex = column + row * 9;
@@ -98,7 +98,7 @@ public class TradeScreenHandler extends ScreenHandler {
         }
 
         @Override
-        public boolean canTakeItems(PlayerEntity playerEntity) {
+        public boolean canTakeItems(Player playerEntity) {
             return false;
         }
     }

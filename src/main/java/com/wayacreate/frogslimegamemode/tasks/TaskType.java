@@ -1,6 +1,6 @@
 package com.wayacreate.frogslimegamemode.tasks;
 
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
 
 public enum TaskType {
     ACTIVATE_GAMEMODE(
@@ -9,7 +9,7 @@ public enum TaskType {
         "Starter kit and guide access",
         "Journey",
         1,
-        Formatting.GREEN
+        ChatFormatting.GREEN
     ),
     TAME_HELPER(
         "First Helper",
@@ -17,7 +17,7 @@ public enum TaskType {
         "Helper commands and role gameplay",
         "Helpers",
         1,
-        Formatting.AQUA
+        ChatFormatting.AQUA
     ),
     ASSIGN_ROLE(
         "Field Orders",
@@ -25,7 +25,7 @@ public enum TaskType {
         "Dedicated helper jobs",
         "Helpers",
         1,
-        Formatting.GOLD
+        ChatFormatting.GOLD
     ),
     UNLOCK_ABILITIES(
         "Ability Apprentice",
@@ -33,7 +33,7 @@ public enum TaskType {
         "Ability cycling and combat depth",
         "Abilities",
         3,
-        Formatting.LIGHT_PURPLE
+        ChatFormatting.LIGHT_PURPLE
     ),
     CRAFT_ABILITY(
         "Mob Smith",
@@ -41,7 +41,7 @@ public enum TaskType {
         "Permanent ability crafting route",
         "Abilities",
         1,
-        Formatting.RED
+        ChatFormatting.RED
     ),
     EVOLVE_HELPER(
         "Growing Stronger",
@@ -49,15 +49,15 @@ public enum TaskType {
         "Stronger helpers and more unlocks",
         "Helpers",
         1,
-        Formatting.YELLOW
+        ChatFormatting.YELLOW
     ),
     REACH_NETHER(
         "Nether Bound",
         "Reach the Nether.",
         "Nether contracts and blaze abilities",
-        "World",
+        "Level",
         1,
-        Formatting.DARK_RED
+        ChatFormatting.DARK_RED
     ),
     COMPLETE_CONTRACT(
         "Signed and Sealed",
@@ -65,15 +65,15 @@ public enum TaskType {
         "Coins and contract progression",
         "Economy",
         1,
-        Formatting.GOLD
+        ChatFormatting.GOLD
     ),
     REACH_END(
         "End Walker",
         "Reach the End.",
         "Final route unlocked",
-        "World",
+        "Level",
         1,
-        Formatting.DARK_PURPLE
+        ChatFormatting.DARK_PURPLE
     ),
     DEFEAT_FINAL_BOSS(
         "Beat the Run",
@@ -81,7 +81,7 @@ public enum TaskType {
         "Gamemode complete",
         "Finale",
         1,
-        Formatting.DARK_RED
+        ChatFormatting.DARK_RED
     );
 
     private final String displayName;
@@ -89,9 +89,9 @@ public enum TaskType {
     private final String rewardText;
     private final String category;
     private final int requiredAmount;
-    private final Formatting color;
+    private final ChatFormatting color;
 
-    TaskType(String displayName, String description, String rewardText, String category, int requiredAmount, Formatting color) {
+    TaskType(String displayName, String description, String rewardText, String category, int requiredAmount, ChatFormatting color) {
         this.displayName = displayName;
         this.description = description;
         this.rewardText = rewardText;
@@ -120,7 +120,7 @@ public enum TaskType {
         return requiredAmount;
     }
 
-    public Formatting getColor() {
+    public ChatFormatting getColor() {
         return color;
     }
 }

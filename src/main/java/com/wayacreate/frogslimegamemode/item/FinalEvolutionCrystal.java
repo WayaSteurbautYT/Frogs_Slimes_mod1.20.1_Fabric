@@ -2,43 +2,43 @@ package com.wayacreate.frogslimegamemode.item;
 
 import com.wayacreate.frogslimegamemode.achievements.AchievementManager;
 import com.wayacreate.frogslimegamemode.entity.SlimeHelperEntity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.InteractionHand;
 
 public class FinalEvolutionCrystal extends Item {
-    public FinalEvolutionCrystal(Settings settings) {
+    public FinalEvolutionCrystal(Properties settings) {
         super(settings);
     }
     
     @Override
-    public ActionResult useOnEntity(ItemStack stack, PlayerEntity user, LivingEntity entity, Hand hand) {
+    public InteractionResult useOnEntity(ItemStack stack, Player user, LivingEntity entity, InteractionHand hand) {
         if (!user.getWorld().isClient) {
             if (entity instanceof SlimeHelperEntity slime && slime.isOwner(user)) {
                 if (!slime.isFinalForm()) {
                     slime.unlockFinalForm();
                     stack.decrement(1);
-                    if (user instanceof net.minecraft.server.network.ServerPlayerEntity serverPlayer) {
+                    if (user instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
                         AchievementManager.unlockAchievement(serverPlayer, "final_form");
                     }
-                    user.sendMessage(Text.literal("THE FINAL EVOLUTION HAS BEGUN...")
-                        .formatted(Formatting.DARK_RED, Formatting.BOLD), false);
-                    return ActionResult.SUCCESS;
+                    user.sendMessage(Component.literal("THE FINAL EVOLUTION HAS BEGUN...")
+                        .formatted(ChatFormatting.DARK_RED, ChatFormatting.BOLD), false);
+                    return InteractionResult.SUCCESS;
                 } else {
-                    user.sendMessage(Text.literal("This slime has already reached its final form...")
-                        .formatted(Formatting.DARK_GRAY), false);
-                    return ActionResult.FAIL;
+                    user.sendMessage(Component.literal("This slime has already reached its final form...")
+                        .formatted(ChatFormatting.DARK_GRAY), false);
+                    return InteractionResult.FAIL;
                 }
             } else {
-                user.sendMessage(Text.literal("This crystal can only be used on your slime helper!")
-                    .formatted(Formatting.RED), false);
+                user.sendMessage(Component.literal("This crystal can only be used on your slime helper!")
+                    .formatted(ChatFormatting.RED), false);
             }
         }
-        return ActionResult.PASS;
+        return InteractionResult.PASS;
     }
 }

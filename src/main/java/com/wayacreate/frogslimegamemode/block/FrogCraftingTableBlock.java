@@ -1,33 +1,33 @@
 package com.wayacreate.frogslimegamemode.block;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.CraftingTableBlock;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.screen.NamedScreenHandlerFactory;
-import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.CraftingTableBlock;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 public class FrogCraftingTableBlock extends CraftingTableBlock {
-    public FrogCraftingTableBlock(Settings settings) {
+    public FrogCraftingTableBlock(Properties settings) {
         super(settings);
     }
 
     @Override
-    public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+    public InteractionResult onUse(BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         if (!world.isClient) {
-            NamedScreenHandlerFactory factory = new SimpleNamedScreenHandlerFactory(
+            MenuProvider factory = new SimpleMenuProvider(
                 (syncId, playerInventory, playerEntity) -> 
                     new com.wayacreate.frogslimegamemode.screen.FrogCraftingScreenHandler(syncId, playerInventory),
-                Text.literal("Frog Crafting Table")
+                Component.literal("Frog Crafting Table")
             );
             player.openHandledScreen(factory);
-            return ActionResult.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
-        return ActionResult.CONSUME;
+        return InteractionResult.CONSUME;
     }
 }
