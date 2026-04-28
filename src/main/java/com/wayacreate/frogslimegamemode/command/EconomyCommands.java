@@ -17,6 +17,8 @@ import java.util.List;
 
 public class EconomyCommands {
     
+    private static final ArrayList<String> commandHistory = new ArrayList<>();
+    
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         // /sell command
         dispatcher.register(CommandManager.literal("sell")
@@ -79,6 +81,7 @@ public class EconomyCommands {
         }
         
         ShopManager.listItem(player, handItem, price);
+        logCommandHistory("sell " + price);
         return 1;
     }
     
@@ -299,9 +302,7 @@ public class EconomyCommands {
         return 1;
     }
     
-    // Helper method to use ArrayList import
     private static void logCommandHistory(String command) {
-        java.util.ArrayList<String> history = new java.util.ArrayList<>();
-        history.add(command);
+        commandHistory.add(command);
     }
 }
