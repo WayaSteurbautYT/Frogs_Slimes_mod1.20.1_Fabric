@@ -17,6 +17,7 @@ public class ModKeybinds {
     public static KeyBinding openCollectionsKey;
     public static KeyBinding useAbilityKey;
     public static KeyBinding switchAbilityKey;
+    public static KeyBinding consumeAbilityKey;
     
     // Manhunt keybinds
     public static KeyBinding hunterTrackKey;
@@ -59,6 +60,13 @@ public class ModKeybinds {
             "key.frogslimegamemode.switch_ability",
             InputUtil.Type.KEYSYM,
             GLFW.GLFW_KEY_TAB,
+            "category.frogslimegamemode"
+        ));
+        
+        consumeAbilityKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+            "key.frogslimegamemode.consume_ability",
+            InputUtil.Type.KEYSYM,
+            GLFW.GLFW_KEY_X,
             "category.frogslimegamemode"
         ));
         
@@ -126,6 +134,12 @@ public class ModKeybinds {
             if (switchAbilityKey.wasPressed()) {
                 if (client.player != null) {
                     ClientPlayNetworking.send(ModNetworking.SWITCH_ABILITY, 
+                        net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create());
+                }
+            }
+            if (consumeAbilityKey.wasPressed()) {
+                if (client.player != null) {
+                    ClientPlayNetworking.send(ModNetworking.CONSUME_ABILITY_ITEM, 
                         net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create());
                 }
             }

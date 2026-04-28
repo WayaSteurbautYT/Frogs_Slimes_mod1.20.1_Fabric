@@ -120,4 +120,8 @@ public class GamemodeData {
             playerAbilities.add(abilityId);
         }
     }
+    
+    public boolean hasAbility(String abilityId) {
+        return playerAbilities.contains(abilityId);
+    }
 }

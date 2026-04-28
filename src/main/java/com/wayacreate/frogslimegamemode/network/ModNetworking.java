@@ -18,6 +18,7 @@ public final class ModNetworking {
     public static final Identifier USE_ABILITY = new Identifier(FrogSlimeGamemode.MOD_ID, "use_ability");
     public static final Identifier PLAYER_TONGUE_ANIMATION = new Identifier(FrogSlimeGamemode.MOD_ID, "player_tongue_animation");
     public static final Identifier SWITCH_ABILITY = new Identifier(FrogSlimeGamemode.MOD_ID, "switch_ability");
+    public static final Identifier CONSUME_ABILITY_ITEM = new Identifier(FrogSlimeGamemode.MOD_ID, "consume_ability_item");
     
     // Manhunt ability packets
     public static final Identifier HUNTER_TRACK = new Identifier(FrogSlimeGamemode.MOD_ID, "hunter_track");
@@ -45,6 +46,13 @@ public final class ModNetworking {
             server.execute(() -> {
                 // Handle ability switching
                 com.wayacreate.frogslimegamemode.abilities.PlayerAbilityManager.switchToNextAbility(player);
+            });
+        });
+        
+        ServerPlayNetworking.registerGlobalReceiver(CONSUME_ABILITY_ITEM, (server, player, handler, buf, responseSender) -> {
+            server.execute(() -> {
+                // Handle consuming mob ability item from hand
+                com.wayacreate.frogslimegamemode.item.MobAbilityItem.consumeHeldAbilityItem(player);
             });
         });
         

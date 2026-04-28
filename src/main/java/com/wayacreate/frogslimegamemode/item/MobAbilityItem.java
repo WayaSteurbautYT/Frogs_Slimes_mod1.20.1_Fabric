@@ -168,4 +168,78 @@ public class MobAbilityItem extends Item {
         
         return TypedActionResult.pass(stack);
     }
+    
+    /**
+     * Consume a mob ability item from the player's hand when hotkey is pressed.
+     * This is called from the server when the consume ability keybinding is pressed.
+     */
+    public static void consumeHeldAbilityItem(net.minecraft.server.network.ServerPlayerEntity player) {
+        // Check main hand first, then offhand
+        ItemStack mainHand = player.getMainHandStack();
+        ItemStack offHand = player.getOffHandStack();
+        ItemStack abilityStack = null;
+        boolean isMainHand = false;
+        
+        if (isMobAbility(mainHand)) {
+            abilityStack = mainHand;
+            isMainHand = true;
+        } else if (isMobAbility(offHand)) {
+            abilityStack = offHand;
+            isMainHand = false;
+        }
+        
+        if (abilityStack == null || abilityStack.isEmpty()) {
+            player.sendMessage(Text.literal("Hold a Mob Ability item to consume it!")
+                .formatted(Formatting.RED), false);
+            return;
+        }
+        
+        String abilityId = getAbilityId(abilityStack);
+        if (abilityId == null) {
+            player.sendMessage(Text.literal("Invalid ability item!").formatted(Formatting.RED), false);
+            return;
+        }
+        
+        MobAbility ability = MobAbility.getAbility(abilityId);
+        if (ability == null) {
+            player.sendMessage(Text.literal("Unknown ability!").formatted(Formatting.RED), false);
+            return;
+        }
+        
+        // Check if already unlocked
+        var playerData = com.wayacreate.frogslimegamemode.gamemode.GamemodeManager.getData(player);
+        if (playerData.hasAbility(abilityId)) {
+            player.sendMessage(Text.literal("You already have this ability!")
+                .formatted(Formatting.YELLOW), false);
+            return;
+        }
+        
+        // Add ability to player
+        playerData.addAbility(abilityId);
+        
+        // Apply ability bonuses
+        AbilityDropItem.applyAbilityToPlayerStatic(player, ability);
+        
+        // Get display item for effects
+        net.minecraft.item.Item displayItem = AbilityDropItem.getDropItemForAbility(abilityId);
+        
+        // Send totem animation
+        com.wayacreate.frogslimegamemode.network.ModNetworking.sendTotemAnimation(player, 
+            "Ability Unlocked!", 
+            ability.getName() + " - " + ability.getDescription(), 
+            Formatting.LIGHT_PURPLE,
+            displayItem);
+        
+        // Play sound
+        player.playSound(net.minecraft.sound.SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+        
+        // Send message
+        player.sendMessage(Text.literal("You consumed the ")
+            .formatted(Formatting.LIGHT_PURPLE)
+            .append(ability.getFormattedName())
+            .append(Text.literal("! Press [TAB] to switch abilities.").formatted(Formatting.YELLOW)), false);
+        
+        // Consume the item
+        abilityStack.decrement(1);
+    }
 }

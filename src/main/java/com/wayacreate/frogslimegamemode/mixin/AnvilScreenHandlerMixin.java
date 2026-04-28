@@ -1,6 +1,6 @@
 package com.wayacreate.frogslimegamemode.mixin;
 
-import com.wayacreate.frogslimegamemode.item.AbilityDropItem;
+import com.wayacreate.frogslimegamemode.item.ModItems;
 import com.wayacreate.frogslimegamemode.item.MobAbilityItem;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -15,18 +15,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class AnvilScreenHandlerMixin {
     
     @Inject(method = "canTakeOutput", at = @At("HEAD"), cancellable = true)
-    private void canTakeOutput(PlayerEntity player, CallbackInfoReturnable<Boolean> cir) {
+    private void canTakeOutput(PlayerEntity player, boolean canTakeOutput, CallbackInfoReturnable<Boolean> cir) {
         AnvilScreenHandler handler = (AnvilScreenHandler) (Object) this;
         ItemStack leftSlot = handler.getSlot(0).getStack();
         ItemStack rightSlot = handler.getSlot(1).getStack();
         
-        // Check if combining ability drop with matching mob item
-        if (AbilityDropItem.isAbilityDrop(leftSlot) && !rightSlot.isEmpty()) {
-            String abilityId = AbilityDropItem.getAbilityId(leftSlot);
+        // Check if combining ability stick with mob drop
+        if (leftSlot.isOf(ModItems.ABILITY_STICK) && !rightSlot.isEmpty()) {
             String mobItemId = net.minecraft.registry.Registries.ITEM.getId(rightSlot.getItem()).getPath();
+            String abilityId = getAbilityFromMobDrop(mobItemId);
             
-            String targetAbility = getAbilityFromMobDrop(mobItemId);
-            if (targetAbility != null && targetAbility.equals(abilityId)) {
+            if (abilityId != null) {
                 cir.setReturnValue(true);
             }
         }
@@ -37,18 +36,50 @@ public class AnvilScreenHandlerMixin {
         AnvilScreenHandler handler = (AnvilScreenHandler) (Object) this;
         ItemStack leftSlot = handler.getSlot(0).getStack();
         ItemStack rightSlot = handler.getSlot(1).getStack();
+        ItemStack outputSlot = handler.getSlot(2).getStack();
         
-        // Check if combining ability drop with matching mob item
-        if (AbilityDropItem.isAbilityDrop(leftSlot) && !rightSlot.isEmpty()) {
-            String abilityId = AbilityDropItem.getAbilityId(leftSlot);
+        // Check if left has ability stick and right has mob drop
+        if (leftSlot.isOf(ModItems.ABILITY_STICK) && !rightSlot.isEmpty()) {
             String mobItemId = net.minecraft.registry.Registries.ITEM.getId(rightSlot.getItem()).getPath();
+            String abilityId = getAbilityFromMobDrop(mobItemId);
             
-            String targetAbility = getAbilityFromMobDrop(mobItemId);
-            if (targetAbility != null && targetAbility.equals(abilityId)) {
-                // Consume items
-                leftSlot.decrement(1);
-                rightSlot.decrement(1);
-                ci.cancel();
+            if (abilityId != null) {
+                // Check if output has mob ability NBT tag (created by updateResult)
+                // The stack param contains the item being taken
+                boolean stackIsMobAbility = MobAbilityItem.isMobAbility(stack);
+                boolean outputIsMobAbility = MobAbilityItem.isMobAbility(outputSlot);
+                
+                if (stackIsMobAbility || outputIsMobAbility) {
+                    // Get ability ID from whichever stack has it
+                    String actualAbilityId = MobAbilityItem.getAbilityId(stack);
+                    if (actualAbilityId == null) {
+                        actualAbilityId = MobAbilityItem.getAbilityId(outputSlot);
+                    }
+                    if (actualAbilityId == null) {
+                        actualAbilityId = abilityId; // fallback to calculated
+                    }
+                    
+                    // Consume inputs
+                    leftSlot.decrement(1);
+                    rightSlot.decrement(1);
+                    
+                    // Create and give fresh mob ability
+                    ItemStack mobAbility = MobAbilityItem.createMobAbility(actualAbilityId);
+                    if (!mobAbility.isEmpty()) {
+                        player.getInventory().offerOrDrop(mobAbility);
+                    }
+                    
+                    // Clear output slot
+                    handler.getSlot(2).setStack(ItemStack.EMPTY);
+                    
+                    // Mark slots as changed
+                    handler.getSlot(0).markDirty();
+                    handler.getSlot(1).markDirty();
+                    handler.getSlot(2).markDirty();
+                    
+                    // Cancel vanilla behavior
+                    ci.cancel();
+                }
             }
         }
     }
@@ -59,13 +90,12 @@ public class AnvilScreenHandlerMixin {
         ItemStack leftSlot = handler.getSlot(0).getStack();
         ItemStack rightSlot = handler.getSlot(1).getStack();
         
-        // Check if combining ability drop with matching mob item
-        if (AbilityDropItem.isAbilityDrop(leftSlot) && !rightSlot.isEmpty()) {
-            String abilityId = AbilityDropItem.getAbilityId(leftSlot);
+        // Check if combining ability stick with mob drop
+        if (leftSlot.isOf(ModItems.ABILITY_STICK) && !rightSlot.isEmpty()) {
             String mobItemId = net.minecraft.registry.Registries.ITEM.getId(rightSlot.getItem()).getPath();
+            String abilityId = getAbilityFromMobDrop(mobItemId);
             
-            String targetAbility = getAbilityFromMobDrop(mobItemId);
-            if (targetAbility != null && targetAbility.equals(abilityId)) {
+            if (abilityId != null) {
                 ItemStack mobAbility = MobAbilityItem.createMobAbility(abilityId);
                 if (!mobAbility.isEmpty()) {
                     handler.getSlot(2).setStack(mobAbility);

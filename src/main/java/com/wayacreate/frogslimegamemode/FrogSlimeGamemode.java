@@ -43,7 +43,7 @@ public class FrogSlimeGamemode implements ModInitializer {
         TaskManager.init();
         AchievementManager.init();
         ModGameRules.register();
-        // AnvilRecipeHandler.register(); // Disabled - using mixin instead
+        AnvilRecipeHandler.register();
         
         FrogSlimeGamemode.LOGGER.info("Dimension teleportation available via /frogslime dimension command");
 

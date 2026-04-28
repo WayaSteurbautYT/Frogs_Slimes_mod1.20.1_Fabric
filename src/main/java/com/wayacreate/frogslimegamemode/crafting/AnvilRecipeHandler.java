@@ -1,6 +1,6 @@
 package com.wayacreate.frogslimegamemode.crafting;
 
-import com.wayacreate.frogslimegamemode.item.AbilityDropItem;
+import com.wayacreate.frogslimegamemode.item.ModItems;
 import com.wayacreate.frogslimegamemode.item.MobAbilityItem;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.block.Blocks;
@@ -22,35 +22,31 @@ public class AnvilRecipeHandler {
                 return ActionResult.PASS;
             }
             
-            // Check if player is holding ability_drop in main hand
+            // Check if player is holding ability_stick in main hand
             ItemStack mainHand = player.getMainHandStack();
-            if (!AbilityDropItem.isAbilityDrop(mainHand)) {
+            if (!mainHand.isOf(ModItems.ABILITY_STICK)) {
                 return ActionResult.PASS;
             }
             
-            // Check if player has mob item in offhand
+            // Check if player has mob drop in offhand
             ItemStack offHand = player.getOffHandStack();
             if (offHand.isEmpty()) {
-                player.sendMessage(Text.literal("Hold the mob item in your offhand!")
+                player.sendMessage(Text.literal("Hold the mob drop in your offhand (e.g., rotten flesh, bone, spider eye)!")
                     .formatted(Formatting.YELLOW), false);
                 return ActionResult.PASS;
             }
             
-            // Get ability ID from the ability drop
-            String abilityId = AbilityDropItem.getAbilityId(mainHand);
+            // Get ability ID from the mob drop
+            String abilityId = getAbilityIdFromItem(offHand);
             if (abilityId == null) {
-                // If no NBT, identify from the mob item in offhand
-                abilityId = getAbilityIdFromItem(offHand);
-                if (abilityId == null) {
-                    player.sendMessage(Text.literal("Unknown mob item!")
-                        .formatted(Formatting.RED), false);
-                    return ActionResult.PASS;
-                }
+                player.sendMessage(Text.literal("Unknown mob drop! Use vanilla mob drops like rotten flesh, bones, spider eyes, etc.")
+                    .formatted(Formatting.RED), false);
+                return ActionResult.PASS;
             }
             
-            // Check if offhand item matches the ability
+            // Validate that the mob item matches the ability
             if (!isMatchingMobItem(offHand, abilityId)) {
-                player.sendMessage(Text.literal("The mob item doesn't match this ability drop!")
+                player.sendMessage(Text.literal("Invalid mob drop combination!")
                     .formatted(Formatting.RED), false);
                 return ActionResult.PASS;
             }
@@ -59,7 +55,7 @@ public class AnvilRecipeHandler {
             ItemStack mobAbility = MobAbilityItem.createMobAbility(abilityId);
             if (mobAbility.isEmpty()) return ActionResult.PASS;
             
-            // Consume items
+            // Consume items (ability stick + mob drop)
             mainHand.decrement(1);
             offHand.decrement(1);
             
@@ -75,6 +71,7 @@ public class AnvilRecipeHandler {
             player.sendMessage(Text.literal("Created " + mobAbility.getName().getString() + "!")
                 .formatted(Formatting.GREEN), false);
             
+            // Also works with left click - but right click is more convenient
             return ActionResult.SUCCESS;
         });
     }
