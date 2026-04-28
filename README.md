@@ -548,7 +548,7 @@ But be warned... your slime may become too powerful. What have you created?
 
 ## Why This Exists
 
-This mod feels like it was made by a modded YouTuber with too much free time (and it kind of was). Inspired by the chaotic energy of **Craftee**, **Gold**, **ActualDonibobes**, **Skeppy**, **xNestorio**, **Baablu**, **Henwyy**, **Bionic**, and the unexpected plot twists that make you go "WAIT WHAT?!" 😱
+This mod feels like it was made by a modded YouTuber with too much free time (and it kind of was). Inspired by the chaotic energy of **Craftee**, **GoldActual**, **Donibobes**, **Skeppy**, **xNestorio**, **Baablu**, **Henwyy**, **Bionic**, and the unexpected plot twists that make you go "WAIT WHAT?!" 😱
 
 This is basically if all those YouTubers had a baby and that baby learned Java... yeah, that's this mod. The energy is UNMATCHED! 🔥
 
