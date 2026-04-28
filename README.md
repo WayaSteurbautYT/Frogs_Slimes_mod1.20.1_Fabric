@@ -6,18 +6,28 @@
 ![Fabric](https://img.shields.io/badge/Fabric-Loader-blue)
 ![Java](https://img.shields.io/badge/Java-17-orange)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
+![Version](https://img.shields.io/badge/Version-1.8.8-blueviolet)
 
-**A unique Minecraft Fabric mod where frog and slime helpers beat the game for you!**
+**A unique Minecraft Fabric mod where frog and slime helpers fight for you!**
 
-[Features](#features) • [Installation](#installation) • [How to Play](#how-to-play) • [Gallery](#gallery) • [Commands](#commands)
+[Features](#features) • [Commands](#-all-commands) • [Installation](#installation) • [How to Play](#how-to-play) • [Gallery](#gallery)
 
 </div>
 
 ---
 
-## What is this?
+## 🎮 What is This Mod?
 
-A custom gamemode where you tame frog and slime helpers that fight mobs and evolve as they kill. Inspired by content creators like Craftee, xxNestorio, DonnieBobes, Skeppy and more, but with an unexpected twist ending like in Groxs videos.
+Frog & Slime Gamemode is a **complete multiplayer RPG experience** for Minecraft Fabric. Tame frog and slime helpers that evolve as they fight, unlock mob abilities by eating them, complete contracts, join guilds, trade with other players, and compete in bounty hunting and manhunt modes. All culminating in an epic boss fight with a shocking twist ending!
+
+### 🌟 Key Features at a Glance
+- **Evolution System**: Helpers evolve through 5 stages (Basic → Advanced → Elite → Master → Final Form)
+- **Mob Abilities**: Eat mobs to unlock 20+ unique abilities (Fireball, Teleport, Poison Cloud, etc.)
+- **Economy System**: Full player marketplace with coins, trading, bounties, and guild banks
+- **Multiplayer Features**: Guilds, teams, manhunt mode, PvP with bounties, private messaging
+- **RPG Elements**: Contracts, missions, ranks, achievements, and progression rewards
+- **Custom Dimension**: Transformed End dimension for the final boss fight
+- **Builder AI**: Helpers can build schematics using Baritone integration
 
 ## Features
 
@@ -335,21 +345,120 @@ After defeating the Giant Slime Boss, use the **Final Evolution Crystal** on you
 - 30 Attack Damage
 - 100% Knockback Resistance
 
-## Commands
+## ⌨️ All Commands
+
+### 🎮 Core Gamemode Commands (`/frogslime`)
 
 | Command | Description |
 |---------|-------------|
-| `/frogslime enable` | Begin the gamemode |
+| `/frogslime enable` | Begin the gamemode - receive starter kit with Guide Book |
 | `/frogslime disable` | Stop the gamemode |
 | `/frogslime info` | Show help information |
 | `/frogslime tasks` | Open tasks & challenges menu |
-| `/frogslime reset` | Reset all gamemode data (use with caution) |
-| `/frogslime manhunt speedrunner` | Set yourself as the speedrunner |
-| `/frogslime manhunt hunter` | Set yourself as a hunter (targets nearest player) |
+| `/frogslime reset` | **⚠️ Reset all gamemode data** (abilities, progress, everything) |
+
+### 🏃 Manhunt Commands (`/frogslime manhunt`)
+
+| Command | Description |
+|---------|-------------|
+| `/frogslime manhunt auto` | Start auto-assigned manhunt (random speedrunner) |
+| `/frogslime manhunt speedrunner` | Set yourself as speedrunner |
+| `/frogslime manhunt solo` | Set yourself as solo speedrunner |
+| `/frogslime manhunt hunter` | Become a hunter (targets nearest player) |
+| `/frogslime manhunt team <speedrunner_team> <hunter_team>` | Start team-based manhunt |
 | `/frogslime manhunt end` | End the manhunt game |
+
+### 🌌 Dimension Commands (`/frogslime dimension`)
+
+| Command | Description |
+|---------|-------------|
 | `/frogslime dimension transformed_end` | Teleport to the Transformed End dimension |
-| `/frogslime dimension return` | Return from the dimension to spawn |
-| `/helper <role>` | Assign a role to your helper (Miner, Lumberjack, Combat, Builder, Farmer) |
+| `/frogslime dimension return` | Return to Overworld spawn |
+
+### 👥 Team Commands (`/frogslime team`)
+
+| Command | Description |
+|---------|-------------|
+| `/frogslime team create <name> <color>` | Create a new team |
+| `/frogslime team join <name>` | Join an existing team |
+| `/frogslime team leave` | Leave your current team |
+| `/frogslime team list` | List all teams |
+| `/frogslime team tp <player>` | Teleport to a team member |
+
+### 🎖️ Rank Commands (`/frogslime rank`)
+
+| Command | Description |
+|---------|-------------|
+| `/frogslime rank <player> <rank>` | Set a player's rank (requires permissions) |
+
+### 📜 Contract Commands (`/frogslime contract`)
+
+| Command | Description |
+|---------|-------------|
+| `/frogslime contract list` | List available contracts |
+| `/frogslime contract accept <type>` | Accept a contract |
+| `/frogslime contract my` | View your active contracts |
+
+### 💰 Economy Commands (Standalone)
+
+| Command | Description |
+|---------|-------------|
+| `/balance` | Check your coin balance |
+| `/pay <player> <amount>` | Send coins to another player |
+| `/sell <price>` | Sell item in your hand to marketplace |
+| `/shop` | View marketplace listings |
+| `/shop buy <index>` | Buy item from marketplace |
+| `/shop cancel <index>` | Cancel your listing |
+| `/shop mylistings` | View your active listings |
+| `/trade <player>` | Send trade request to player |
+| `/trade accept` | Accept incoming trade |
+| `/trade decline` | Decline incoming trade |
+| `/trade toggle` | Toggle trading availability |
+
+### 💬 Social Commands
+
+| Command | Description |
+|---------|-------------|
+| `/msg <player> <message>` | Send private message |
+
+### 🎯 Bounty Commands (`/bounty`)
+
+| Command | Description |
+|---------|-------------|
+| `/bounty add <player> <coins>` | Place a bounty on a player |
+| `/bounty list` | List all active bounties |
+| `/bounty check` | Check bounty on your own head |
+
+### 🏰 Guild Commands (`/guild`)
+
+| Command | Description |
+|---------|-------------|
+| `/guild create <name>` | Create a new guild |
+| `/guild disband` | Disband your guild (owner only) |
+| `/guild invite <player>` | Invite player to guild |
+| `/guild join <name>` | Join a guild (via invite) |
+| `/guild leave` | Leave your guild |
+| `/guild info` | Show guild information |
+| `/guild members` | List guild members |
+| `/guild deposit <amount>` | Deposit coins to guild bank |
+| `/guild missions` | List active guild missions |
+| `/guild missions create <name>` | Create a new mission |
+| `/guild missions complete <id>` | Complete a mission |
+
+### 🛠️ Helper Commands (`/helper`)
+
+| Command | Description |
+|---------|-------------|
+| `/helper giverole <role>` | Get role assignment item (Miner, Lumberjack, Combat Specialist, Farmer, Builder) |
+| `/helper <helper> build <schematic>` | Set helper to build a schematic |
+| `/helper <helper> stop` | Stop helper building |
+| `/helper <helper> progress` | Check build progress |
+
+### 🧪 Test Commands (`/frogslime test`)
+
+| Command | Description |
+|---------|-------------|
+| `/frogslime test achievement <id>` | Test unlock an achievement |
 
 ## Tasks & Challenges
 
@@ -378,37 +487,40 @@ But be warned... your slime may become too powerful. What have you created?
 
 This mod feels like it was made by a modded YouTuber with too much free time (and it kind of was). Inspired by the chaotic energy of Craftee, xxNestorio, DonnieBobes, Skeppy, and the unexpected plot twists of Groxs videos.
 
-## Recent Updates
+## 📜 Changelog
+
+### v1.8.8 - Current Release
+- ✅ Full economy system with marketplace, trading, and player shops
+- ✅ Guild system with missions, banks, and member management
+- ✅ Bounty system for PvP rewards
+- ✅ Complete helper role system with Baritone AI integration
+- ✅ Team system with teleportation and color support
+- ✅ Private messaging system
+- ✅ Enhanced manhunt with team and auto modes
+- ✅ Rank system with chat prefixes
 
 ### v1.5.0 - Dimension Implementation
 - ✅ Implemented datapack-based custom dimension system
 - ✅ Configured dimension JSON files for proper generation
 - ✅ Updated teleporter with RegistryKey-based dimension access
 - ✅ Added fallback system to regular End if custom dimension unavailable
-- ✅ Made dimension fully customizable via JSON configuration
 
 ### v1.4.0 - UI & Polish Update
 - ✅ Added progress bar HUD showing gamemode completion
 - ✅ Implemented custom achievement toast notifications
 - ✅ Added achievement sound effects (level-up sound)
-- ✅ Improved task tracking with visual progress indicators
 - ✅ Enhanced HUD rendering system
 
 ### v1.3.0 - Dimension Update
 - ✅ Added custom dimension system foundation
 - ✅ Implemented dimension teleportation commands
-- ✅ Created Transformed End dimension configuration
-- ✅ Added return command for dimension travel
 
 ### v1.2.0 - Final Polish
 - ✅ Added Builder and Farmer AI roles
 - ✅ Integrated ManhuntCompass with ManhuntManager
 - ✅ Changed potion recipes from crafting to brewing
-- ✅ Added helper egg upgrade system
 - ✅ Implemented persistent saving system
 - ✅ Added player kill reward system
-- ✅ Adjusted drop chances for balanced progression (40% for players, 50% for helpers)
-- ✅ Fixed compilation errors and cleaned up code
 
 ## Contributing
 
