@@ -16,7 +16,70 @@
 
 ---
 
-## 🎮 What is This Mod?
+## � Yo, What's Good?! Welcome to the Chaos! 🐸🫧
+
+**Subscribe or your frogs will evolve WITHOUT you!** (jk... unless? 😳)
+
+What's up everybody, it's **WayaCreate** back with another INSANE Minecraft mod that will literally break your brain! 🧠💥 This isn't just a mod—this is a **COMPLETE MULTIPLAYER RPG EXPERIENCE** that I built because you guys asked for it! That's right, this is **community-driven content** at its finest!
+
+### 🔥 Why You NEED This Mod (Trust Me Bro):
+- **Tame frog & slime helpers** that EVOLVE into ABSOLUTE UNITS! 💪
+- **Eat mobs to steal their abilities** (yes, you read that right, EAT THEM! 🍽️)
+- **Guilds, Bounties, Manhunt, Economy**—basically Minecraft on CREATIVE MODE STEROIDS!
+- **GIANT SLIME BOSS** replaces the Ender Dragon... and it gets WILD! 👹
+- **20+ unlockable abilities** from Fireballs to Teleportation! ⚡
+
+### 🎯 Who Made This Chaos?
+Hey, I'm **Waya Steurbaut** (aka **WayaCreate**) and I make fan-requested content spanning gaming, design, and cutting-edge tech! From Minecraft mods to Blender tutorials, video editing tips to live streams—**YOUR ideas come to life here!** 🎮🎨🚀
+
+📺 **Subscribe on YouTube:** [@wayacreate](https://www.youtube.com/@wayacreate)  
+💻 **Check my other projects below!** ⬇️
+
+### 🎮 What You'll Find on My Channel:
+- Minecraft, Roblox, Fortnite & Destiny 2 gameplay/tutorials
+- Blender 3D modeling & animation guides
+- Video editing masterclasses
+- AI tools & graphics design tips
+- **LIVE STREAMS** where YOU control the content!
+
+*New videos every week, powered by YOUR suggestions!* 🏆
+
+---
+
+## 🛠️ For The Developers (Why Use This Template?)
+
+Yo modders! Looking for a **FULLY FEATURED RPG MOD TEMPLATE** that actually works? Here's why this repo is OP:
+
+✅ **Complete Evolution System** - 5-stage helper progression with persistent saving  
+✅ **Ability Unlock Framework** - Modular system for adding new mob abilities  
+✅ **Economy & Trading** - Full player marketplace with coins, shops, guild banks  
+✅ **Multiplayer Systems** - Teams, guilds, bounties, private messaging, manhunt  
+✅ **Custom Dimensions** - Datapack-based dimension implementation  
+✅ **AI Integration** - Baritone helper roles (Miner, Builder, Farmer, etc.)  
+✅ **GUI Systems** - Task menus, progress bars, achievement toasts  
+✅ **RPG Elements** - Contracts, missions, ranks, achievements, boss fights  
+
+### ⚠️ What to Watch Out For:
+- **Persistent Data** is saved per-world, not globally—plan your server resets!
+- **Dimension System** requires proper datapack setup or falls back to vanilla End
+- **Helper AI** needs Baritone API—make sure dependencies are loaded
+- **Economy** uses server-side storage—back up your `frogslime/` data folder!
+
+---
+
+## 🔗 My Other Epic Projects
+
+Want more chaos? Check these out:
+
+| Project | Description | Link |
+|---------|-------------|------|
+| **🎡 Waya's Wheel** | Interactive streaming wheel for content creators | [GitHub](https://github.com/WayaSteurbaut/wayas-wheel) |
+| **🎵 Anime MC Shonen Rap Cypher** | Music production & lyric writing project | Coming Soon |
+| **🎨 Trailer Shaders** | Custom Minecraft shader pack for cinematic content | Coming Soon |
+
+---
+
+## � What is This Mod?
 
 Frog & Slime Gamemode is a **complete multiplayer RPG experience** for Minecraft Fabric. Tame frog and slime helpers that evolve as they fight, unlock mob abilities by eating them, complete contracts, join guilds, trade with other players, and compete in bounty hunting and manhunt modes. All culminating in an epic boss fight with a shocking twist ending!
 
@@ -485,7 +548,9 @@ But be warned... your slime may become too powerful. What have you created?
 
 ## Why This Exists
 
-This mod feels like it was made by a modded YouTuber with too much free time (and it kind of was). Inspired by the chaotic energy of Craftee, xxNestorio, DonnieBobes, Skeppy, and the unexpected plot twists of Groxs videos.
+This mod feels like it was made by a modded YouTuber with too much free time (and it kind of was). Inspired by the chaotic energy of **Craftee**, **Gold**, **ActualDonibobes**, **Skeppy**, **xNestorio**, **Baablu**, **Henwyy**, **Bionic**, and the unexpected plot twists that make you go "WAIT WHAT?!" 😱
+
+This is basically if all those YouTubers had a baby and that baby learned Java... yeah, that's this mod. The energy is UNMATCHED! 🔥
 
 ## 📜 Changelog
 
