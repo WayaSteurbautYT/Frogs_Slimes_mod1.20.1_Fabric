@@ -53,6 +53,7 @@ loom {
 }
 
 processResources {
+    doNotTrackState("OneDrive reparse point workaround")
     inputs.property "version", project.version
     filteringCharset "UTF-8"
 

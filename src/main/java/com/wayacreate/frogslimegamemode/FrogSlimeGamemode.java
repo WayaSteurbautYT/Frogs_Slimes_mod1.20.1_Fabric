@@ -3,8 +3,12 @@ package com.wayacreate.frogslimegamemode;
 import com.wayacreate.frogslimegamemode.abilities.PlayerAbilityManager;
 import com.wayacreate.frogslimegamemode.achievements.AchievementManager;
 import com.wayacreate.frogslimegamemode.block.ModBlocks;
+import com.wayacreate.frogslimegamemode.command.BountyCommand;
+import com.wayacreate.frogslimegamemode.command.EconomyCommands;
 import com.wayacreate.frogslimegamemode.command.FrogSlimeCommand;
+import com.wayacreate.frogslimegamemode.command.GuildCommand;
 import com.wayacreate.frogslimegamemode.command.HelperCommand;
+import com.wayacreate.frogslimegamemode.economy.BountyManager;
 import com.wayacreate.frogslimegamemode.crafting.AnvilRecipeHandler;
 import com.wayacreate.frogslimegamemode.dimension.ModDimensions;
 import com.wayacreate.frogslimegamemode.eating.EatingSystem;
@@ -19,6 +23,8 @@ import com.wayacreate.frogslimegamemode.network.ModNetworking;
 import com.wayacreate.frogslimegamemode.tasks.TaskManager;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
@@ -50,6 +56,9 @@ public class FrogSlimeGamemode implements ModInitializer {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             FrogSlimeCommand.register(dispatcher);
             HelperCommand.register(dispatcher, registryAccess, environment);
+            EconomyCommands.register(dispatcher);
+            GuildCommand.register(dispatcher);
+            BountyCommand.register(dispatcher);
         });
 
         // Register chat message event for rank and team display
@@ -83,6 +92,14 @@ public class FrogSlimeGamemode implements ModInitializer {
             // Save all player data when server stops
             for (var player : server.getPlayerManager().getPlayerList()) {
                 GamemodeManager.onPlayerLeave(player);
+            }
+        });
+        
+        // Register player death event for bounties
+        ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
+            if (entity instanceof ServerPlayerEntity player && 
+                damageSource.getAttacker() instanceof ServerPlayerEntity killer) {
+                BountyManager.onPlayerDeath(player, killer);
             }
         });
 

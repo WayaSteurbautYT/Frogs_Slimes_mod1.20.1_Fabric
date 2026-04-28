@@ -239,7 +239,11 @@ public class MobAbilityItem extends Item {
             .append(ability.getFormattedName())
             .append(Text.literal("! Press [TAB] to switch abilities.").formatted(Formatting.YELLOW)), false);
         
-        // Consume the item
-        abilityStack.decrement(1);
+        // Consume the item from the correct hand
+        if (isMainHand) {
+            mainHand.decrement(1);
+        } else {
+            offHand.decrement(1);
+        }
     }
 }
