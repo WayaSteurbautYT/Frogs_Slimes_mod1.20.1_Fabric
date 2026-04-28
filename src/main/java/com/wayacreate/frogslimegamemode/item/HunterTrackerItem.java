@@ -43,7 +43,9 @@ public class HunterTrackerItem extends Item {
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
         if (!world.isClient && user instanceof ServerPlayerEntity serverPlayer) {
             if (ManhuntManager.isHunter(serverPlayer)) {
-                ManhuntManager.useHunterTrackAbility(serverPlayer);
+                if (!ManhuntManager.useContextualAbility(serverPlayer)) {
+                    ManhuntManager.useHunterTrackAbility(serverPlayer);
+                }
             } else {
                 user.sendMessage(Text.literal("Only hunters can use this item!")
                     .formatted(Formatting.RED), true);

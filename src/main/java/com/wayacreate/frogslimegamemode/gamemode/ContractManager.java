@@ -2,6 +2,8 @@ package com.wayacreate.frogslimegamemode.gamemode;
 
 import com.wayacreate.frogslimegamemode.FrogSlimeGamemode;
 import com.wayacreate.frogslimegamemode.achievements.AchievementManager;
+import com.wayacreate.frogslimegamemode.tasks.TaskManager;
+import com.wayacreate.frogslimegamemode.tasks.TaskType;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -116,6 +118,8 @@ public class ContractManager {
             .formatted(Formatting.GREEN, Formatting.BOLD)
             .append(Text.literal(type.getName())
                 .formatted(Formatting.YELLOW)), false);
+        player.sendMessage(Text.literal("Goal: " + type.getDescription())
+            .formatted(Formatting.GRAY), false);
         player.sendMessage(Text.literal("Reward: " + reward + " coins")
             .formatted(Formatting.GOLD), false);
         player.sendMessage(Text.literal("Expires in 30 minutes")
@@ -164,7 +168,7 @@ public class ContractManager {
         contracts.remove(contractIndex);
         
         // Add reward to player's balance
-        EconomyManager.addCoins(player, contract.getReward());
+        com.wayacreate.frogslimegamemode.economy.EconomyManager.addBalance(player, contract.getReward());
         
         player.sendMessage(Text.literal("Contract Completed: ")
             .formatted(Formatting.GREEN, Formatting.BOLD)
@@ -172,6 +176,8 @@ public class ContractManager {
                 .formatted(Formatting.YELLOW)), false);
         player.sendMessage(Text.literal("Reward: " + contract.getReward() + " coins")
             .formatted(Formatting.GOLD), false);
+
+        TaskManager.completeTask(player, TaskType.COMPLETE_CONTRACT);
         
         // Update completed count
         int totalCompleted = completedContracts.getOrDefault(uuid, 0) + 1;
@@ -195,7 +201,7 @@ public class ContractManager {
         if (contracts == null || contracts.isEmpty()) {
             player.sendMessage(Text.literal("You have no active contracts.")
                 .formatted(Formatting.GRAY), false);
-            player.sendMessage(Text.literal("Use /contract accept <type> to accept a contract.")
+            player.sendMessage(Text.literal("Use /frogslime contract accept <type> to accept a contract.")
                 .formatted(Formatting.YELLOW), false);
             return;
         }
@@ -217,14 +223,16 @@ public class ContractManager {
     }
     
     public static void listAvailableContracts(ServerPlayerEntity player) {
-        player.sendMessage(Text.literal("Available Contracts:").formatted(Formatting.BOLD), false);
+        player.sendMessage(Text.literal("Available Contracts:").formatted(Formatting.GOLD, Formatting.BOLD), false);
         for (ContractType type : contractTypes) {
-            player.sendMessage(Text.literal("- " + type.getName() + ": " + type.getDescription())
+            player.sendMessage(Text.literal("- " + type.getName() + " [" + type.getId() + "]")
+                .formatted(Formatting.YELLOW), false);
+            player.sendMessage(Text.literal("  " + type.getDescription())
                 .formatted(Formatting.GRAY), false);
             player.sendMessage(Text.literal("  Reward: " + type.getBaseReward() + "-" + type.getMaxReward() + " coins")
                 .formatted(Formatting.GOLD), false);
         }
-        player.sendMessage(Text.literal("Use /contract accept <id> to accept a contract.")
+        player.sendMessage(Text.literal("Use /frogslime contract accept <id> to accept a contract.")
             .formatted(Formatting.YELLOW), false);
     }
     

@@ -217,6 +217,12 @@ public abstract class PlayerEntityMixin {
         PlayerEntity player = (PlayerEntity) (Object) this;
         if (!player.getWorld().isClient && GamemodeManager.isInGamemode(player)) {
             GamemodeManager.getData(player).incrementDeathCount();
+
+            if (player instanceof net.minecraft.server.network.ServerPlayerEntity serverPlayer
+                && com.wayacreate.frogslimegamemode.gamemode.ManhuntManager.isInGame(serverPlayer)
+                && com.wayacreate.frogslimegamemode.gamemode.ManhuntManager.isSpeedrunner(serverPlayer)) {
+                com.wayacreate.frogslimegamemode.gamemode.ManhuntManager.onSpeedrunnerDeath(serverPlayer);
+            }
             
             // Drop raw ability drop items on death (need to be crafted with normal drops)
             var abilities = GamemodeManager.getData(player).getPlayerAbilities();

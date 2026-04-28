@@ -1,7 +1,10 @@
 package com.wayacreate.frogslimegamemode.crafting;
 
+import com.wayacreate.frogslimegamemode.achievements.AchievementManager;
 import com.wayacreate.frogslimegamemode.item.ModItems;
 import com.wayacreate.frogslimegamemode.item.MobAbilityItem;
+import com.wayacreate.frogslimegamemode.tasks.TaskManager;
+import com.wayacreate.frogslimegamemode.tasks.TaskType;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.ItemStack;
@@ -70,6 +73,11 @@ public class AnvilRecipeHandler {
             // Send message
             player.sendMessage(Text.literal("Created " + mobAbility.getName().getString() + "!")
                 .formatted(Formatting.GREEN), false);
+
+            TaskManager.completeTask(player, TaskType.CRAFT_ABILITY);
+            if (player instanceof net.minecraft.server.network.ServerPlayerEntity serverPlayer) {
+                AchievementManager.unlockAchievement(serverPlayer, "mob_smith");
+            }
             
             // Also works with left click - but right click is more convenient
             return ActionResult.SUCCESS;
@@ -110,6 +118,7 @@ public class AnvilRecipeHandler {
         if (itemIdStr.equals("minecraft:emerald")) return "villager";
         if (itemIdStr.equals("minecraft:iron_ingot")) return "iron_golem";
         if (itemIdStr.equals("minecraft:snowball")) return "snow_golem";
+        if (itemIdStr.equals("minecraft:music_disc_cat")) return "parrot";
         if (itemIdStr.equals("minecraft:golden_apple")) return "technoblade_pig";
         if (itemIdStr.equals("minecraft:redstone")) return "mumbo_jumbo";
         if (itemIdStr.equals("minecraft:dirt")) return "derpy";
@@ -188,6 +197,7 @@ public class AnvilRecipeHandler {
             case "villager", "wandering_trader" -> itemIdStr.equals("minecraft:emerald");
             case "iron_golem" -> itemIdStr.equals("minecraft:iron_ingot");
             case "snow_golem" -> itemIdStr.equals("minecraft:snowball");
+            case "parrot" -> itemIdStr.equals("minecraft:music_disc_cat");
             case "technoblade_pig" -> itemIdStr.equals("minecraft:golden_apple");
             case "mumbo_jumbo" -> itemIdStr.equals("minecraft:redstone");
             case "derpy" -> itemIdStr.equals("minecraft:dirt");
@@ -233,7 +243,6 @@ public class AnvilRecipeHandler {
             case "goat", "panda", "polar_bear" -> itemIdStr.equals("minecraft:leather");
             case "frog", "tadpole" -> itemIdStr.equals("minecraft:slime_ball");
             case "fox", "wolf", "cat", "ocelot" -> itemIdStr.equals("minecraft:bone");
-            case "parrot" -> itemIdStr.equals("minecraft:feather");
             default -> false;
         };
     }

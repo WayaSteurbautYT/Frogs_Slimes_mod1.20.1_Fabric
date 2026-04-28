@@ -19,14 +19,6 @@ public class ModKeybinds {
     public static KeyBinding switchAbilityKey;
     public static KeyBinding consumeAbilityKey;
     
-    // Manhunt keybinds
-    public static KeyBinding hunterTrackKey;
-    public static KeyBinding hunterBlockKey;
-    public static KeyBinding hunterSlowKey;
-    public static KeyBinding speedrunnerEscapeKey;
-    public static KeyBinding speedrunnerSpeedKey;
-    public static KeyBinding speedrunnerInvisKey;
-    
     public static void register() {
         openGuiKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
             "key.frogslimegamemode.open_gui",
@@ -70,59 +62,26 @@ public class ModKeybinds {
             "category.frogslimegamemode"
         ));
         
-        // Manhunt keybinds
-        hunterTrackKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-            "key.frogslimegamemode.hunter_track",
-            InputUtil.Type.KEYSYM,
-            GLFW.GLFW_KEY_R,
-            "category.frogslimegamemode"
-        ));
-        
-        hunterBlockKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-            "key.frogslimegamemode.hunter_block",
-            InputUtil.Type.KEYSYM,
-            GLFW.GLFW_KEY_F,
-            "category.frogslimegamemode"
-        ));
-        
-        hunterSlowKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-            "key.frogslimegamemode.hunter_slow",
-            InputUtil.Type.KEYSYM,
-            GLFW.GLFW_KEY_G,
-            "category.frogslimegamemode"
-        ));
-        
-        speedrunnerEscapeKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-            "key.frogslimegamemode.speedrunner_escape",
-            InputUtil.Type.KEYSYM,
-            GLFW.GLFW_KEY_V,
-            "category.frogslimegamemode"
-        ));
-        
-        speedrunnerSpeedKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-            "key.frogslimegamemode.speedrunner_speed",
-            InputUtil.Type.KEYSYM,
-            GLFW.GLFW_KEY_B,
-            "category.frogslimegamemode"
-        ));
-        
-        speedrunnerInvisKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-            "key.frogslimegamemode.speedrunner_invis",
-            InputUtil.Type.KEYSYM,
-            GLFW.GLFW_KEY_N,
-            "category.frogslimegamemode"
-        ));
-        
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (openGuiKey.wasPressed()) {
                 if (client.player != null) {
+                    ClientPlayNetworking.send(ModNetworking.REQUEST_PROGRESS_SNAPSHOT,
+                        net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create());
                     client.setScreen(new FrogSlimeGamemodeScreen(client.player));
                 }
             }
             if (openSkillsKey.wasPressed()) {
+                if (client.player != null) {
+                    ClientPlayNetworking.send(ModNetworking.REQUEST_PROGRESS_SNAPSHOT,
+                        net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create());
+                }
                 client.setScreen(new SkillsScreen());
             }
             if (openCollectionsKey.wasPressed()) {
+                if (client.player != null) {
+                    ClientPlayNetworking.send(ModNetworking.REQUEST_PROGRESS_SNAPSHOT,
+                        net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create());
+                }
                 client.setScreen(new CollectionsScreen());
             }
             if (useAbilityKey.wasPressed()) {
@@ -140,44 +99,6 @@ public class ModKeybinds {
             if (consumeAbilityKey.wasPressed()) {
                 if (client.player != null) {
                     ClientPlayNetworking.send(ModNetworking.CONSUME_ABILITY_ITEM, 
-                        net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create());
-                }
-            }
-            
-            // Manhunt keybinds
-            if (hunterTrackKey.wasPressed()) {
-                if (client.player != null) {
-                    ClientPlayNetworking.send(ModNetworking.HUNTER_TRACK, 
-                        net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create());
-                }
-            }
-            if (hunterBlockKey.wasPressed()) {
-                if (client.player != null) {
-                    ClientPlayNetworking.send(ModNetworking.HUNTER_BLOCK, 
-                        net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create());
-                }
-            }
-            if (hunterSlowKey.wasPressed()) {
-                if (client.player != null) {
-                    ClientPlayNetworking.send(ModNetworking.HUNTER_SLOW, 
-                        net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create());
-                }
-            }
-            if (speedrunnerEscapeKey.wasPressed()) {
-                if (client.player != null) {
-                    ClientPlayNetworking.send(ModNetworking.SPEEDRUNNER_ESCAPE, 
-                        net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create());
-                }
-            }
-            if (speedrunnerSpeedKey.wasPressed()) {
-                if (client.player != null) {
-                    ClientPlayNetworking.send(ModNetworking.SPEEDRUNNER_SPEED, 
-                        net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create());
-                }
-            }
-            if (speedrunnerInvisKey.wasPressed()) {
-                if (client.player != null) {
-                    ClientPlayNetworking.send(ModNetworking.SPEEDRUNNER_INVIS, 
                         net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create());
                 }
             }

@@ -64,7 +64,7 @@ public class AbilityDropItem extends Item {
             case "elder_guardian" -> net.minecraft.item.Items.NAUTILUS_SHELL;
             case "horse", "donkey", "mule", "llama", "trader_llama" -> net.minecraft.item.Items.LEATHER;
             case "fox", "wolf", "cat", "ocelot" -> net.minecraft.item.Items.BONE;
-            case "parrot" -> net.minecraft.item.Items.FEATHER;
+            case "parrot" -> net.minecraft.item.Items.MUSIC_DISC_CAT;
             case "dolphin" -> net.minecraft.item.Items.COD;
             case "squid", "glow_squid" -> net.minecraft.item.Items.INK_SAC;
             case "pufferfish", "tropical_fish", "salmon", "cod" -> net.minecraft.item.Items.COD;
@@ -176,7 +176,7 @@ public class AbilityDropItem extends Item {
         ItemStack stack = user.getStackInHand(hand);
         
         if (!world.isClient) {
-            user.sendMessage(Text.literal("This is an ability drop. Put it in an anvil with the mob's item to create the final ability!")
+            user.sendMessage(Text.literal("Take this to the Ability Crafting Table to forge the final mob ability item. The anvil plus Ability Stick route still works too.")
                 .formatted(Formatting.YELLOW), false);
         }
         

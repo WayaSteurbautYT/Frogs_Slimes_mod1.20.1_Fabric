@@ -15,8 +15,11 @@ public class AchievementManager {
     private static final Map<UUID, Map<String, Boolean>> PLAYER_ACHIEVEMENTS = new HashMap<>();
     
     static {
+        register(new Achievement("journey_started", "Journey Started", "Activated the Frog & Slime route", Formatting.GREEN));
+
         // Early game achievements
         register(new Achievement("first_helper", "First Ally", "Tamed your first frog or slime helper", Formatting.GREEN));
+        register(new Achievement("helper_commander", "Helper Commander", "Assigned a role to your first helper", Formatting.GOLD));
         register(new Achievement("first_evolution", "Growing Stronger", "Your helper evolved for the first time", Formatting.AQUA));
         register(new Achievement("mob_eater", "Hungry Helper", "Your helper ate its first mob", Formatting.YELLOW));
         
@@ -63,6 +66,7 @@ public class AchievementManager {
         
         // Ability achievements
         register(new Achievement("ability_unlock", "Power Unlocked", "Unlocked your first player ability", Formatting.LIGHT_PURPLE));
+        register(new Achievement("mob_smith", "Mob Smith", "Forged your first mob ability item", Formatting.RED));
         register(new Achievement("ability_master", "Ability Master", "Unlocked all player abilities", Formatting.GOLD));
         
         // Dimension achievements

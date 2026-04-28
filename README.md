@@ -14,6 +14,55 @@
 
 </div>
 
+## Route Revamp
+
+This build focuses on making the mod actually playable as a guided route instead of a pile of disconnected systems.
+
+### What changed
+
+- Progression menus now use synced multiplayer-safe data instead of fake client placeholders.
+- The main route is tracked through 10 concrete objectives from activation to final boss kill.
+- Task completion now triggers objective popups, achievement toasts, and progress snapshots.
+- The guide book, task book, starter kit, and chat commands now explain how to progress on SMP.
+- Ability forging is clearer: the Ability Crafting Table can now forge matching mob drops directly into mob ability items.
+- Manhunt now supports TAB cycling plus R use for both hunters and speedrunners while holding the correct control item.
+- Speedrunner deaths, hunter wins, dragon wins, and giant slime boss wins now properly end the match.
+
+## Quick Start
+
+1. Run `/frogslime enable`.
+2. Spawn and tame your frog and slime helpers.
+3. Assign a helper role.
+4. Unlock and forge abilities.
+5. Reach the Nether, then the End.
+6. Defeat the Ender Dragon or Giant Slime Boss to finish the run.
+
+## Core Commands
+
+- `/frogslime help` - overview of the route, controls, and side systems
+- `/frogslime progress` - current tasks, completion, and upcoming unlocks
+- `/frogslime abilities` - unlocked player abilities and selected slot
+- `/frogslime recipes` - main crafting loop and forge flow
+- `/frogslime guide` - restore the guide book and task book
+- `/frogslime tasks` - open the progression board
+- `/frogslime contract list`
+- `/frogslime contract accept <id>`
+- `/frogslime contract my`
+
+## Manhunt Controls
+
+- Hunters: hold a `Hunter Tracker` or `Manhunt Compass`, press `TAB` to cycle `Track`, `Blockade`, `Snare`, then press `R`.
+- Speedrunners: hold a `Clock`, press `TAB` to cycle `Escape`, `Burst`, `Veil`, then press `R`.
+- Use `/frogslime manhunt status` to inspect the current match.
+- The manhunt ends when all speedrunners are eliminated or when a speedrunner beats the run by killing the Ender Dragon or Giant Slime Boss.
+
+## SMP Onboarding
+
+- Once the server is already running Frog & Slime mode, newly joining players are auto-enabled and receive the starter route kit.
+- The starter route includes a written guide, task book, helper eggs, role items, ability sticks, and early survival gear.
+- Contracts are explained through `/frogslime help`, the guide book, and `/frogslime contract list`.
+- Use `/frogslime progress` whenever you are unsure what to do next.
+
 ---
 
 ## � Yo, What's Good?! Welcome to the Chaos! 🐸🫧

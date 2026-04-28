@@ -39,6 +39,10 @@ public class GamemodeState extends PersistentState {
     public boolean hasPlayerData(UUID uuid) {
         return playerDataMap.containsKey(uuid);
     }
+
+    public boolean hasAnyEnabledPlayers() {
+        return playerDataMap.values().stream().anyMatch(PlayerData::isGamemodeEnabled);
+    }
     
     public void removePlayerData(UUID uuid) {
         playerDataMap.remove(uuid);

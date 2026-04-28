@@ -1,16 +1,21 @@
 package com.wayacreate.frogslimegamemode.entity;
 
+import com.wayacreate.frogslimegamemode.achievements.AchievementManager;
 import com.wayacreate.frogslimegamemode.eating.MobAbility;
 import com.wayacreate.frogslimegamemode.entity.ai.BuilderGoal;
 import com.wayacreate.frogslimegamemode.entity.ai.FarmerGoal;
+import com.wayacreate.frogslimegamemode.entity.ai.HelperRoleManager;
 import com.wayacreate.frogslimegamemode.entity.ai.LumberjackGoal;
 import com.wayacreate.frogslimegamemode.entity.ai.MiningGoal;
 import com.wayacreate.frogslimegamemode.evolution.EvolutionStage;
 import com.wayacreate.frogslimegamemode.evolution.MobTransformation;
 import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
 import com.wayacreate.frogslimegamemode.gamemode.PlayerLevel;
+import com.wayacreate.frogslimegamemode.tasks.TaskManager;
+import com.wayacreate.frogslimegamemode.tasks.TaskType;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ai.goal.*;
+import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
@@ -47,6 +52,7 @@ public class FrogHelperEntity extends TameableEntity {
     private static final TrackedData<String> TRANSFORMATION = DataTracker.registerData(FrogHelperEntity.class, TrackedDataHandlerRegistry.STRING);
     private int particleCooldown = 0;
     private final List<String> abilities = new ArrayList<>();
+    private final List<Goal> activeRoleGoals = new ArrayList<>();
     private String lastRole = "";
     private int abilityCooldown = 0;
     private int tongueExtensionTicks = 0;
@@ -114,6 +120,10 @@ public class FrogHelperEntity extends TameableEntity {
                 this.setOwner(player);
                 this.setTamed(true);
                 GamemodeManager.getData(player).incrementHelpers();
+                TaskManager.completeTask(player, TaskType.TAME_HELPER);
+                if (player instanceof ServerPlayerEntity serverPlayer) {
+                    AchievementManager.unlockAchievement(serverPlayer, "first_helper");
+                }
                 GamemodeManager.grantAdvancement((net.minecraft.server.network.ServerPlayerEntity) player, "frogslimegamemode:tame_frog");
                 player.sendMessage(Text.literal("Frog helper joined your team!")
                     .formatted(Formatting.GREEN), false);
@@ -162,20 +172,14 @@ public class FrogHelperEntity extends TameableEntity {
         int newStage = getEvolutionStage() + 1;
         if (newStage <= 3) {
             setEvolutionStage(newStage);
-            
-            double healthBonus = 10.0 * newStage;
-            double damageBonus = 2.0 * newStage;
-            
-            this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(20.0 + healthBonus);
-            this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(4.0 + damageBonus);
-            this.setHealth(this.getMaxHealth());
-            
+
             // Apply transformation at higher evolution stages
             if (newStage >= 2) {
                 applyTransformation();
             }
-            
-            applyAbilityBonuses();
+
+            refreshAttributes();
+            this.setHealth(this.getMaxHealth());
             
             spawnEvolutionParticles();
             updateCustomName();
@@ -186,6 +190,16 @@ public class FrogHelperEntity extends TameableEntity {
                     .append(Text.literal(EvolutionStage.fromLevel(newStage).getName())
                         .formatted(Formatting.LIGHT_PURPLE, Formatting.BOLD))
                     .append(Text.literal("!").formatted(Formatting.GOLD)), false);
+                TaskManager.completeTask(owner, TaskType.EVOLVE_HELPER);
+                if (owner instanceof ServerPlayerEntity serverPlayer) {
+                    AchievementManager.unlockAchievement(serverPlayer, "first_evolution");
+                    if (newStage >= 2) {
+                        AchievementManager.unlockAchievement(serverPlayer, "elite_helper");
+                    }
+                    if (newStage >= 3) {
+                        AchievementManager.unlockAchievement(serverPlayer, "master_helper");
+                    }
+                }
             }
         }
     }
@@ -197,29 +211,7 @@ public class FrogHelperEntity extends TameableEntity {
         
         if (next != current) {
             setTransformation(next.getId());
-            
-            // Apply transformation-specific bonuses
-            switch (next) {
-                case ENDERMAN -> {
-                    this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(0.4);
-                    this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.getMaxHealth() + 10);
-                }
-                case BLAZE -> {
-                    this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) + 3);
-                }
-                case IRON_GOLEM -> {
-                    this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.getMaxHealth() + 20);
-                    this.getAttributeInstance(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE).setBaseValue(0.5);
-                }
-                case WARDEN -> {
-                    this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(this.getMaxHealth() + 30);
-                    this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) + 5);
-                }
-                default -> {} // No special bonuses for other transformations
-            }
-            
-            this.setHealth(this.getMaxHealth());
-            
+
             if (this.getOwner() instanceof PlayerEntity owner) {
                 owner.sendMessage(Text.literal("Your helper transformed into ")
                     .formatted(Formatting.AQUA)
@@ -240,31 +232,53 @@ public class FrogHelperEntity extends TameableEntity {
     public void addAbility(MobAbility ability) {
         if (!abilities.contains(ability.getId())) {
             abilities.add(ability.getId());
-            applyAbilityBonuses();
+            refreshAttributes();
         }
     }
     
-    private void applyAbilityBonuses() {
-        double totalDamageBonus = 0;
-        double totalSpeedBonus = 0;
-        double totalHealthBonus = 0;
-        double totalKnockbackBonus = 0;
+    private void refreshAttributes() {
+        double maxHealth = 20.0 + (10.0 * getEvolutionStage());
+        double attackDamage = 4.0 + (2.0 * getEvolutionStage());
+        double movementSpeed = 0.3;
+        double knockbackResistance = 0.0;
+
+        switch (MobTransformation.fromId(getTransformation())) {
+            case ENDERMAN -> {
+                movementSpeed += 0.1;
+                maxHealth += 10.0;
+            }
+            case BLAZE -> attackDamage += 3.0;
+            case IRON_GOLEM -> {
+                maxHealth += 20.0;
+                knockbackResistance += 0.5;
+            }
+            case WARDEN -> {
+                maxHealth += 30.0;
+                attackDamage += 5.0;
+            }
+            default -> {
+            }
+        }
+
+        if (HelperRoleManager.isCombatRole(getRole())) {
+            attackDamage += 4.0;
+        }
         
         for (String abilityId : abilities) {
             MobAbility ability = MobAbility.getAbility(abilityId);
             if (ability != null) {
-                totalDamageBonus += ability.getDamageBonus();
-                totalSpeedBonus += ability.getSpeedBonus();
-                totalHealthBonus += ability.getHealthBonus();
-                totalKnockbackBonus += ability.getKnockbackResistance();
+                attackDamage += ability.getDamageBonus();
+                movementSpeed += ability.getSpeedBonus();
+                maxHealth += ability.getHealthBonus();
+                knockbackResistance += ability.getKnockbackResistance();
             }
         }
         
-        // Apply bonuses on top of base stats
-        this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(4.0 + totalDamageBonus);
-        this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(0.3 + totalSpeedBonus);
-        this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(20.0 + totalHealthBonus);
-        this.getAttributeInstance(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE).setBaseValue(totalKnockbackBonus);
+        this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(attackDamage);
+        this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(movementSpeed);
+        this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(maxHealth);
+        this.getAttributeInstance(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE).setBaseValue(knockbackResistance);
+        this.setHealth(Math.min(this.getHealth(), this.getMaxHealth()));
     }
     
     public List<String> getAbilities() {
@@ -292,7 +306,9 @@ public class FrogHelperEntity extends TameableEntity {
     }
     
     public void setRole(String role) {
-        this.dataTracker.set(ROLE, role);
+        this.dataTracker.set(ROLE, HelperRoleManager.normalizeRole(role));
+        refreshRoleGoals();
+        refreshAttributes();
         updateCustomName();
     }
     
@@ -327,7 +343,8 @@ public class FrogHelperEntity extends TameableEntity {
             abilities.add(abilityId);
         }
         
-        applyAbilityBonuses();
+        refreshRoleGoals();
+        refreshAttributes();
         updateCustomName();
     }
     
@@ -356,24 +373,12 @@ public class FrogHelperEntity extends TameableEntity {
             }
         }
         
-        // Add role-based goals dynamically (only when role changes to prevent memory leak)
         String role = getRole();
         if (!Objects.equals(role, lastRole)) {
             lastRole = role;
-            if (!role.isEmpty()) {
-                if (Objects.equals(role, "Miner")) {
-                    this.goalSelector.add(8, new MiningGoal(this));
-                } else if (Objects.equals(role, "Lumberjack")) {
-                    this.goalSelector.add(8, new LumberjackGoal(this));
-                } else if (Objects.equals(role, "Builder")) {
-                    this.goalSelector.add(8, new BuilderGoal(this));
-                } else if (Objects.equals(role, "Farmer")) {
-                    this.goalSelector.add(8, new FarmerGoal(this));
-                } else if (Objects.equals(role, "Combat Specialist")) {
-                    // Combat role gets enhanced attack damage
-                    this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(8.0);
-                }
-            }
+            refreshRoleGoals();
+            refreshAttributes();
+            updateCustomName();
         }
         
         if (!this.getWorld().isClient && particleCooldown > 0) {
@@ -542,6 +547,19 @@ public class FrogHelperEntity extends TameableEntity {
         this.setCustomName(Text.literal(nameText)
             .formatted(mobTransform.getColor()));
         this.setCustomNameVisible(true);
+    }
+
+    private void refreshRoleGoals() {
+        for (Goal goal : activeRoleGoals) {
+            this.goalSelector.remove(goal);
+        }
+        activeRoleGoals.clear();
+
+        Goal roleGoal = HelperRoleManager.createRoleGoal(getRole(), this);
+        if (roleGoal != null) {
+            activeRoleGoals.add(roleGoal);
+            this.goalSelector.add(8, roleGoal);
+        }
     }
     
     @Override

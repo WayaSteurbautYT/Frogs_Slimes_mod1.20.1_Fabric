@@ -1,9 +1,13 @@
 package com.wayacreate.frogslimegamemode.entity;
 
+import com.wayacreate.frogslimegamemode.achievements.AchievementManager;
 import com.wayacreate.frogslimegamemode.eating.MobAbility;
+import com.wayacreate.frogslimegamemode.entity.ai.HelperRoleManager;
 import com.wayacreate.frogslimegamemode.evolution.EvolutionStage;
 import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
 import com.wayacreate.frogslimegamemode.gamemode.PlayerLevel;
+import com.wayacreate.frogslimegamemode.tasks.TaskManager;
+import com.wayacreate.frogslimegamemode.tasks.TaskType;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ai.goal.*;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
@@ -34,6 +38,7 @@ import net.minecraft.world.EntityView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class SlimeHelperEntity extends TameableEntity {
     private static final TrackedData<Integer> EVOLUTION_STAGE = DataTracker.registerData(SlimeHelperEntity.class, TrackedDataHandlerRegistry.INTEGER);
@@ -41,7 +46,9 @@ public class SlimeHelperEntity extends TameableEntity {
     private static final TrackedData<Boolean> FINAL_FORM = DataTracker.registerData(SlimeHelperEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
     private static final TrackedData<String> ROLE = DataTracker.registerData(SlimeHelperEntity.class, TrackedDataHandlerRegistry.STRING);
     private final List<String> abilities = new ArrayList<>();
+    private final List<net.minecraft.entity.ai.goal.Goal> activeRoleGoals = new ArrayList<>();
     private int abilityCooldown = 0;
+    private String lastRole = "";
     
     public SlimeHelperEntity(EntityType<? extends TameableEntity> entityType, World world) {
         super(entityType, world);
@@ -118,6 +125,10 @@ public class SlimeHelperEntity extends TameableEntity {
                 this.setOwner(player);
                 this.setTamed(true);
                 GamemodeManager.getData(player).incrementHelpers();
+                TaskManager.completeTask(player, TaskType.TAME_HELPER);
+                if (player instanceof ServerPlayerEntity serverPlayer) {
+                    AchievementManager.unlockAchievement(serverPlayer, "first_helper");
+                }
                 GamemodeManager.grantAdvancement((net.minecraft.server.network.ServerPlayerEntity) player, "frogslimegamemode:tame_slime");
                 player.sendMessage(Text.literal("Slime helper joined your team!")
                     .formatted(Formatting.GREEN), false);
@@ -163,15 +174,9 @@ public class SlimeHelperEntity extends TameableEntity {
         int newStage = getEvolutionStage() + 1;
         if (newStage <= 3) {
             setEvolutionStage(newStage);
-            
-            double healthBonus = 15.0 * newStage;
-            double damageBonus = 3.0 * newStage;
-            
-            this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(25.0 + healthBonus);
-            this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(5.0 + damageBonus);
+
+            refreshAttributes();
             this.setHealth(this.getMaxHealth());
-            
-            applyAbilityBonuses();
             
             spawnEvolutionParticles();
             updateCustomName();
@@ -182,6 +187,16 @@ public class SlimeHelperEntity extends TameableEntity {
                     .append(Text.literal(EvolutionStage.fromLevel(newStage).getName())
                         .formatted(Formatting.LIGHT_PURPLE, Formatting.BOLD))
                     .append(Text.literal("!").formatted(Formatting.GOLD)), false);
+                TaskManager.completeTask(owner, TaskType.EVOLVE_HELPER);
+                if (owner instanceof ServerPlayerEntity serverPlayer) {
+                    AchievementManager.unlockAchievement(serverPlayer, "first_evolution");
+                    if (newStage >= 2) {
+                        AchievementManager.unlockAchievement(serverPlayer, "elite_helper");
+                    }
+                    if (newStage >= 3) {
+                        AchievementManager.unlockAchievement(serverPlayer, "master_helper");
+                    }
+                }
             }
         }
     }
@@ -189,31 +204,45 @@ public class SlimeHelperEntity extends TameableEntity {
     public void addAbility(MobAbility ability) {
         if (!abilities.contains(ability.getId())) {
             abilities.add(ability.getId());
-            applyAbilityBonuses();
+            refreshAttributes();
         }
     }
     
-    private void applyAbilityBonuses() {
-        double totalDamageBonus = 0;
-        double totalSpeedBonus = 0;
-        double totalHealthBonus = 0;
-        double totalKnockbackBonus = 0;
+    private void refreshAttributes() {
+        double attackDamage;
+        double movementSpeed = 0.25;
+        double maxHealth;
+        double knockbackResistance;
+
+        if (isFinalForm()) {
+            maxHealth = 200.0;
+            attackDamage = 30.0;
+            knockbackResistance = 1.0;
+        } else {
+            maxHealth = 25.0 + (15.0 * getEvolutionStage());
+            attackDamage = 5.0 + (3.0 * getEvolutionStage());
+            knockbackResistance = 0.3;
+        }
+
+        if (HelperRoleManager.isCombatRole(getRole())) {
+            attackDamage += 4.0;
+        }
         
         for (String abilityId : abilities) {
             MobAbility ability = MobAbility.getAbility(abilityId);
             if (ability != null) {
-                totalDamageBonus += ability.getDamageBonus();
-                totalSpeedBonus += ability.getSpeedBonus();
-                totalHealthBonus += ability.getHealthBonus();
-                totalKnockbackBonus += ability.getKnockbackResistance();
+                attackDamage += ability.getDamageBonus();
+                movementSpeed += ability.getSpeedBonus();
+                maxHealth += ability.getHealthBonus();
+                knockbackResistance += ability.getKnockbackResistance();
             }
         }
         
-        // Apply bonuses on top of base stats
-        this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(5.0 + totalDamageBonus);
-        this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(0.25 + totalSpeedBonus);
-        this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(25.0 + totalHealthBonus);
-        this.getAttributeInstance(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE).setBaseValue(0.3 + totalKnockbackBonus);
+        this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(attackDamage);
+        this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(movementSpeed);
+        this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(maxHealth);
+        this.getAttributeInstance(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE).setBaseValue(knockbackResistance);
+        this.setHealth(Math.min(this.getHealth(), this.getMaxHealth()));
     }
     
     public List<String> getAbilities() {
@@ -224,10 +253,8 @@ public class SlimeHelperEntity extends TameableEntity {
         if (!isFinalForm()) {
             setFinalForm(true);
             setEvolutionStage(4);
-            
-            this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(200.0);
-            this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(30.0);
-            this.getAttributeInstance(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE).setBaseValue(1.0);
+
+            refreshAttributes();
             this.setHealth(this.getMaxHealth());
             
             spawnFinalFormParticles();
@@ -275,7 +302,9 @@ public class SlimeHelperEntity extends TameableEntity {
     }
     
     public void setRole(String role) {
-        this.dataTracker.set(ROLE, role);
+        this.dataTracker.set(ROLE, HelperRoleManager.normalizeRole(role));
+        refreshRoleGoals();
+        refreshAttributes();
         updateCustomName();
     }
     
@@ -310,7 +339,8 @@ public class SlimeHelperEntity extends TameableEntity {
             abilities.add(abilityId);
         }
         
-        applyAbilityBonuses();
+        refreshRoleGoals();
+        refreshAttributes();
         updateCustomName();
     }
     
@@ -450,8 +480,28 @@ public class SlimeHelperEntity extends TameableEntity {
                 tryUseCombatAbility(world);
             }
         }
+
+        if (!Objects.equals(getRole(), lastRole)) {
+            lastRole = getRole();
+            refreshRoleGoals();
+            refreshAttributes();
+            updateCustomName();
+        }
         
         // Spawn idle particles
         spawnIdleParticles();
+    }
+
+    private void refreshRoleGoals() {
+        for (net.minecraft.entity.ai.goal.Goal goal : activeRoleGoals) {
+            this.goalSelector.remove(goal);
+        }
+        activeRoleGoals.clear();
+
+        net.minecraft.entity.ai.goal.Goal roleGoal = HelperRoleManager.createRoleGoal(getRole(), this);
+        if (roleGoal != null) {
+            activeRoleGoals.add(roleGoal);
+            this.goalSelector.add(8, roleGoal);
+        }
     }
 }

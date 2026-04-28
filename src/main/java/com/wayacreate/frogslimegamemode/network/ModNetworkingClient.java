@@ -4,12 +4,18 @@ import com.wayacreate.frogslimegamemode.achievements.AchievementToast;
 import com.wayacreate.frogslimegamemode.client.hud.GamemodeHud;
 import com.wayacreate.frogslimegamemode.client.hud.ManhuntHud;
 import com.wayacreate.frogslimegamemode.client.gui.TasksScreen;
+import com.wayacreate.frogslimegamemode.client.state.ManhuntClientState;
+import com.wayacreate.frogslimegamemode.client.state.ProgressionClientState;
+import com.wayacreate.frogslimegamemode.tasks.TaskType;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.toast.SystemToast;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.Vec3d;
 
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.List;
 import java.util.UUID;
 
 public final class ModNetworkingClient {
@@ -21,6 +27,9 @@ public final class ModNetworkingClient {
             boolean active = buf.readBoolean();
             client.execute(() -> {
                 GamemodeHud.setGamemodeActive(active);
+                if (!active) {
+                    ProgressionClientState.clear();
+                }
             });
         });
 
@@ -48,6 +57,7 @@ public final class ModNetworkingClient {
         ClientPlayNetworking.registerGlobalReceiver(ModNetworking.ACHIEVEMENT_TOAST, (client, handler, buf, responseSender) -> {
             String name = buf.readString();
             String description = buf.readString();
+            net.minecraft.item.ItemStack iconStack = buf.readItemStack();
             int color = buf.readInt();
 
             client.execute(() -> {
@@ -56,10 +66,8 @@ public final class ModNetworkingClient {
                     Text descriptionText = Text.literal(description);
                     client.getToastManager().add(SystemToast.create(client, SystemToast.Type.TUTORIAL_HINT, titleText, descriptionText));
                     
-                    // Also show custom achievement toast
-                    AchievementToast.show(titleText, descriptionText);
+                    AchievementToast.show(titleText, descriptionText, iconStack);
                     
-                    // Play achievement sound
                     if (client.player != null) {
                         client.player.playSound(net.minecraft.sound.SoundEvents.ENTITY_PLAYER_LEVELUP, 0.5f, 1.0f);
                     }
@@ -131,9 +139,14 @@ public final class ModNetworkingClient {
         });
 
         ClientPlayNetworking.registerGlobalReceiver(ModNetworking.MANHUNT_HUD_UPDATE, (client, handler, buf, responseSender) -> {
+            boolean active = buf.readBoolean();
+            String role = buf.readString();
             String elapsedTime = buf.readString();
             int deathCount = buf.readInt();
             String targetName = buf.readString();
+            int selectedIndex = buf.readInt();
+            String selectedAbilityName = buf.readString();
+            String selectedAbilityDescription = buf.readString();
             int hunterTrackCd = buf.readInt();
             int hunterBlockCd = buf.readInt();
             int hunterSlowCd = buf.readInt();
@@ -142,21 +155,76 @@ public final class ModNetworkingClient {
             int speedrunnerInvisCd = buf.readInt();
 
             client.execute(() -> {
-                if (client.player != null) {
-                    UUID uuid = client.player.getUuid();
-                    ManhuntHud.updateClientElapsedTime(uuid, elapsedTime);
-                    ManhuntHud.updateClientDeathCount(uuid, deathCount);
-                    ManhuntHud.updateClientTargetName(uuid, targetName);
-                    
-                    // Update cooldowns based on role
-                    boolean isHunter = com.wayacreate.frogslimegamemode.gamemode.ManhuntManager.isHunter(client.player);
-                    if (isHunter) {
-                        ManhuntHud.updateClientHunterCooldowns(uuid, hunterTrackCd, hunterBlockCd, hunterSlowCd);
-                    } else {
-                        ManhuntHud.updateClientSpeedrunnerCooldowns(uuid, speedrunnerEscapeCd, speedrunnerSpeedCd, speedrunnerInvisCd);
-                    }
-                }
+                ManhuntClientState.update(
+                    active,
+                    role,
+                    elapsedTime,
+                    deathCount,
+                    targetName,
+                    selectedIndex,
+                    selectedAbilityName,
+                    selectedAbilityDescription,
+                    hunterTrackCd,
+                    hunterBlockCd,
+                    hunterSlowCd,
+                    speedrunnerEscapeCd,
+                    speedrunnerSpeedCd,
+                    speedrunnerInvisCd
+                );
             });
+        });
+
+        ClientPlayNetworking.registerGlobalReceiver(ModNetworking.PROGRESSION_SNAPSHOT, (client, handler, buf, responseSender) -> {
+            boolean active = buf.readBoolean();
+            int level = buf.readInt();
+            double xp = buf.readDouble();
+            double xpToNext = buf.readDouble();
+            int helpersSpawned = buf.readInt();
+            int mobsEaten = buf.readInt();
+            int itemsCollected = buf.readInt();
+            int deaths = buf.readInt();
+            int jumps = buf.readInt();
+            int abilityCount = buf.readInt();
+            int highestEvolutionStage = buf.readInt();
+            int achievementCount = buf.readInt();
+            String selectedAbilityName = buf.readString();
+            String selectedAbilityDescription = buf.readString();
+            int taskCount = buf.readInt();
+
+            EnumMap<TaskType, Integer> taskProgress = new EnumMap<>(TaskType.class);
+            for (int i = 0; i < taskCount; i++) {
+                String taskName = buf.readString();
+                int progress = buf.readInt();
+                taskProgress.put(TaskType.valueOf(taskName), progress);
+            }
+
+            int unlockCount = buf.readInt();
+            List<String> unlockNames = new ArrayList<>();
+            List<String> unlockDescriptions = new ArrayList<>();
+            for (int i = 0; i < unlockCount; i++) {
+                unlockNames.add(buf.readString());
+                unlockDescriptions.add(buf.readString());
+            }
+
+            client.execute(() -> ProgressionClientState.update(
+                active,
+                level,
+                xp,
+                xpToNext,
+                helpersSpawned,
+                mobsEaten,
+                itemsCollected,
+                deaths,
+                jumps,
+                abilityCount,
+                highestEvolutionStage,
+                achievementCount,
+                selectedAbilityName,
+                selectedAbilityDescription,
+                taskProgress,
+                unlockNames,
+                unlockDescriptions
+            ));
         });
     }
     

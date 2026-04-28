@@ -1,6 +1,7 @@
 package com.wayacreate.frogslimegamemode.mixin;
 
 import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
+import com.wayacreate.frogslimegamemode.gamemode.GamemodeState;
 import com.wayacreate.frogslimegamemode.util.CreateWorldState;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,9 +18,12 @@ public class PlayerManagerMixin {
 
     @Inject(method = "onPlayerConnect", at = @At("TAIL"))
     private void onPlayerConnect(ServerPlayerEntity player, CallbackInfo ci) {
-        // Check if world was created with frogslime mode
-        if (CreateWorldState.isFrogSlimeMode()) {
-            GamemodeManager.enableGamemode(player);
+        boolean fromWorldPreset = CreateWorldState.isFrogSlimeMode();
+        boolean serverAlreadyRunningGamemode = player.getServer() != null
+            && GamemodeState.get(player.getServer()).hasAnyEnabledPlayers();
+
+        if (fromWorldPreset || serverAlreadyRunningGamemode) {
+            GamemodeManager.enableGamemode(player, false);
             CreateWorldState.resetFrogSlimeMode();
         }
     }

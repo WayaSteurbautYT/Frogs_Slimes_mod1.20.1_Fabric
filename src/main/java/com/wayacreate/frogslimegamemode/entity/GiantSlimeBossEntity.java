@@ -1,5 +1,9 @@
 package com.wayacreate.frogslimegamemode.entity;
 
+import com.wayacreate.frogslimegamemode.achievements.AchievementManager;
+import com.wayacreate.frogslimegamemode.gamemode.ManhuntManager;
+import com.wayacreate.frogslimegamemode.tasks.TaskManager;
+import com.wayacreate.frogslimegamemode.tasks.TaskType;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ai.goal.*;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
@@ -77,6 +81,13 @@ public class GiantSlimeBossEntity extends HostileEntity {
             
             // Broadcast death message
             if (damageSource.getAttacker() instanceof PlayerEntity player) {
+                TaskManager.completeTask(player, TaskType.DEFEAT_FINAL_BOSS);
+                if (player instanceof net.minecraft.server.network.ServerPlayerEntity serverPlayer) {
+                    AchievementManager.unlockAchievement(serverPlayer, "boss_killer");
+                    if (ManhuntManager.isInGame(serverPlayer) && ManhuntManager.isSpeedrunner(serverPlayer)) {
+                        ManhuntManager.onSpeedrunnerWin(serverPlayer);
+                    }
+                }
                 this.getWorld().getPlayers().forEach(p -> 
                     p.sendMessage(Text.literal("The Giant Slime Boss has been defeated by ")
                         .formatted(Formatting.GOLD)

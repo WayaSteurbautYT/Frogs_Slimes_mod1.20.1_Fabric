@@ -1,5 +1,9 @@
 package com.wayacreate.frogslimegamemode.block;
 
+import com.wayacreate.frogslimegamemode.achievements.AchievementManager;
+import com.wayacreate.frogslimegamemode.item.MobAbilityItem;
+import com.wayacreate.frogslimegamemode.tasks.TaskManager;
+import com.wayacreate.frogslimegamemode.tasks.TaskType;
 import com.wayacreate.frogslimegamemode.item.AbilityDropItem;
 import net.minecraft.block.AnvilBlock;
 import net.minecraft.block.BlockState;
@@ -26,18 +30,20 @@ public class AbilityCraftingTableBlock extends AnvilBlock {
         if (!world.isClient && !stack.isEmpty()) {
             String abilityId = getAbilityIdFromItem(stack);
             if (abilityId != null) {
-                // Convert mob drop to ability drop
-                ItemStack abilityDrop = AbilityDropItem.createAbilityDrop(abilityId);
-                
-                // Consume the mob drop
+                ItemStack mobAbility = MobAbilityItem.createMobAbility(abilityId);
                 stack.decrement(1);
-                
-                // Give ability drop to player
-                if (!player.getInventory().insertStack(abilityDrop)) {
-                    player.dropItem(abilityDrop, false);
+
+                if (!player.getInventory().insertStack(mobAbility)) {
+                    player.dropItem(mobAbility, false);
                 }
-                
-                player.sendMessage(Text.literal("Converted " + stack.getItem().getName().getString() + " to " + abilityDrop.getItem().getName().getString()), true);
+
+                TaskManager.completeTask(player, TaskType.CRAFT_ABILITY);
+                if (player instanceof net.minecraft.server.network.ServerPlayerEntity serverPlayer) {
+                    AchievementManager.unlockAchievement(serverPlayer, "mob_smith");
+                }
+
+                player.sendMessage(Text.literal("Forged " + mobAbility.getName().getString() + " from " + stack.getItem().getName().getString() + ".")
+                    .formatted(net.minecraft.util.Formatting.GREEN), true);
                 return ActionResult.SUCCESS;
             }
         }
@@ -47,9 +53,11 @@ public class AbilityCraftingTableBlock extends AnvilBlock {
             NamedScreenHandlerFactory factory = new SimpleNamedScreenHandlerFactory(
                 (syncId, playerInventory, playerEntity) -> 
                     new com.wayacreate.frogslimegamemode.screen.AbilityCraftingScreenHandler(syncId, playerInventory),
-                Text.literal("Ability Anvil")
+                Text.literal("Ability Forge")
             );
             player.openHandledScreen(factory);
+            player.sendMessage(Text.literal("Tip: right-click this table with a mob drop to forge the matching ability item.")
+                .formatted(net.minecraft.util.Formatting.YELLOW), true);
             return ActionResult.SUCCESS;
         }
         
@@ -75,6 +83,7 @@ public class AbilityCraftingTableBlock extends AnvilBlock {
             case "turtle_shell" -> "turtle";
             case "trident" -> "drowned";
             case "nautilus_shell" -> "elder_guardian";
+            case "music_disc_cat" -> "parrot";
             default -> null;
         };
     }

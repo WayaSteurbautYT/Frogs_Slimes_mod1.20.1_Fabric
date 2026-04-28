@@ -10,6 +10,8 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Hand;
+import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -31,9 +33,22 @@ public class ManhuntCompassItem extends Item {
     
     public static boolean isManhuntCompass(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return false;
-        if (!stack.isOf(Items.COMPASS)) return false;
+        if (!(stack.isOf(Items.COMPASS) || (ModItems.MANHUNT_COMPASS != null && stack.isOf(ModItems.MANHUNT_COMPASS)))) return false;
         NbtCompound nbt = stack.getNbt();
-        return nbt != null && nbt.getBoolean(MANHUNT_COMPASS_NBT);
+        return stack.isOf(ModItems.MANHUNT_COMPASS) || (nbt != null && nbt.getBoolean(MANHUNT_COMPASS_NBT));
+    }
+
+    @Override
+    public TypedActionResult<ItemStack> use(World world, net.minecraft.entity.player.PlayerEntity user, Hand hand) {
+        if (!world.isClient && user instanceof ServerPlayerEntity serverPlayer) {
+            if (ManhuntManager.isHunter(serverPlayer)) {
+                ManhuntManager.useContextualAbility(serverPlayer);
+            } else {
+                user.sendMessage(Text.literal("Only hunters can use this item!")
+                    .formatted(Formatting.RED), true);
+            }
+        }
+        return TypedActionResult.success(user.getStackInHand(hand));
     }
     
     @Override

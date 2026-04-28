@@ -1,19 +1,34 @@
 package com.wayacreate.frogslimegamemode.client.gui;
 
+import com.wayacreate.frogslimegamemode.client.state.ProgressionClientState;
 import com.wayacreate.frogslimegamemode.tasks.TaskType;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 
 public class TasksScreen extends Screen {
-    private static final int TITLE_COLOR = 0xFFFFFF;
-    private static final int TEXT_COLOR = 0xE0E0E0;
-    private static final int COMPLETED_COLOR = 0x55FF55;
-    
-    private int currentTab = 0; // 0 = Tasks, 1 = Recipes, 2 = Achievements
-    private static final String[] TAB_NAMES = {"Tasks", "Recipes", "Achievements"};
+    private static final String[] TABS = {"Journey", "Recipes", "Achievements"};
+    private static final String[][] RECIPE_ROWS = {
+        {"Ability Forge", "Crafting Table + Emeralds + Slime Balls", "Main forge for mob ability items."},
+        {"Frog Crafting Table", "Crafting Tables + Slime Balls", "Unlock the custom frog crafting route."},
+        {"Ability Stick", "Stick + Stone + Dirt + Sand", "Legacy path for anvil ability crafting."},
+        {"Hunter Tracker", "Compass with the hunter kit", "Hold it to cycle Track, Blockade, Snare."},
+        {"Speedrunner Clock", "Starter clock for the speedrunner", "Hold it, TAB to cycle, R to cast."},
+        {"Contracts", "/frogslime contract list", "Accept a contract to start the economy route."}
+    };
+    private static final String[][] ACHIEVEMENT_ROWS = {
+        {"Journey Started", "Enable the route and receive the starter kit.", "ACTIVATE_GAMEMODE"},
+        {"First Ally", "Tame your first helper.", "TAME_HELPER"},
+        {"Helper Commander", "Assign a helper role.", "ASSIGN_ROLE"},
+        {"Mob Smith", "Forge your first mob ability item.", "CRAFT_ABILITY"},
+        {"Ability Apprentice", "Unlock 3 player abilities.", "UNLOCK_ABILITIES"},
+        {"Nether Bound", "Reach the Nether.", "REACH_NETHER"},
+        {"End Walker", "Reach the End.", "REACH_END"},
+        {"Beat the Run", "Defeat the dragon or giant slime boss.", "DEFEAT_FINAL_BOSS"}
+    };
+
+    private int currentTab;
 
     public TasksScreen() {
         super(Text.literal("Progression"));
@@ -21,193 +36,186 @@ public class TasksScreen extends Screen {
 
     @Override
     protected void init() {
-        int buttonWidth = 120;
-        int buttonHeight = 20;
-        int x = (this.width - buttonWidth) / 2;
-        int y = this.height - 28;
-
-        this.addDrawableChild(
-            ButtonWidget.builder(Text.literal("Close"), button -> this.close())
-                .dimensions(x, y, buttonWidth, buttonHeight)
-                .build()
-        );
-        
-        // Tab buttons
-        int tabWidth = 100;
-        int tabX = (this.width - (tabWidth * 3)) / 2;
-        for (int i = 0; i < 3; i++) {
-            final int tabIndex = i;
-            this.addDrawableChild(
-                ButtonWidget.builder(Text.literal(TAB_NAMES[i]), button -> {
-                    currentTab = tabIndex;
-                })
-                .dimensions(tabX + (i * (tabWidth + 5)), 30, tabWidth, 20)
-                .build()
-            );
+        int startX = 28;
+        for (int i = 0; i < TABS.length; i++) {
+            int index = i;
+            this.addDrawableChild(ButtonWidget.builder(Text.literal(TABS[i]), button -> currentTab = index)
+                .dimensions(startX + i * 86, 36, 78, 20)
+                .build());
         }
+
+        this.addDrawableChild(ButtonWidget.builder(Text.literal("Close"), button -> this.close())
+            .dimensions(this.width - 108, this.height - 36, 80, 20)
+            .build());
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        this.renderBackground(context);
-        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 10, TITLE_COLOR);
-        
-        // Draw current tab content
+        MenuStyle.drawFrame(context, this.width, this.height);
+        MenuStyle.drawHeader(
+            context,
+            this.textRenderer,
+            "Progression Board",
+            ProgressionClientState.isActive() ? "Live route objectives and unlock help" : "Enable the gamemode to populate this board",
+            this.width
+        );
+
+        MenuStyle.drawPanel(context, 28, 72, this.width - 56, this.height - 118, currentTab % 2 == 1);
         switch (currentTab) {
-            case 0 -> renderTasksTab(context);
-            case 1 -> renderRecipesTab(context);
-            case 2 -> renderAchievementsTab(context);
+            case 0 -> renderJourney(context);
+            case 1 -> renderRecipes(context);
+            default -> renderAchievements(context);
         }
 
         super.render(context, mouseX, mouseY, delta);
     }
-    
-    private void renderTasksTab(DrawContext context) {
-        int startY = 60;
-        int lineHeight = 16;
-        int index = 0;
-        
-        context.drawTextWithShadow(this.textRenderer, Text.literal("=== TASKS ===").formatted(Formatting.GOLD), 20, startY, TITLE_COLOR);
-        startY += 25;
-        
+
+    private void renderJourney(DrawContext context) {
+        int panelX = 40;
+        int y = 86;
+
+        context.drawTextWithShadow(
+            this.textRenderer,
+            Text.literal("Completed " + ProgressionClientState.getCompletedTaskCount() + " / " + TaskType.values().length),
+            panelX,
+            y,
+            MenuStyle.ACCENT_GOLD
+        );
+        MenuStyle.drawProgressBar(context, panelX + 132, y + 1, this.width - 220, 10, ProgressionClientState.getOverallProgress(), MenuStyle.POSITIVE);
+
+        int rowY = y + 28;
         for (TaskType task : TaskType.values()) {
-            int progress = getTaskProgress(task);
-            int required = task.getRequiredAmount();
-            boolean complete = progress >= required;
-            
-            String taskText = task.name().replace("_", " ");
-            String progressText = progress + "/" + required;
-            
-            int color = complete ? COMPLETED_COLOR : TEXT_COLOR;
-            String status = complete ? "[✓]" : "[ ]";
-            
-            context.drawTextWithShadow(this.textRenderer, 
-                Text.literal(status + " " + taskText + ": " + progressText), 
-                20, startY + (index * lineHeight), color);
-            index++;
-        }
-        
-        // Progress bar
-        int totalProgress = getTotalTaskProgress();
-        int totalRequired = getTotalTaskRequired();
-        float percent = totalRequired > 0 ? (float) totalProgress / totalRequired : 0;
-        
-        int barWidth = 200;
-        int barHeight = 10;
-        int barX = (this.width - barWidth) / 2;
-        int barY = startY + (index * lineHeight) + 20;
-        
-        context.fill(barX, barY, barX + barWidth, barY + barHeight, 0xFF333333);
-        context.fill(barX, barY, barX + (int)(barWidth * percent), barY + barHeight, 0xFF55FF55);
-        
-        context.drawCenteredTextWithShadow(this.textRenderer, 
-            Text.literal("Total Progress: " + (int)(percent * 100) + "%").formatted(Formatting.GOLD),
-            this.width / 2, barY + 15, TITLE_COLOR);
-    }
-    
-    private void renderRecipesTab(DrawContext context) {
-        int startY = 60;
-        int lineHeight = 20;
-        int index = 0;
-        
-        context.drawTextWithShadow(this.textRenderer, Text.literal("=== CRAFTING RECIPES ===").formatted(Formatting.GOLD), 20, startY, TITLE_COLOR);
-        startY += 25;
-        
-        String[][] recipes = {
-            {"Manhunt Compass", "Compass + Redstone", "Basic"},
-            {"Role Assignment Stick", "Stick + Paper", "Basic"},
-            {"Evolution Stone", "Slime Ball + Diamond", "Advanced"},
-            {"Slime Food", "Slime Ball + Wheat", "Basic"},
-            {"Frog Food", "Slime Ball + Spider Eye", "Basic"},
-            {"Ability Essence", "Mob Drop + Nether Star", "Elite"},
-            {"Final Evolution Crystal", "Evolution Stone x4 + Dragon Egg", "Master"}
-        };
-        
-        for (String[] recipe : recipes) {
-            String name = recipe[0];
-            String ingredients = recipe[1];
-            String tier = recipe[2];
-            
-            int tierColor = switch (tier) {
-                case "Basic" -> 0xFFFFFF;
-                case "Advanced" -> 0x55FFFF;
-                case "Elite" -> 0xAA00AA;
-                case "Master" -> 0xFFAA00;
-                default -> 0xFFFFFF;
-            };
-            
-            context.drawTextWithShadow(this.textRenderer, 
-                Text.literal("• " + name).formatted(Formatting.BOLD), 
-                20, startY + (index * lineHeight), tierColor);
-            context.drawTextWithShadow(this.textRenderer, 
-                Text.literal("  " + ingredients).formatted(Formatting.GRAY), 
-                20, startY + (index * lineHeight) + 10, TEXT_COLOR);
-            index += 2;
+            int progress = ProgressionClientState.getTaskProgress(task);
+            boolean complete = progress >= task.getRequiredAmount();
+            int rowHeight = 34;
+
+            MenuStyle.drawPanel(context, panelX, rowY, this.width - 80, rowHeight, !complete);
+            context.drawTextWithShadow(
+                this.textRenderer,
+                Text.literal(task.getDisplayName()),
+                panelX + 10,
+                rowY + 7,
+                complete ? MenuStyle.POSITIVE : MenuStyle.TEXT
+            );
+            context.drawTextWithShadow(
+                this.textRenderer,
+                Text.literal(task.getCategory()),
+                panelX + 10,
+                rowY + 19,
+                MenuStyle.MUTED
+            );
+
+            context.drawTextWithShadow(
+                this.textRenderer,
+                Text.literal(task.getDescription()),
+                panelX + 124,
+                rowY + 7,
+                MenuStyle.MUTED
+            );
+
+            float ratio = Math.min(1.0f, progress / (float) task.getRequiredAmount());
+            MenuStyle.drawProgressBar(context, this.width - 188, rowY + 8, 96, 10, ratio, complete ? MenuStyle.POSITIVE : MenuStyle.ACCENT);
+            context.drawTextWithShadow(
+                this.textRenderer,
+                Text.literal(progress + "/" + task.getRequiredAmount()),
+                this.width - 82,
+                rowY + 7,
+                complete ? MenuStyle.POSITIVE : MenuStyle.TEXT
+            );
+
+            context.drawTextWithShadow(
+                this.textRenderer,
+                Text.literal("Unlock: " + task.getRewardText()),
+                panelX + 124,
+                rowY + 19,
+                complete ? MenuStyle.POSITIVE : MenuStyle.TEXT
+            );
+
+            rowY += rowHeight + 6;
         }
     }
-    
-    private void renderAchievementsTab(DrawContext context) {
-        int startY = 60;
-        int lineHeight = 18;
-        int index = 0;
-        
-        context.drawTextWithShadow(this.textRenderer, Text.literal("=== ACHIEVEMENTS ===").formatted(Formatting.GOLD), 20, startY, TITLE_COLOR);
-        startY += 25;
-        
-        String[][] achievements = {
-            {"First Ally", "Tame your first helper", "Early Game"},
-            {"Growing Stronger", "Helper evolves first time", "Early Game"},
-            {"Mob Hunter", "Kill 10 mobs with helpers", "Progression"},
-            {"Elite Force", "Helper reaches Elite stage", "Progression"},
-            {"Master Ally", "Helper reaches Master stage", "Late Game"},
-            {"Ultimate Power", "Helper reaches Final Form", "End Game"},
-            {"Boss Slayer", "Defeat Giant Slime Boss", "End Game"}
-        };
-        
-        for (String[] achievement : achievements) {
-            String name = achievement[0];
-            String description = achievement[1];
-            String category = achievement[2];
-            
-            context.drawTextWithShadow(this.textRenderer, 
-                Text.literal("★ " + name).formatted(Formatting.YELLOW, Formatting.BOLD), 
-                20, startY + (index * lineHeight), 0xFFAA00);
-            context.drawTextWithShadow(this.textRenderer, 
-                Text.literal("  " + description).formatted(Formatting.GRAY), 
-                20, startY + (index * lineHeight) + 10, TEXT_COLOR);
-            context.drawTextWithShadow(this.textRenderer, 
-                Text.literal("  [" + category + "]").formatted(Formatting.DARK_GRAY), 
-                20, startY + (index * lineHeight) + 10 + 10, 0x888888);
-            index += 3;
+
+    private void renderRecipes(DrawContext context) {
+        int x = 40;
+        int y = 90;
+
+        context.drawTextWithShadow(this.textRenderer, Text.literal("Core Route Recipes"), x, y, MenuStyle.ACCENT_GOLD);
+        y += 22;
+
+        for (int i = 0; i < RECIPE_ROWS.length; i++) {
+            int rowY = y + i * 42;
+            MenuStyle.drawPanel(context, x, rowY, this.width - 80, 36, i % 2 == 1);
+            context.drawTextWithShadow(this.textRenderer, Text.literal(RECIPE_ROWS[i][0]), x + 10, rowY + 6, MenuStyle.TEXT);
+            context.drawTextWithShadow(this.textRenderer, Text.literal(RECIPE_ROWS[i][1]), x + 10, rowY + 18, MenuStyle.ACCENT);
+            context.drawTextWithShadow(this.textRenderer, Text.literal(RECIPE_ROWS[i][2]), x + 286, rowY + 12, MenuStyle.MUTED);
         }
+
+        context.drawTextWithShadow(
+            this.textRenderer,
+            Text.literal("The guide book and /frogslime recipes cover the same route in chat-friendly form."),
+            x,
+            this.height - 72,
+            MenuStyle.MUTED
+        );
     }
-    
-    private int getTaskProgress(TaskType task) {
-        // This would normally fetch from the server
-        // For now, return placeholder values
-        return switch (task) {
-            case KILL_MOBS -> 25;
-            case COLLECT_ITEMS -> 50;
-            case REACH_NETHER -> 0;
-            case FIND_DIAMONDS -> 5;
-            case KILL_BOSS -> 0;
-        };
-    }
-    
-    private int getTotalTaskProgress() {
-        int total = 0;
-        for (TaskType task : TaskType.values()) {
-            total += getTaskProgress(task);
+
+    private void renderAchievements(DrawContext context) {
+        int x = 40;
+        int y = 90;
+
+        context.drawTextWithShadow(
+            this.textRenderer,
+            Text.literal("Achievement Popups Unlocked: " + ProgressionClientState.getAchievementCount()),
+            x,
+            y,
+            MenuStyle.ACCENT_GOLD
+        );
+        y += 24;
+
+        for (int i = 0; i < ACHIEVEMENT_ROWS.length; i++) {
+            int rowY = y + i * 34;
+            TaskType gate = TaskType.valueOf(ACHIEVEMENT_ROWS[i][2]);
+            boolean unlocked = ProgressionClientState.getTaskProgress(gate) >= gate.getRequiredAmount();
+            MenuStyle.drawPanel(context, x, rowY, this.width - 80, 28, i % 2 == 0);
+            context.drawTextWithShadow(
+                this.textRenderer,
+                Text.literal(ACHIEVEMENT_ROWS[i][0]),
+                x + 10,
+                rowY + 8,
+                unlocked ? MenuStyle.POSITIVE : MenuStyle.TEXT
+            );
+            context.drawTextWithShadow(
+                this.textRenderer,
+                Text.literal(ACHIEVEMENT_ROWS[i][1]),
+                x + 160,
+                rowY + 8,
+                MenuStyle.MUTED
+            );
+            context.drawTextWithShadow(
+                this.textRenderer,
+                Text.literal(unlocked ? "Unlocked" : "Locked"),
+                this.width - 98,
+                rowY + 8,
+                unlocked ? MenuStyle.POSITIVE : MenuStyle.DANGER
+            );
         }
-        return total;
-    }
-    
-    private int getTotalTaskRequired() {
-        int total = 0;
-        for (TaskType task : TaskType.values()) {
-            total += task.getRequiredAmount();
+
+        int unlockY = this.height - 120;
+        context.drawTextWithShadow(this.textRenderer, Text.literal("Up Next"), x, unlockY, MenuStyle.ACCENT_GOLD);
+        if (ProgressionClientState.getNextUnlockNames().isEmpty()) {
+            context.drawTextWithShadow(this.textRenderer, Text.literal("No queued unlocks."), x, unlockY + 16, MenuStyle.MUTED);
+            return;
         }
-        return total;
+
+        for (int i = 0; i < ProgressionClientState.getNextUnlockNames().size(); i++) {
+            context.drawTextWithShadow(
+                this.textRenderer,
+                Text.literal(ProgressionClientState.getNextUnlockNames().get(i) + " - " + ProgressionClientState.getNextUnlockDescriptions().get(i)),
+                x,
+                unlockY + 16 + i * 14,
+                MenuStyle.MUTED
+            );
+        }
     }
 
     @Override
@@ -215,4 +223,3 @@ public class TasksScreen extends Screen {
         return false;
     }
 }
-

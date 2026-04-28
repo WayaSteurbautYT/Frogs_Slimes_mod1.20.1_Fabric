@@ -1,5 +1,6 @@
 package com.wayacreate.frogslimegamemode.item;
 
+import com.wayacreate.frogslimegamemode.achievements.AchievementManager;
 import com.wayacreate.frogslimegamemode.entity.SlimeHelperEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -22,6 +23,9 @@ public class FinalEvolutionCrystal extends Item {
                 if (!slime.isFinalForm()) {
                     slime.unlockFinalForm();
                     stack.decrement(1);
+                    if (user instanceof net.minecraft.server.network.ServerPlayerEntity serverPlayer) {
+                        AchievementManager.unlockAchievement(serverPlayer, "final_form");
+                    }
                     user.sendMessage(Text.literal("THE FINAL EVOLUTION HAS BEGUN...")
                         .formatted(Formatting.DARK_RED, Formatting.BOLD), false);
                     return ActionResult.SUCCESS;

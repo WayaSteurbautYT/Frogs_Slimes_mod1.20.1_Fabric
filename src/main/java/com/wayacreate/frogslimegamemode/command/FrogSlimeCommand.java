@@ -1,22 +1,33 @@
 package com.wayacreate.frogslimegamemode.command;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.wayacreate.frogslimegamemode.achievements.AchievementManager;
+import com.wayacreate.frogslimegamemode.abilities.PlayerAbilityManager;
 import com.wayacreate.frogslimegamemode.dimension.TransformedEndTeleporter;
+import com.wayacreate.frogslimegamemode.eating.MobAbility;
 import com.wayacreate.frogslimegamemode.gamemode.ContractManager;
-import com.wayacreate.frogslimegamemode.gamemode.EconomyManager;
 import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
 import com.wayacreate.frogslimegamemode.gamemode.ManhuntManager;
+import com.wayacreate.frogslimegamemode.gamemode.PlayerLevel;
 import com.wayacreate.frogslimegamemode.gamemode.RankManager;
 import com.wayacreate.frogslimegamemode.gamemode.TeamManager;
+import com.wayacreate.frogslimegamemode.item.ModItems;
 import com.wayacreate.frogslimegamemode.network.ModNetworking;
+import com.wayacreate.frogslimegamemode.progression.ProgressionUnlock;
+import com.wayacreate.frogslimegamemode.tasks.TaskManager;
+import com.wayacreate.frogslimegamemode.tasks.TaskType;
+import net.minecraft.item.ItemStack;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class FrogSlimeCommand {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
@@ -25,8 +36,18 @@ public class FrogSlimeCommand {
                 .executes(FrogSlimeCommand::startGamemode))
             .then(CommandManager.literal("disable")
                 .executes(FrogSlimeCommand::stopGamemode))
+            .then(CommandManager.literal("help")
+                .executes(FrogSlimeCommand::showHelp))
             .then(CommandManager.literal("info")
-                .executes(FrogSlimeCommand::showInfo))
+                .executes(FrogSlimeCommand::showHelp))
+            .then(CommandManager.literal("guide")
+                .executes(FrogSlimeCommand::giveGuide))
+            .then(CommandManager.literal("progress")
+                .executes(FrogSlimeCommand::showProgress))
+            .then(CommandManager.literal("abilities")
+                .executes(FrogSlimeCommand::showAbilities))
+            .then(CommandManager.literal("recipes")
+                .executes(FrogSlimeCommand::showRecipes))
             .then(CommandManager.literal("tasks")
                 .executes(FrogSlimeCommand::openTasks))
             .then(CommandManager.literal("reset")
@@ -44,6 +65,8 @@ public class FrogSlimeCommand {
                     .executes(FrogSlimeCommand::setSoloSpeedrunner))
                 .then(CommandManager.literal("hunter")
                     .executes(FrogSlimeCommand::setHunter))
+                .then(CommandManager.literal("status")
+                    .executes(FrogSlimeCommand::showManhuntStatus))
                 .then(CommandManager.literal("end")
                     .executes(FrogSlimeCommand::endManhunt)))
             .then(CommandManager.literal("dimension")
@@ -81,12 +104,12 @@ public class FrogSlimeCommand {
                         .executes(FrogSlimeCommand::acceptContract)))
                 .then(CommandManager.literal("my")
                     .executes(FrogSlimeCommand::listMyContracts)))
-            .then(CommandManager.literal("balance")
-                .executes(FrogSlimeCommand::checkBalance))
-            .then(CommandManager.literal("pay")
-                .then(CommandManager.argument("player", StringArgumentType.string())
-                    .then(CommandManager.argument("amount", StringArgumentType.string())
-                        .executes(FrogSlimeCommand::payPlayer))))
+            .then(EconomyCommands.buildShopSubcommand())
+            .then(EconomyCommands.buildTradeSubcommand())
+            .then(EconomyCommands.buildBalanceSubcommand())
+            .then(EconomyCommands.buildPaySubcommand())
+            .then(EconomyCommands.buildMessageSubcommand())
+            .then(GuildCommand.buildGuildSubcommand("guild"))
             .then(CommandManager.literal("test")
                 .then(CommandManager.literal("achievement")
                     .then(CommandManager.argument("id", StringArgumentType.string())
@@ -114,31 +137,45 @@ public class FrogSlimeCommand {
         return 0;
     }
     
-    private static int showInfo(CommandContext<ServerCommandSource> context) {
+    private static int showHelp(CommandContext<ServerCommandSource> context) {
         ServerPlayerEntity player = context.getSource().getPlayer();
         if (player != null) {
-            player.sendMessage(Text.literal("=== Frog & Slime Gamemode by WayaCreate ===")
+            player.sendMessage(Text.literal("=== Frog & Slime Command Board ===")
                 .formatted(Formatting.GOLD, Formatting.BOLD), false);
-            player.sendMessage(Text.literal("Commands:").formatted(Formatting.YELLOW), false);
-            player.sendMessage(Text.literal("  /frogslime enable - Begin the gamemode")
+            player.sendMessage(Text.literal("Core route").formatted(Formatting.YELLOW), false);
+            player.sendMessage(Text.literal("  /frogslime enable - Start the route for online players")
                 .formatted(Formatting.WHITE), false);
-            player.sendMessage(Text.literal("  /frogslime disable - Stop the gamemode")
+            player.sendMessage(Text.literal("  /frogslime progress - Show live tasks and next unlocks")
                 .formatted(Formatting.WHITE), false);
-            player.sendMessage(Text.literal(""), false);
-            player.sendMessage(Text.literal("How to Play:").formatted(Formatting.YELLOW), false);
-            player.sendMessage(Text.literal("1. Start the gamemode with /frogslime enable")
+            player.sendMessage(Text.literal("  /frogslime abilities - List unlocked abilities and the selected slot")
                 .formatted(Formatting.WHITE), false);
-            player.sendMessage(Text.literal("2. Spawn helpers with spawn eggs")
+            player.sendMessage(Text.literal("  /frogslime recipes - Explain the main crafting route")
                 .formatted(Formatting.WHITE), false);
-            player.sendMessage(Text.literal("3. Tame them by right-clicking")
+            player.sendMessage(Text.literal("  /frogslime guide - Reclaim the guide book and task book")
                 .formatted(Formatting.WHITE), false);
-            player.sendMessage(Text.literal("4. They evolve by killing mobs!")
+            player.sendMessage(Text.literal("  /frogslime tasks - Open the progression board")
                 .formatted(Formatting.WHITE), false);
-            player.sendMessage(Text.literal("5. Defeat the Ender Dragon for a surprise...")
-                .formatted(Formatting.DARK_RED, Formatting.ITALIC), false);
+            player.sendMessage(Text.literal("Contracts and SMP").formatted(Formatting.YELLOW), false);
+            player.sendMessage(Text.literal("  /frogslime contract list - View available contracts")
+                .formatted(Formatting.WHITE), false);
+            player.sendMessage(Text.literal("  /frogslime contract accept <id> - Start a contract")
+                .formatted(Formatting.WHITE), false);
+            player.sendMessage(Text.literal("  /frogslime contract my - Track accepted contracts")
+                .formatted(Formatting.WHITE), false);
+            player.sendMessage(Text.literal("Manhunt").formatted(Formatting.YELLOW), false);
+            player.sendMessage(Text.literal("  /frogslime manhunt speedrunner | hunter | auto | status | end")
+                .formatted(Formatting.WHITE), false);
+            player.sendMessage(Text.literal("Hunter controls: hold tracker or compass, TAB cycles, R uses.")
+                .formatted(Formatting.RED), false);
+            player.sendMessage(Text.literal("Speedrunner controls: hold a clock, TAB cycles, R uses.")
+                .formatted(Formatting.AQUA), false);
             return 1;
         }
         return 0;
+    }
+
+    private static int showInfo(CommandContext<ServerCommandSource> context) {
+        return showHelp(context);
     }
     
     private static int openTasks(CommandContext<ServerCommandSource> context) {
@@ -218,24 +255,24 @@ public class FrogSlimeCommand {
     private static int setHunter(CommandContext<ServerCommandSource> context) {
         ServerPlayerEntity player = context.getSource().getPlayer();
         if (player != null) {
-            // Default to nearest player as target
-            ServerPlayerEntity nearest = null;
-            double nearestDist = Double.MAX_VALUE;
+            ServerPlayerEntity target = ManhuntManager.getPrimarySpeedrunner(player.getServer());
+            if (target == player) {
+                target = null;
+            }
             
             for (ServerPlayerEntity other : player.getServer().getPlayerManager().getPlayerList()) {
-                if (other != player) {
-                    double dist = player.squaredDistanceTo(other);
-                    if (dist < nearestDist) {
-                        nearestDist = dist;
-                        nearest = other;
-                    }
+                if (target != null) {
+                    break;
+                }
+                if (other != player && !ManhuntManager.isHunter(other)) {
+                    target = other;
                 }
             }
             
-            if (nearest != null) {
-                ManhuntManager.setHunter(player, nearest);
+            if (target != null) {
+                ManhuntManager.setHunter(player, target);
             } else {
-                player.sendMessage(Text.literal("No other players found to hunt!")
+                player.sendMessage(Text.literal("No valid speedrunner target found.")
                     .formatted(Formatting.RED), false);
             }
             return 1;
@@ -247,11 +284,54 @@ public class FrogSlimeCommand {
     private static int endManhunt(CommandContext<ServerCommandSource> context) {
         ServerPlayerEntity player = context.getSource().getPlayer();
         if (player != null) {
-            ManhuntManager.endGame(player);
+            ManhuntManager.endAllGames(player.getServer());
             return 1;
         }
         context.getSource().sendError(Text.literal("Only players can use this command!"));
         return 0;
+    }
+
+    private static int showManhuntStatus(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        if (player == null) {
+            context.getSource().sendError(Text.literal("Only players can use this command!"));
+            return 0;
+        }
+
+        player.sendMessage(Text.literal("=== Manhunt Status ===")
+            .formatted(Formatting.GOLD, Formatting.BOLD), false);
+
+        if (ManhuntManager.isCountdownActive()) {
+            player.sendMessage(Text.literal("Countdown: " + ManhuntManager.getCountdownSeconds() + "s")
+                .formatted(Formatting.YELLOW), false);
+        }
+
+        player.sendMessage(Text.literal("Hunters: " + ManhuntManager.getActiveHunterCount()
+            + " | Active speedrunners: " + ManhuntManager.getActiveSpeedrunnerCount()
+            + " | Ghost speedrunners: " + ManhuntManager.getGhostSpeedrunnerCount())
+            .formatted(Formatting.WHITE), false);
+
+        if (ManhuntManager.isHunter(player)) {
+            ServerPlayerEntity target = ManhuntManager.getTarget(player);
+            player.sendMessage(Text.literal("You are a hunter.")
+                .formatted(Formatting.RED, Formatting.BOLD), false);
+            player.sendMessage(Text.literal("Target: " + (target != null ? target.getName().getString() : "None"))
+                .formatted(Formatting.YELLOW), false);
+        } else if (ManhuntManager.isSpeedrunner(player)) {
+            player.sendMessage(Text.literal("You are the speedrunner.")
+                .formatted(Formatting.GREEN, Formatting.BOLD), false);
+            player.sendMessage(Text.literal("Elapsed: " + ManhuntManager.getElapsedTime(player)
+                + " | Deaths: " + ManhuntManager.getDeathCount(player))
+                .formatted(Formatting.WHITE), false);
+        } else {
+            ServerPlayerEntity activeTarget = ManhuntManager.getPrimarySpeedrunner(player.getServer());
+            if (activeTarget != null) {
+                player.sendMessage(Text.literal("Current lead speedrunner: " + activeTarget.getName().getString())
+                    .formatted(Formatting.AQUA), false);
+            }
+        }
+
+        return 1;
     }
     
     private static int teleportToTransformedEnd(CommandContext<ServerCommandSource> context) {
@@ -279,12 +359,13 @@ public class FrogSlimeCommand {
     private static int giveRoleItem(CommandContext<ServerCommandSource> context) {
         ServerPlayerEntity player = context.getSource().getPlayer();
         if (player != null) {
-            // Give a role selection item
-            com.wayacreate.frogslimegamemode.item.RoleItem roleItem = new com.wayacreate.frogslimegamemode.item.RoleItem(
-                new net.fabricmc.fabric.api.item.v1.FabricItemSettings().maxCount(1), "Selection");
-            net.minecraft.item.ItemStack stack = new net.minecraft.item.ItemStack(roleItem);
-            player.getInventory().insertStack(stack);
-            player.sendMessage(Text.literal("Use this item to select your role!").formatted(Formatting.GREEN), false);
+            player.getInventory().insertStack(new net.minecraft.item.ItemStack(ModItems.MINER_ROLE));
+            player.getInventory().insertStack(new net.minecraft.item.ItemStack(ModItems.LUMBERJACK_ROLE));
+            player.getInventory().insertStack(new net.minecraft.item.ItemStack(ModItems.COMBAT_ROLE));
+            player.getInventory().insertStack(new net.minecraft.item.ItemStack(ModItems.BUILDER_ROLE));
+            player.getInventory().insertStack(new net.minecraft.item.ItemStack(ModItems.FARMER_ROLE));
+            player.sendMessage(Text.literal("Gave you the full helper role kit.")
+                .formatted(Formatting.GREEN), false);
             return 1;
         }
         context.getSource().sendError(Text.literal("Only players can use this command!"));
@@ -404,61 +485,148 @@ public class FrogSlimeCommand {
         context.getSource().sendError(Text.literal("Only players can use this command!"));
         return 0;
     }
-    
-    private static int checkBalance(CommandContext<ServerCommandSource> context) {
+
+    private static int giveGuide(CommandContext<ServerCommandSource> context) {
         ServerPlayerEntity player = context.getSource().getPlayer();
-        if (player != null) {
-            EconomyManager.checkBalance(player);
-            return 1;
+        if (player == null) {
+            context.getSource().sendError(Text.literal("Only players can use this command!"));
+            return 0;
         }
-        context.getSource().sendError(Text.literal("Only players can use this command!"));
-        return 0;
+
+        player.getInventory().insertStack(GamemodeManager.createGuideBook());
+        if (ModItems.TASK_BOOK != null) {
+            player.getInventory().insertStack(new ItemStack(ModItems.TASK_BOOK));
+        }
+
+        player.sendMessage(Text.literal("Guide book restored. Use /frogslime tasks for the live board.")
+            .formatted(Formatting.GREEN), false);
+        if (GamemodeManager.isInGamemode(player)) {
+            ModNetworking.openTasksScreen(player);
+        }
+        return 1;
     }
-    
-    private static int payPlayer(CommandContext<ServerCommandSource> context) {
+
+    private static int showProgress(CommandContext<ServerCommandSource> context) {
         ServerPlayerEntity player = context.getSource().getPlayer();
-        String targetName = StringArgumentType.getString(context, "player");
-        String amountStr = StringArgumentType.getString(context, "amount");
-        
-        if (player != null) {
-            try {
-                int amount = Integer.parseInt(amountStr);
-                if (amount <= 0) {
-                    player.sendMessage(Text.literal("Amount must be positive!")
-                        .formatted(Formatting.RED), false);
-                    return 0;
-                }
-                
-                ServerPlayerEntity target = player.getServer().getPlayerManager().getPlayer(targetName);
-                if (target == null) {
-                    player.sendMessage(Text.literal("Player not found!")
-                        .formatted(Formatting.RED), false);
-                    return 0;
-                }
-                
-                EconomyManager.sendCoins(player, target, amount);
-                
-                // Unlock trading achievements
-                int totalTrades = EconomyManager.getTotalTrades(player.getUuid());
-                if (totalTrades == 1) {
-                    AchievementManager.unlockAchievement(player, "first_trade");
-                }
-                if (totalTrades >= 25) {
-                    AchievementManager.unlockAchievement(player, "merchant");
-                }
-                if (totalTrades >= 100) {
-                    AchievementManager.unlockAchievement(player, "trade_tycoon");
-                }
-                
-                return 1;
-            } catch (NumberFormatException e) {
-                player.sendMessage(Text.literal("Invalid amount!")
-                    .formatted(Formatting.RED), false);
-                return 0;
+        if (player == null) {
+            context.getSource().sendError(Text.literal("Only players can use this command!"));
+            return 0;
+        }
+
+        if (!GamemodeManager.isInGamemode(player)) {
+            player.sendMessage(Text.literal("Enable the route first with /frogslime enable.")
+                .formatted(Formatting.RED), false);
+            return 0;
+        }
+
+        TaskManager.syncDerivedTasks(player);
+        ModNetworking.sendProgressSnapshot(player);
+
+        player.sendMessage(Text.literal("=== Route Progress ===")
+            .formatted(Formatting.GOLD, Formatting.BOLD), false);
+        player.sendMessage(Text.literal("Level " + PlayerLevel.getLevel(player)
+            + " | Completion " + (int) (TaskManager.getOverallProgress(player) * 100)
+            + "% | Tasks " + TaskManager.getCompletedTaskCount(player) + "/" + TaskType.values().length)
+            .formatted(Formatting.YELLOW), false);
+
+        for (TaskType task : TaskManager.getActiveObjectives(player, 3)) {
+            int progress = GamemodeManager.getData(player).getTaskProgress(task);
+            player.sendMessage(Text.literal("- " + task.getDisplayName() + " [" + progress + "/" + task.getRequiredAmount() + "]")
+                .formatted(task.getColor()), false);
+            player.sendMessage(Text.literal("  " + task.getDescription() + " -> " + task.getRewardText())
+                .formatted(Formatting.GRAY), false);
+        }
+
+        List<String> unlocks = getUpcomingUnlocks(player, 3);
+        if (!unlocks.isEmpty()) {
+            player.sendMessage(Text.literal("Next unlocks").formatted(Formatting.AQUA), false);
+            for (String unlock : unlocks) {
+                player.sendMessage(Text.literal("  " + unlock).formatted(Formatting.WHITE), false);
             }
         }
-        context.getSource().sendError(Text.literal("Only players can use this command!"));
-        return 0;
+        return 1;
+    }
+
+    private static int showAbilities(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        if (player == null) {
+            context.getSource().sendError(Text.literal("Only players can use this command!"));
+            return 0;
+        }
+
+        if (!GamemodeManager.isInGamemode(player)) {
+            player.sendMessage(Text.literal("Enable the route first with /frogslime enable.")
+                .formatted(Formatting.RED), false);
+            return 0;
+        }
+
+        List<String> abilities = GamemodeManager.getData(player).getPlayerAbilities();
+        MobAbility selected = PlayerAbilityManager.getCurrentAbility(player);
+
+        player.sendMessage(Text.literal("=== Player Abilities ===")
+            .formatted(Formatting.GOLD, Formatting.BOLD), false);
+        player.sendMessage(Text.literal("Unlocked: " + abilities.size())
+            .formatted(Formatting.YELLOW), false);
+        if (selected != null) {
+            player.sendMessage(Text.literal("Selected: " + selected.getName() + " - " + selected.getDescription())
+                .formatted(Formatting.AQUA), false);
+        }
+        player.sendMessage(Text.literal("TAB cycles, R uses the selected active ability.")
+            .formatted(Formatting.GRAY), false);
+
+        for (String abilityId : abilities) {
+            MobAbility ability = MobAbility.getAbility(abilityId);
+            if (ability != null) {
+                player.sendMessage(Text.literal("- " + ability.getName() + ": " + ability.getDescription())
+                    .formatted(Formatting.WHITE), false);
+            } else {
+                player.sendMessage(Text.literal("- " + abilityId)
+                    .formatted(Formatting.WHITE), false);
+            }
+        }
+        return 1;
+    }
+
+    private static int showRecipes(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        if (player == null) {
+            context.getSource().sendError(Text.literal("Only players can use this command!"));
+            return 0;
+        }
+
+        player.sendMessage(Text.literal("=== Route Recipes ===")
+            .formatted(Formatting.GOLD, Formatting.BOLD), false);
+        player.sendMessage(Text.literal("Ability Forge: crafting table + emeralds + slime balls.")
+            .formatted(Formatting.WHITE), false);
+        player.sendMessage(Text.literal("Frog Crafting Table: crafting tables + slime balls.")
+            .formatted(Formatting.WHITE), false);
+        player.sendMessage(Text.literal("Ability Stick: stick + stone + dirt + sand.")
+            .formatted(Formatting.WHITE), false);
+        player.sendMessage(Text.literal("Main crafting loop: use mob drops at the Ability Forge for final mob ability items.")
+            .formatted(Formatting.AQUA), false);
+        player.sendMessage(Text.literal("Legacy loop: combine a matching drop with an Ability Stick in an anvil.")
+            .formatted(Formatting.GRAY), false);
+        player.sendMessage(Text.literal("Contracts: /frogslime contract list, then /frogslime contract accept <id>.")
+            .formatted(Formatting.YELLOW), false);
+        return 1;
+    }
+
+    private static List<String> getUpcomingUnlocks(ServerPlayerEntity player, int limit) {
+        List<String> upcoming = new ArrayList<>();
+        int level = PlayerLevel.getLevel(player);
+        int evolutionStage = TaskManager.getHighestHelperEvolution(player);
+
+        for (ProgressionUnlock.Unlock unlock : ProgressionUnlock.getUnlocksForLevel(level + 10)) {
+            if (!ProgressionUnlock.isUnlocked(unlock.getId(), level, evolutionStage)) {
+                upcoming.add(unlock.getName() + " - " + unlock.getDescription()
+                    + " (Lv " + unlock.getRequiredLevel() + ", Evo " + unlock.getRequiredEvolutionStage() + ")");
+                if (upcoming.size() >= limit) {
+                    break;
+                }
+            }
+        }
+
+        return upcoming;
     }
     
     private static int testAchievement(CommandContext<ServerCommandSource> context) {

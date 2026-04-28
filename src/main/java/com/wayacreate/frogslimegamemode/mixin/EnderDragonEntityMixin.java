@@ -1,8 +1,12 @@
 package com.wayacreate.frogslimegamemode.mixin;
 
+import com.wayacreate.frogslimegamemode.achievements.AchievementManager;
 import com.wayacreate.frogslimegamemode.entity.SlimeHelperEntity;
 import com.wayacreate.frogslimegamemode.gamemode.GamemodeManager;
+import com.wayacreate.frogslimegamemode.gamemode.ManhuntManager;
 import com.wayacreate.frogslimegamemode.item.ModItems;
+import com.wayacreate.frogslimegamemode.tasks.TaskManager;
+import com.wayacreate.frogslimegamemode.tasks.TaskType;
 import net.minecraft.entity.boss.dragon.EnderDragonEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -32,6 +36,11 @@ public abstract class EnderDragonEntityMixin {
             for (PlayerEntity player : nearbyPlayers) {
                 if (player instanceof ServerPlayerEntity serverPlayer) {
                     GamemodeManager.triggerEnding(serverPlayer, true);
+                    TaskManager.completeTask(serverPlayer, TaskType.DEFEAT_FINAL_BOSS);
+                    AchievementManager.unlockAchievement(serverPlayer, "dragon_slayer");
+                    if (ManhuntManager.isInGame(serverPlayer) && ManhuntManager.isSpeedrunner(serverPlayer)) {
+                        ManhuntManager.onSpeedrunnerWin(serverPlayer);
+                    }
                     
                     List<SlimeHelperEntity> slimes = dragon.getWorld().getEntitiesByClass(
                         SlimeHelperEntity.class,
