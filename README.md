@@ -2,13 +2,15 @@
 
 <div align="center">
 
-![Minecraft Version](https://img.shields.io/badge/Minecraft-1.20.1-brightgreen)
-![Fabric](https://img.shields.io/badge/Fabric-Loader-blue)
-![Java](https://img.shields.io/badge/Java-17-orange)
+![Minecraft Version](https://img.shields.io/badge/Minecraft-1.21.1-brightgreen)
+![NeoForge](https://img.shields.io/badge/NeoForge-21.1.143-orange)
+![Java](https://img.shields.io/badge/Java-21-orange)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
-![Version](https://img.shields.io/badge/Version-1.8.8-blueviolet)
+![Version](https://img.shields.io/badge/Version-2.6.0--NeoForge-blueviolet)
 
-**A unique Minecraft Fabric mod where frog and slime helpers fight for you!**
+**A unique Minecraft NeoForge mod where frog and slime helpers fight for you!**
+
+> ⚠️ **Port Notice**: This version has been ported from Fabric 1.20.1 to NeoForge 1.21.1 with Mojang mappings.
 
 [Features](#features) • [Commands](#-all-commands) • [Installation](#installation) • [How to Play](#how-to-play) • [Gallery](#gallery)
 
@@ -306,16 +308,15 @@ Experience the mod's items, crafting, and collections with an authentic Minecraf
 ## Installation
 
 ### Requirements
-- Minecraft 1.20.1
-- Fabric Loader
-- Fabric API
+- Minecraft 1.21.1
+- NeoForge 21.1.143+
+- Java 21+
 
 ### Steps
-1. Install [Fabric Loader](https://fabricmc.net/)
-2. Download the latest [Fabric API](https://www.curseforge.com/minecraft/mc-mods/fabric-api)
-3. Download the latest release of Frog & Slime Gamemode
-4. Place both `.jar` files in your `mods` folder
-5. Launch the game!
+1. Install [NeoForge](https://neoforged.net/)
+2. Download the latest release of Frog & Slime Gamemode for NeoForge
+3. Place the `.jar` file in your `mods` folder
+4. Launch the game!
 
 ## How to Play
 
@@ -603,7 +604,26 @@ This is basically if all those YouTubers had a baby and that baby learned Java..
 
 ## 📜 Changelog
 
-### v1.8.8 - Current Release
+### v2.6.0 - NeoForge 1.21.1 Port (Current)
+- 🔄 **Major Port**: Migrated from Fabric 1.20.1 to NeoForge 1.21.1
+- 🔧 **API Migration**: Updated to Mojang mappings (Yarn → Mojang)
+- ☕ **Java 21**: Now requires Java 21+
+- 🔧 **Core API Changes**:
+  - `getRotationVector()` → `getLookAngle()`
+  - `getPos()` → `position()`
+  - `addVelocity()` → `push()`
+  - `spawnParticles()` → `sendParticles()`
+  - `addStatusEffect()` → `addEffect()`
+  - `sendMessage()` → `sendSystemMessage()`
+  - `formatted()` → `withStyle()`
+  - `getWorld()` → `level()`
+  - `teleport()` → `teleportTo()`
+  - `markDirty()` → `setDirty()` (SavedData)
+  - `PlayerManager` → `PlayerList`
+  - Effect renames: `SLOWNESS`→`MOVEMENT_SLOWDOWN`, `JUMP_BOOST`→`JUMP`, etc.
+- ⚠️ **Note**: This is a WIP port - some features may not be fully functional yet
+
+### v1.8.8 - Previous Release (Fabric 1.20.1)
 - ✅ Full economy system with marketplace, trading, and player shops
 - ✅ Guild system with missions, banks, and member management
 - ✅ Bounty system for PvP rewards
