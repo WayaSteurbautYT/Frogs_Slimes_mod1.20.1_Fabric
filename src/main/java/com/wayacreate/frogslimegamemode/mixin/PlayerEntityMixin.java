@@ -24,11 +24,11 @@ public abstract class PlayerEntityMixin {
         PlayerEntity player = (PlayerEntity) (Object) this;
         
         if (!player.getWorld().isClient) {
-            // Check if player is holding an ability drop item and left-clicking air
+            // Check if player is holding a mob ability item and left-clicking air
             if (target == null) {
                 ItemStack stack = player.getMainHandStack();
-                if (com.wayacreate.frogslimegamemode.item.AbilityDropItem.isAbilityDrop(stack)) {
-                    consumeAbilityDrop(player, stack);
+                if (com.wayacreate.frogslimegamemode.item.MobAbilityItem.isMobAbility(stack)) {
+                    consumeMobAbility(player, stack);
                     ci.cancel();
                     return;
                 }
@@ -100,48 +100,106 @@ public abstract class PlayerEntityMixin {
         }
     }
     
-    private void consumeAbilityDrop(PlayerEntity player, ItemStack stack) {
-        String abilityId = com.wayacreate.frogslimegamemode.item.AbilityDropItem.getAbilityId(stack);
+    private void consumeMobAbility(PlayerEntity player, ItemStack stack) {
+        String abilityId = com.wayacreate.frogslimegamemode.item.MobAbilityItem.getAbilityId(stack);
         
         if (abilityId != null && !abilityId.isEmpty()) {
             MobAbility ability = MobAbility.getAbility(abilityId);
             
             if (ability != null) {
-                // Add ability to player's unlocked abilities
+                // Check if player is sneaking to add to helper, otherwise add to player
+                boolean addToHelper = player.isSneaking();
+                
                 if (player instanceof net.minecraft.server.network.ServerPlayerEntity serverPlayer) {
-                    com.wayacreate.frogslimegamemode.gamemode.GamemodeManager.getData(serverPlayer).addAbility(abilityId);
-                    
                     // Get the item to display in the animation
                     net.minecraft.item.Item displayItem = com.wayacreate.frogslimegamemode.item.AbilityDropItem.getDropItemForAbility(abilityId);
                     
-                    // Send totem animation packet with item for particles
-                    ModNetworking.sendTotemAnimation(serverPlayer, 
-                        "Ability Unlocked!", 
-                        ability.getName() + " - " + ability.getDescription(), 
-                        Formatting.LIGHT_PURPLE,
-                        displayItem);
-                    
-                    // Send title animation
-                    ModNetworking.showTitle(serverPlayer, 
-                        "Ability Unlocked!", 
-                        ability.getName() + " - " + ability.getDescription(), 
-                        Formatting.LIGHT_PURPLE);
-                    
-                    // Play level-up sound directly on server (client will hear it)
-                    serverPlayer.playSound(net.minecraft.sound.SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+                    if (addToHelper) {
+                        // Add to helper abilities
+                        var helpers = player.getWorld().getEntitiesByClass(
+                            FrogHelperEntity.class,
+                            player.getBoundingBox().expand(32),
+                            frog -> frog.isOwner(player)
+                        );
+                        
+                        var slimes = player.getWorld().getEntitiesByClass(
+                            SlimeHelperEntity.class,
+                            player.getBoundingBox().expand(32),
+                            slime -> slime.isOwner(player)
+                        );
+                        
+                        if (!helpers.isEmpty()) {
+                            helpers.get(0).addAbility(ability);
+                            ModNetworking.sendTotemAnimation(serverPlayer, 
+                                "Helper Ability Added!", 
+                                ability.getName() + " - " + ability.getDescription(), 
+                                Formatting.GREEN,
+                                displayItem);
+                            serverPlayer.playSound(net.minecraft.sound.SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+                            player.sendMessage(Text.literal("Your frog gained ")
+                                .formatted(Formatting.GREEN)
+                                .append(ability.getFormattedName())
+                                .append(Text.literal("!").formatted(Formatting.GREEN)), false);
+                        } else if (!slimes.isEmpty()) {
+                            slimes.get(0).addAbility(ability);
+                            ModNetworking.sendTotemAnimation(serverPlayer, 
+                                "Helper Ability Added!", 
+                                ability.getName() + " - " + ability.getDescription(), 
+                                Formatting.GREEN,
+                                displayItem);
+                            serverPlayer.playSound(net.minecraft.sound.SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+                            player.sendMessage(Text.literal("Your slime gained ")
+                                .formatted(Formatting.GREEN)
+                                .append(ability.getFormattedName())
+                                .append(Text.literal("!").formatted(Formatting.GREEN)), false);
+                        } else {
+                            player.sendMessage(Text.literal("No helper nearby! Ability added to you instead.")
+                                .formatted(Formatting.YELLOW), false);
+                            com.wayacreate.frogslimegamemode.gamemode.GamemodeManager.getData(serverPlayer).addAbility(abilityId);
+                            ModNetworking.sendTotemAnimation(serverPlayer, 
+                                "Ability Unlocked!", 
+                                ability.getName() + " - " + ability.getDescription(), 
+                                Formatting.LIGHT_PURPLE,
+                                displayItem);
+                            serverPlayer.playSound(net.minecraft.sound.SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+                            player.sendMessage(Text.literal("You unlocked the ")
+                                .formatted(Formatting.LIGHT_PURPLE)
+                                .append(ability.getFormattedName())
+                                .append(Text.literal("! Press [TAB] to switch abilities.").formatted(Formatting.YELLOW)), false);
+                        }
+                    } else {
+                        // Add to player's unlocked abilities
+                        com.wayacreate.frogslimegamemode.gamemode.GamemodeManager.getData(serverPlayer).addAbility(abilityId);
+                        
+                        // Send totem animation packet with item for particles
+                        ModNetworking.sendTotemAnimation(serverPlayer, 
+                            "Ability Unlocked!", 
+                            ability.getName() + " - " + ability.getDescription(), 
+                            Formatting.LIGHT_PURPLE,
+                            displayItem);
+                        
+                        // Send title animation
+                        ModNetworking.showTitle(serverPlayer, 
+                            "Ability Unlocked!", 
+                            ability.getName() + " - " + ability.getDescription(), 
+                            Formatting.LIGHT_PURPLE);
+                        
+                        // Play level-up sound directly on server (client will hear it)
+                        serverPlayer.playSound(net.minecraft.sound.SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+                        
+                        // Apply ability bonuses to the player
+                        com.wayacreate.frogslimegamemode.item.AbilityDropItem.applyAbilityToPlayerStatic(player, ability);
+                        
+                        // Send message
+                        player.sendMessage(Text.literal("You unlocked the ")
+                            .formatted(Formatting.LIGHT_PURPLE)
+                            .append(ability.getFormattedName())
+                            .append(Text.literal("! Press [TAB] to switch abilities.").formatted(Formatting.YELLOW)), false);
+                    }
                 }
-                
-                // Apply ability bonuses to the player
-                com.wayacreate.frogslimegamemode.item.AbilityDropItem.applyAbilityToPlayerStatic(player, ability);
                 
                 // Consume the item
                 stack.decrement(1);
-                
-                // Send message
-                player.sendMessage(Text.literal("You unlocked the ")
-                    .formatted(Formatting.LIGHT_PURPLE)
-                    .append(ability.getFormattedName())
-                    .append(Text.literal("! Press [TAB] to switch abilities.").formatted(Formatting.YELLOW)), false);
             }
         }
     }
@@ -160,7 +218,7 @@ public abstract class PlayerEntityMixin {
         if (!player.getWorld().isClient && GamemodeManager.isInGamemode(player)) {
             GamemodeManager.getData(player).incrementDeathCount();
             
-            // Drop ability items on death
+            // Drop raw ability drop items on death (need to be crafted with normal drops)
             var abilities = GamemodeManager.getData(player).getPlayerAbilities();
             for (String abilityId : abilities) {
                 ItemStack drop = com.wayacreate.frogslimegamemode.item.AbilityDropItem.createAbilityDrop(abilityId);

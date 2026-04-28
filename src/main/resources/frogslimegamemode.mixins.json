@@ -8,7 +8,8 @@
     "PlayerEntityMixin",
     "LivingEntityMixin",
     "ServerWorldMixin",
-    "ItemMixin"
+    "ItemMixin",
+    "AnvilScreenHandlerMixin"
   ],
   "client": [
     "CreateWorldScreenMixin",

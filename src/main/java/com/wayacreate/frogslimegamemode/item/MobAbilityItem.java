@@ -27,8 +27,9 @@ public class MobAbilityItem extends Item {
             return ItemStack.EMPTY;
         }
         
-        // Create the actual mob ability item
-        ItemStack item = new ItemStack(ModItems.MOB_ABILITY);
+        // Use the specific mob item for this ability (not a totem)
+        net.minecraft.item.Item displayItem = AbilityDropItem.getDropItemForAbility(abilityId);
+        ItemStack item = new ItemStack(displayItem);
         NbtCompound nbt = item.getOrCreateNbt();
         nbt.putBoolean(MOB_ABILITY_NBT, true);
         nbt.putString(ABILITY_ID_NBT, abilityId);
@@ -67,41 +68,99 @@ public class MobAbilityItem extends Item {
             MobAbility ability = MobAbility.getAbility(abilityId);
             
             if (ability != null) {
-                // Add ability to player's unlocked abilities
+                // Check if player is sneaking to add to helper, otherwise add to player
+                boolean addToHelper = user.isSneaking();
+                
                 if (user instanceof ServerPlayerEntity serverPlayer) {
-                    com.wayacreate.frogslimegamemode.gamemode.GamemodeManager.getData(serverPlayer).addAbility(abilityId);
-                    
                     // Get the item to display in the animation
                     net.minecraft.item.Item displayItem = AbilityDropItem.getDropItemForAbility(abilityId);
                     
-                    // Send totem animation packet with item for particles
-                    ModNetworking.sendTotemAnimation(serverPlayer, 
-                        "Ability Unlocked!", 
-                        ability.getName() + " - " + ability.getDescription(), 
-                        Formatting.LIGHT_PURPLE,
-                        displayItem);
-                    
-                    // Send title animation
-                    ModNetworking.showTitle(serverPlayer, 
-                        "Ability Unlocked!", 
-                        ability.getName() + " - " + ability.getDescription(), 
-                        Formatting.LIGHT_PURPLE);
-                    
-                    // Play level-up sound directly on server
-                    serverPlayer.playSound(net.minecraft.sound.SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+                    if (addToHelper) {
+                        // Add to helper abilities
+                        var helpers = user.getWorld().getEntitiesByClass(
+                            com.wayacreate.frogslimegamemode.entity.FrogHelperEntity.class,
+                            user.getBoundingBox().expand(32),
+                            frog -> frog.isOwner(user)
+                        );
+                        
+                        var slimes = user.getWorld().getEntitiesByClass(
+                            com.wayacreate.frogslimegamemode.entity.SlimeHelperEntity.class,
+                            user.getBoundingBox().expand(32),
+                            slime -> slime.isOwner(user)
+                        );
+                        
+                        if (!helpers.isEmpty()) {
+                            helpers.get(0).addAbility(ability);
+                            ModNetworking.sendTotemAnimation(serverPlayer, 
+                                "Helper Ability Added!", 
+                                ability.getName() + " - " + ability.getDescription(), 
+                                Formatting.GREEN,
+                                displayItem);
+                            serverPlayer.playSound(net.minecraft.sound.SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+                            user.sendMessage(Text.literal("Your frog gained ")
+                                .formatted(Formatting.GREEN)
+                                .append(ability.getFormattedName())
+                                .append(Text.literal("!").formatted(Formatting.GREEN)), false);
+                        } else if (!slimes.isEmpty()) {
+                            slimes.get(0).addAbility(ability);
+                            ModNetworking.sendTotemAnimation(serverPlayer, 
+                                "Helper Ability Added!", 
+                                ability.getName() + " - " + ability.getDescription(), 
+                                Formatting.GREEN,
+                                displayItem);
+                            serverPlayer.playSound(net.minecraft.sound.SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+                            user.sendMessage(Text.literal("Your slime gained ")
+                                .formatted(Formatting.GREEN)
+                                .append(ability.getFormattedName())
+                                .append(Text.literal("!").formatted(Formatting.GREEN)), false);
+                        } else {
+                            user.sendMessage(Text.literal("No helper nearby! Ability added to you instead.")
+                                .formatted(Formatting.YELLOW), false);
+                            com.wayacreate.frogslimegamemode.gamemode.GamemodeManager.getData(serverPlayer).addAbility(abilityId);
+                            ModNetworking.sendTotemAnimation(serverPlayer, 
+                                "Ability Unlocked!", 
+                                ability.getName() + " - " + ability.getDescription(), 
+                                Formatting.LIGHT_PURPLE,
+                                displayItem);
+                            serverPlayer.playSound(net.minecraft.sound.SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+                            user.sendMessage(Text.literal("You unlocked the ")
+                                .formatted(Formatting.LIGHT_PURPLE)
+                                .append(ability.getFormattedName())
+                                .append(Text.literal("! Press [TAB] to switch abilities.").formatted(Formatting.YELLOW)), false);
+                        }
+                    } else {
+                        // Add to player's unlocked abilities
+                        com.wayacreate.frogslimegamemode.gamemode.GamemodeManager.getData(serverPlayer).addAbility(abilityId);
+                        
+                        // Send totem animation packet with item for particles
+                        ModNetworking.sendTotemAnimation(serverPlayer, 
+                            "Ability Unlocked!", 
+                            ability.getName() + " - " + ability.getDescription(), 
+                            Formatting.LIGHT_PURPLE,
+                            displayItem);
+                        
+                        // Send title animation
+                        ModNetworking.showTitle(serverPlayer, 
+                            "Ability Unlocked!", 
+                            ability.getName() + " - " + ability.getDescription(), 
+                            Formatting.LIGHT_PURPLE);
+                        
+                        // Play level-up sound directly on server
+                        serverPlayer.playSound(net.minecraft.sound.SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+                        
+                        // Apply ability bonuses to the player
+                        AbilityDropItem.applyAbilityToPlayerStatic(user, ability);
+                        
+                        // Send message
+                        user.sendMessage(Text.literal("You unlocked the ")
+                            .formatted(Formatting.LIGHT_PURPLE)
+                            .append(ability.getFormattedName())
+                            .append(Text.literal("! Press [TAB] to switch abilities.").formatted(Formatting.YELLOW)), false);
+                    }
                 }
-                
-                // Apply ability bonuses to the player
-                AbilityDropItem.applyAbilityToPlayerStatic(user, ability);
                 
                 // Consume the item
                 stack.decrement(1);
-                
-                // Send message
-                user.sendMessage(Text.literal("You unlocked the ")
-                    .formatted(Formatting.LIGHT_PURPLE)
-                    .append(ability.getFormattedName())
-                    .append(Text.literal("! Press [TAB] to switch abilities.").formatted(Formatting.YELLOW)), false);
                 
                 return TypedActionResult.success(stack);
             }

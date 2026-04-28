@@ -74,10 +74,7 @@ public class EatingSystem {
                 // Send tongue animation packet to client
                 com.wayacreate.frogslimegamemode.network.ModNetworking.sendPlayerTongueAnimation(player, mob.getId());
                 
-                // Kill the mob to drop items naturally
-                mob.damage(world.getDamageSources().generic(), Float.MAX_VALUE);
-                
-                // Give ability drop to player
+                // Give ability drop to player before killing the mob
                 MobAbility ability = MobAbility.getAbilityFromEntity(mob.getType());
                 
                 if (ability != null) {
@@ -85,21 +82,16 @@ public class EatingSystem {
                     if (world.random.nextFloat() < 0.4f) {
                         ItemStack abilityDrop = AbilityDropItem.createAbilityDrop(ability.getId());
                         if (!abilityDrop.isEmpty()) {
-                            // Try to add to hotbar first, then main inventory
-                            if (!player.getInventory().insertStack(abilityDrop)) {
-                                // Drop on ground if inventory full
-                                world.spawnEntity(new ItemEntity(world, player.getX(), player.getY(), player.getZ(), abilityDrop));
-                            }
+                            // Drop the ability totem on the ground at mob's location
+                            world.spawnEntity(new ItemEntity(world, mob.getX(), mob.getY(), mob.getZ(), abilityDrop));
+                        }
                         
                         player.sendMessage(Text.literal("You ate a ")
                             .formatted(Formatting.GREEN)
                             .append(Text.literal(mob.getName().getString())
                                 .formatted(Formatting.YELLOW))
-                            .append(Text.literal(" and gained ")
-                                .formatted(Formatting.GREEN))
-                            .append(ability.getFormattedName())
-                            .append(Text.literal("!").formatted(Formatting.GREEN)), false);
-                        }
+                            .append(Text.literal(" and a totem dropped!")
+                                .formatted(Formatting.GREEN)), false);
                     } else {
                         player.sendMessage(Text.literal("The ")
                             .formatted(Formatting.GRAY)
@@ -109,6 +101,9 @@ public class EatingSystem {
                                 .formatted(Formatting.GRAY)), false);
                     }
                 }
+                
+                // Kill the mob to drop items naturally (normal drops + ability totem on ground)
+                mob.damage(world.getDamageSources().generic(), Float.MAX_VALUE);
                 
                 spawnEatParticles(world, mob.getX(), mob.getY(), mob.getZ());
             }
@@ -178,37 +173,23 @@ public class EatingSystem {
         
         for (MobEntity mob : mobs) {
             if (mob.getHealth() <= 5) {
-                // Kill the mob to drop items naturally
-                mob.damage(world.getDamageSources().generic(), Float.MAX_VALUE);
-                
-                // Eat the mob (give ability) - 50% chance for helpers
+                // Drop ability totem before killing the mob - 50% chance for helpers
                 MobAbility ability = MobAbility.getAbilityFromEntity(mob.getType());
                 
                 if (ability != null && world.random.nextFloat() < 0.5f) {
-                    if (helper instanceof FrogHelperEntity frog) {
-                        frog.addAbility(ability);
-                        if (owner != null) {
-                            owner.sendMessage(Text.literal("Your frog ate a ")
-                                .formatted(Formatting.GREEN)
-                                .append(Text.literal(mob.getName().getString())
-                                    .formatted(Formatting.YELLOW))
-                                .append(Text.literal(" and gained ")
-                                    .formatted(Formatting.GREEN))
-                                .append(ability.getFormattedName())
-                                .append(Text.literal("!").formatted(Formatting.GREEN)), false);
-                        }
-                    } else if (helper instanceof SlimeHelperEntity slime) {
-                        slime.addAbility(ability);
-                        if (owner != null) {
-                            owner.sendMessage(Text.literal("Your slime ate a ")
-                                .formatted(Formatting.GREEN)
-                                .append(Text.literal(mob.getName().getString())
-                                    .formatted(Formatting.YELLOW))
-                                .append(Text.literal(" and gained ")
-                                    .formatted(Formatting.GREEN))
-                                .append(ability.getFormattedName())
-                                .append(Text.literal("!").formatted(Formatting.GREEN)), false);
-                        }
+                    ItemStack abilityDrop = AbilityDropItem.createAbilityDrop(ability.getId());
+                    if (!abilityDrop.isEmpty()) {
+                        // Drop the ability totem on the ground at mob's location
+                        world.spawnEntity(new ItemEntity(world, mob.getX(), mob.getY(), mob.getZ(), abilityDrop));
+                    }
+                    
+                    if (owner != null) {
+                        owner.sendMessage(Text.literal("Your helper ate a ")
+                            .formatted(Formatting.GREEN)
+                            .append(Text.literal(mob.getName().getString())
+                                .formatted(Formatting.YELLOW))
+                            .append(Text.literal(" and a totem dropped!")
+                                .formatted(Formatting.GREEN)), false);
                     }
                 } else if (ability != null) {
                     if (owner != null) {
@@ -219,6 +200,9 @@ public class EatingSystem {
                             .append(Text.literal("!").formatted(Formatting.GRAY)), false);
                     }
                 }
+                
+                // Kill the mob to drop items naturally (normal drops + ability totem on ground)
+                mob.damage(world.getDamageSources().generic(), Float.MAX_VALUE);
                 
                 spawnEatParticles(world, mob.getX(), mob.getY(), mob.getZ());
             }

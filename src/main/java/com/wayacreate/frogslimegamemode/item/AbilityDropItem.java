@@ -25,13 +25,14 @@ public class AbilityDropItem extends Item {
             return ItemStack.EMPTY;
         }
         
+        // Use the specific mob item for this ability
         ItemStack drop = new ItemStack(getDropItemForAbility(abilityId));
         NbtCompound nbt = drop.getOrCreateNbt();
         nbt.putBoolean(ABILITY_DROP_NBT, true);
         nbt.putString(ABILITY_ID_NBT, abilityId);
         
         Formatting color = getAbilityColor(ability);
-        drop.setCustomName(Text.literal("Ability: " + ability.getName())
+        drop.setCustomName(Text.literal("Mob Drop: " + ability.getName())
             .formatted(color, Formatting.BOLD));
         
         return drop;
