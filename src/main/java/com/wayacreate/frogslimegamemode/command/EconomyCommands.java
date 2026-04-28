@@ -3,15 +3,20 @@ package com.wayacreate.frogslimegamemode.command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
+import com.wayacreate.frogslimegamemode.achievements.AchievementManager;
 import com.wayacreate.frogslimegamemode.economy.EconomyManager;
 import com.wayacreate.frogslimegamemode.economy.ShopItem;
 import com.wayacreate.frogslimegamemode.economy.ShopManager;
 import com.wayacreate.frogslimegamemode.economy.TradeManager;
+import com.wayacreate.frogslimegamemode.screen.ShopScreenHandler;
+import com.wayacreate.frogslimegamemode.screen.TradeScreenHandler;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
@@ -23,14 +28,22 @@ public class EconomyCommands {
     private static final ArrayList<String> commandHistory = new ArrayList<>();
     
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
-        // /sell command
         dispatcher.register(CommandManager.literal("sell")
             .then(CommandManager.argument("price", IntegerArgumentType.integer(1))
                 .executes(EconomyCommands::sellItem)));
-        
-        // /shop command
-        dispatcher.register(CommandManager.literal("shop")
+        dispatcher.register(buildShopSubcommand());
+        dispatcher.register(buildBalanceSubcommand());
+        dispatcher.register(buildPaySubcommand());
+        dispatcher.register(buildTradeSubcommand());
+        dispatcher.register(buildMessageSubcommand());
+    }
+
+    public static LiteralArgumentBuilder<ServerCommandSource> buildShopSubcommand() {
+        return CommandManager.literal("shop")
             .executes(EconomyCommands::openShop)
+            .then(CommandManager.literal("sell")
+                .then(CommandManager.argument("price", IntegerArgumentType.integer(1))
+                    .executes(EconomyCommands::sellItem)))
             .then(CommandManager.literal("buy")
                 .then(CommandManager.argument("index", IntegerArgumentType.integer(0))
                     .executes(EconomyCommands::buyItem)))
@@ -38,20 +51,23 @@ public class EconomyCommands {
                 .then(CommandManager.argument("index", IntegerArgumentType.integer(0))
                     .executes(EconomyCommands::cancelListing)))
             .then(CommandManager.literal("mylistings")
-                .executes(EconomyCommands::viewMyListings)));
-        
-        // /balance command
-        dispatcher.register(CommandManager.literal("balance")
-            .executes(EconomyCommands::checkBalance));
-        
-        // /pay command
-        dispatcher.register(CommandManager.literal("pay")
+                .executes(EconomyCommands::viewMyListings));
+    }
+
+    public static LiteralArgumentBuilder<ServerCommandSource> buildBalanceSubcommand() {
+        return CommandManager.literal("balance")
+            .executes(EconomyCommands::checkBalance);
+    }
+
+    public static LiteralArgumentBuilder<ServerCommandSource> buildPaySubcommand() {
+        return CommandManager.literal("pay")
             .then(CommandManager.argument("player", StringArgumentType.string())
                 .then(CommandManager.argument("amount", IntegerArgumentType.integer(1))
-                    .executes(EconomyCommands::payPlayer))));
-        
-        // /trade command
-        dispatcher.register(CommandManager.literal("trade")
+                    .executes(EconomyCommands::payPlayer)));
+    }
+
+    public static LiteralArgumentBuilder<ServerCommandSource> buildTradeSubcommand() {
+        return CommandManager.literal("trade")
             .then(CommandManager.argument("player", StringArgumentType.string())
                 .executes(EconomyCommands::sendTradeRequest))
             .then(CommandManager.literal("accept")
@@ -59,13 +75,14 @@ public class EconomyCommands {
             .then(CommandManager.literal("decline")
                 .executes(EconomyCommands::declineTrade))
             .then(CommandManager.literal("toggle")
-                .executes(EconomyCommands::toggleTrading)));
-        
-        // /msg command
-        dispatcher.register(CommandManager.literal("msg")
+                .executes(EconomyCommands::toggleTrading));
+    }
+
+    public static LiteralArgumentBuilder<ServerCommandSource> buildMessageSubcommand() {
+        return CommandManager.literal("msg")
             .then(CommandManager.argument("player", StringArgumentType.string())
                 .then(CommandManager.argument("message", StringArgumentType.greedyString())
-                    .executes(EconomyCommands::sendMessage))));
+                    .executes(EconomyCommands::sendMessage)));
     }
     
     private static int sellItem(CommandContext<ServerCommandSource> context) {
@@ -95,27 +112,10 @@ public class EconomyCommands {
             return 0;
         }
         
-        List<ShopItem> listings = ShopManager.getListings();
-        
-        if (listings.isEmpty()) {
-            player.sendMessage(Text.literal("The shop is empty!").formatted(Formatting.YELLOW), false);
-            return 1;
-        }
-        
-        player.sendMessage(Text.literal("===== Marketplace =====").formatted(Formatting.GOLD, Formatting.BOLD), false);
-        
-        for (int i = 0; i < listings.size(); i++) {
-            ShopItem item = listings.get(i);
-            player.sendMessage(Text.literal("[" + i + "] ").formatted(Formatting.GRAY)
-                .append(item.getItem().getName())
-                .append(Text.literal(" x" + item.getItem().getCount()).formatted(Formatting.WHITE))
-                .append(Text.literal(" - "))
-                .append(Text.literal(item.getPrice() + " coins").formatted(Formatting.GOLD))
-                .append(Text.literal(" by "))
-                .append(Text.literal(item.getSellerName()).formatted(Formatting.AQUA)), false);
-        }
-        
-        player.sendMessage(Text.literal("Use /shop buy <index> to purchase").formatted(Formatting.YELLOW), false);
+        player.openHandledScreen(new SimpleNamedScreenHandlerFactory(
+            (syncId, playerInventory, ignored) -> new ShopScreenHandler(syncId, playerInventory),
+            Text.literal("FrogSlime Shop")
+        ));
         return 1;
     }
     
@@ -209,6 +209,17 @@ public class EconomyCommands {
                 .append(Text.literal(amount + " coins").formatted(Formatting.GOLD))
                 .append(Text.literal(" from "))
                 .append(player.getName().getString()), false);
+
+            int totalTrades = EconomyManager.getTotalTrades(player.getUuid());
+            if (totalTrades == 1) {
+                AchievementManager.unlockAchievement(player, "first_trade");
+            }
+            if (totalTrades >= 25) {
+                AchievementManager.unlockAchievement(player, "merchant");
+            }
+            if (totalTrades >= 100) {
+                AchievementManager.unlockAchievement(player, "trade_tycoon");
+            }
             return 1;
         } else {
             player.sendMessage(Text.literal("You don't have enough coins!").formatted(Formatting.RED), false);
@@ -236,8 +247,13 @@ public class EconomyCommands {
             return 0;
         }
         
-        ItemStack handItem = player.getMainHandStack();
-        TradeManager.sendTradeRequest(player, target, handItem, 0);
+        if (!TradeManager.isTradingEnabled(target.getUuid())) {
+            player.sendMessage(Text.literal(target.getName().getString() + " has trading disabled!")
+                .formatted(Formatting.RED), false);
+            return 0;
+        }
+
+        TradeManager.openTradeGui(player, target);
         return 1;
     }
     

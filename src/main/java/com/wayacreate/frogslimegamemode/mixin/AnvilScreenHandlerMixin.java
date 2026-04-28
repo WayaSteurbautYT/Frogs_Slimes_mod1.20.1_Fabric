@@ -134,6 +134,7 @@ public class AnvilScreenHandlerMixin {
             case "emerald" -> "villager";
             case "iron_ingot" -> "iron_golem";
             case "snowball" -> "snow_golem";
+            case "music_disc_cat" -> "parrot";
             case "golden_apple" -> "technoblade_pig";
             case "redstone" -> "mumbo_jumbo";
             case "dirt" -> "derpy";

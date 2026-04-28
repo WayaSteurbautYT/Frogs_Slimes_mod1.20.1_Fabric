@@ -48,10 +48,10 @@ public class GamemodeHud {
                 
                 // Render progress bar
                 ProgressBarHud.render(drawContext, client);
-                
-                // Render achievement toast
-                com.wayacreate.frogslimegamemode.achievements.AchievementToast.render(drawContext, client);
             }
+
+            MinecraftClient client = MinecraftClient.getInstance();
+            com.wayacreate.frogslimegamemode.achievements.AchievementToast.render(drawContext, client);
         });
         
         FrogSlimeGamemode.LOGGER.info("Gamemode HUD initialized");

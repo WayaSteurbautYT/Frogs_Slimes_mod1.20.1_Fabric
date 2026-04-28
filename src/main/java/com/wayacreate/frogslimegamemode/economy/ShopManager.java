@@ -34,15 +34,14 @@ public class ShopManager {
             return false;
         }
         
-        // Remove item from player
-        item.decrement(1);
-        
-        // Create listing
-        ShopItem listing = new ShopItem(seller.getUuid(), seller.getName().getString(), item.copy(), price);
+        ItemStack listedStack = item.copy();
+        item.setCount(0);
+
+        ShopItem listing = new ShopItem(seller.getUuid(), seller.getName().getString(), listedStack, price);
         listings.add(listing);
         
         seller.sendMessage(Text.literal("Listed ").formatted(Formatting.GREEN)
-            .append(item.getName())
+            .append(listedStack.getName())
             .append(Text.literal(" for ").formatted(Formatting.WHITE))
             .append(Text.literal(price + " coins").formatted(Formatting.GOLD)), false);
         
@@ -55,7 +54,15 @@ public class ShopManager {
             return false;
         }
         
-        ShopItem item = listings.get(index);
+        return buyItem(buyer, listings.get(index));
+    }
+
+    public static boolean buyItem(ServerPlayerEntity buyer, ShopItem requestedItem) {
+        ShopItem item = findListing(requestedItem);
+        if (item == null) {
+            buyer.sendMessage(Text.literal("That listing is no longer available!").formatted(Formatting.RED), false);
+            return false;
+        }
         
         // Can't buy your own item
         if (item.getSellerUuid().equals(buyer.getUuid())) {
@@ -84,7 +91,7 @@ public class ShopManager {
         buyer.getInventory().offerOrDrop(item.getItem());
         
         // Remove listing
-        listings.remove(index);
+        listings.remove(item);
         
         buyer.sendMessage(Text.literal("Bought ").formatted(Formatting.GREEN)
             .append(item.getItem().getName())
@@ -99,7 +106,15 @@ public class ShopManager {
             return false;
         }
         
-        ShopItem item = listings.get(index);
+        return cancelListing(seller, listings.get(index));
+    }
+
+    public static boolean cancelListing(ServerPlayerEntity seller, ShopItem requestedItem) {
+        ShopItem item = findListing(requestedItem);
+        if (item == null) {
+            seller.sendMessage(Text.literal("That listing is no longer available!").formatted(Formatting.RED), false);
+            return false;
+        }
         
         if (!item.getSellerUuid().equals(seller.getUuid())) {
             seller.sendMessage(Text.literal("You can only cancel your own listings!").formatted(Formatting.RED), false);
@@ -108,7 +123,7 @@ public class ShopManager {
         
         // Return item
         seller.getInventory().offerOrDrop(item.getItem());
-        listings.remove(index);
+        listings.remove(item);
         
         seller.sendMessage(Text.literal("Cancelled listing and returned ").formatted(Formatting.GREEN)
             .append(item.getItem().getName()), false);
@@ -128,5 +143,26 @@ public class ShopManager {
     
     public static void removeAllListings(UUID playerUuid) {
         listings.removeIf(l -> l.getSellerUuid().equals(playerUuid));
+    }
+
+    private static ShopItem findListing(ShopItem requestedItem) {
+        for (ShopItem listing : listings) {
+            if (!listing.getSellerUuid().equals(requestedItem.getSellerUuid())) {
+                continue;
+            }
+            if (listing.getPrice() != requestedItem.getPrice()) {
+                continue;
+            }
+            if (listing.getListedTime() != requestedItem.getListedTime()) {
+                continue;
+            }
+
+            ItemStack listingStack = listing.getItem();
+            ItemStack requestedStack = requestedItem.getItem();
+            if (ItemStack.canCombine(listingStack, requestedStack) && listingStack.getCount() == requestedStack.getCount()) {
+                return listing;
+            }
+        }
+        return null;
     }
 }

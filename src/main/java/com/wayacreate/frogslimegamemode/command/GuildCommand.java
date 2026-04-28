@@ -3,14 +3,17 @@ package com.wayacreate.frogslimegamemode.command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.wayacreate.frogslimegamemode.guild.Guild;
 import com.wayacreate.frogslimegamemode.guild.GuildManager;
 import com.wayacreate.frogslimegamemode.guild.GuildMission;
+import com.wayacreate.frogslimegamemode.screen.GuildMissionScreenHandler;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
@@ -20,7 +23,11 @@ import java.util.List;
 public class GuildCommand {
     
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
-        dispatcher.register(CommandManager.literal("guild")
+        dispatcher.register(buildGuildSubcommand("guild"));
+    }
+
+    public static LiteralArgumentBuilder<ServerCommandSource> buildGuildSubcommand(String literalName) {
+        return CommandManager.literal(literalName)
             .then(CommandManager.literal("create")
                 .then(CommandManager.argument("name", StringArgumentType.string())
                     .executes(GuildCommand::createGuild)))
@@ -48,7 +55,7 @@ public class GuildCommand {
                 .then(CommandManager.argument("amount", IntegerArgumentType.integer(1))
                     .executes(GuildCommand::depositCoins)))
             .then(CommandManager.literal("members")
-                .executes(GuildCommand::listMembers)));
+                .executes(GuildCommand::listMembers));
     }
     
     private static int createGuild(CommandContext<ServerCommandSource> context) {
@@ -150,31 +157,11 @@ public class GuildCommand {
             player.sendMessage(Text.literal("You are not in a guild!").formatted(Formatting.RED), false);
             return 0;
         }
-        
-        List<GuildMission> missions = guild.getMissions();
-        if (missions.isEmpty()) {
-            player.sendMessage(Text.literal("No active missions!").formatted(Formatting.YELLOW), false);
-            return 1;
-        }
-        
-        player.sendMessage(Text.literal("===== Guild Missions =====").formatted(Formatting.GOLD, Formatting.BOLD), false);
-        
-        for (GuildMission mission : missions) {
-            if (!mission.isActive()) continue;
-            
-            Text status = mission.isCompletedBy(player.getUuid()) ? 
-                Text.literal(" [COMPLETED]").formatted(Formatting.GREEN) :
-                Text.literal(" [Active]").formatted(Formatting.YELLOW);
-            
-            player.sendMessage(Text.literal(mission.getName()).formatted(Formatting.AQUA)
-                .append(status)
-                .append(Text.literal(" - " + mission.getDescription()).formatted(Formatting.GRAY)), false);
-            
-            player.sendMessage(Text.literal("  Rewards: ").formatted(Formatting.GRAY)
-                .append(Text.literal(mission.getCoinReward() + " coins, " + mission.getExperienceReward() + " XP")
-                    .formatted(Formatting.GOLD)), false);
-        }
-        
+
+        player.openHandledScreen(new SimpleNamedScreenHandlerFactory(
+            (syncId, playerInventory, ignored) -> new GuildMissionScreenHandler(syncId, playerInventory, player),
+            Text.literal(guild.getName() + " Missions")
+        ));
         return 1;
     }
     

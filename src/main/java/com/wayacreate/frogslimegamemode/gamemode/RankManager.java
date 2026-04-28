@@ -1,5 +1,6 @@
 package com.wayacreate.frogslimegamemode.gamemode;
 
+import com.wayacreate.frogslimegamemode.guild.GuildManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -65,6 +66,7 @@ public class RankManager {
     
     public static Text getPlayerDisplayName(ServerPlayerEntity player) {
         PlayerRank rank = getPlayerRank(player.getUuid());
+        String guildName = GuildManager.getGuildName(player.getUuid());
         String teamName = TeamManager.getPlayerTeam(player.getUuid());
         
         Text displayName = Text.literal("");
@@ -73,8 +75,12 @@ public class RankManager {
         displayName = displayName.copy().append(Text.literal("[" + rank.getDisplayName() + "] ")
             .formatted(rank.getColor()));
         
-        // Add team name if in a team
-        if (teamName != null) {
+        if (guildName != null) {
+            Formatting guildColor = GuildManager.getGuildRankColor(player.getUuid());
+            String guildRank = GuildManager.getPlayerRank(player.getUuid()).name();
+            displayName = displayName.copy().append(Text.literal("[" + guildName + " | " + guildRank + "] ")
+                .formatted(guildColor));
+        } else if (teamName != null) {
             TeamManager.Team team = TeamManager.getTeam(teamName);
             if (team != null) {
                 try {

@@ -1,6 +1,8 @@
 package com.wayacreate.frogslimegamemode.guild;
 
 import com.wayacreate.frogslimegamemode.economy.EconomyManager;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -103,7 +105,7 @@ public class GuildManager {
             .append(Text.literal("[Accept]").formatted(Formatting.GREEN)
                 .styled(s -> s.withClickEvent(
                     new net.minecraft.text.ClickEvent(net.minecraft.text.ClickEvent.Action.RUN_COMMAND, 
-                        "/guild join " + guild.getName())))),
+                        "/frogslime guild join " + guild.getName())))),
             false);
         
         return true;
@@ -183,13 +185,41 @@ public class GuildManager {
     }
     
     public static Guild getPlayerGuild(ServerPlayerEntity player) {
-        UUID guildId = playerGuilds.get(player.getUuid());
+        return getPlayerGuild(player.getUuid());
+    }
+
+    public static Guild getPlayerGuild(UUID playerUuid) {
+        UUID guildId = playerGuilds.get(playerUuid);
         if (guildId == null) {
             return null;
         }
         return guildsById.get(guildId);
     }
-    
+
+    public static Guild.GuildRank getPlayerRank(UUID playerUuid) {
+        Guild guild = getPlayerGuild(playerUuid);
+        return guild != null ? guild.getRank(playerUuid) : null;
+    }
+
+    public static Formatting getGuildRankColor(UUID playerUuid) {
+        Guild.GuildRank rank = getPlayerRank(playerUuid);
+        if (rank == null) {
+            return Formatting.WHITE;
+        }
+
+        return switch (rank) {
+            case OWNER -> Formatting.GOLD;
+            case OFFICER -> Formatting.RED;
+            case VETERAN -> Formatting.GREEN;
+            case MEMBER -> Formatting.AQUA;
+        };
+    }
+
+    public static String getGuildName(UUID playerUuid) {
+        Guild guild = getPlayerGuild(playerUuid);
+        return guild != null ? guild.getName() : null;
+    }
+
     public static Guild getGuildById(UUID guildId) {
         return guildsById.get(guildId);
     }
@@ -252,6 +282,59 @@ public class GuildManager {
             return false;
         }
     }
+
+    public static boolean contributeToMissionFromInventory(ServerPlayerEntity player, UUID missionId) {
+        Guild guild = getPlayerGuild(player);
+
+        if (guild == null) {
+            player.sendMessage(Text.literal("You are not in a guild!").formatted(Formatting.RED), false);
+            return false;
+        }
+
+        GuildMission mission = null;
+        for (GuildMission currentMission : guild.getMissions()) {
+            if (currentMission.getId().equals(missionId)) {
+                mission = currentMission;
+                break;
+            }
+        }
+
+        if (mission == null) {
+            player.sendMessage(Text.literal("Mission not found!").formatted(Formatting.RED), false);
+            return false;
+        }
+
+        if (!mission.isActive()) {
+            player.sendMessage(Text.literal("This mission has expired!").formatted(Formatting.RED), false);
+            return false;
+        }
+
+        if (mission.isCompletedBy(player.getUuid())) {
+            player.sendMessage(Text.literal("You already completed this mission.").formatted(Formatting.YELLOW), false);
+            return false;
+        }
+
+        if (!hasRequiredItems(player.getInventory(), mission.getRequiredItems())) {
+            player.sendMessage(Text.literal("You do not have the required items for this mission!")
+                .formatted(Formatting.RED), false);
+            return false;
+        }
+
+        removeRequiredItems(player.getInventory(), mission.getRequiredItems());
+        mission.markCompleted(player.getUuid());
+
+        for (ItemStack reward : mission.getItemRewards()) {
+            player.getInventory().offerOrDrop(reward.copy());
+        }
+
+        if (mission.getCoinReward() > 0) {
+            EconomyManager.addBalance(player, mission.getCoinReward());
+        }
+
+        player.sendMessage(Text.literal("Mission completed! Rewards delivered.")
+            .formatted(Formatting.GREEN), false);
+        return true;
+    }
     
     public static boolean createMission(ServerPlayerEntity player, GuildMission mission) {
         Guild guild = getPlayerGuild(player);
@@ -279,5 +362,39 @@ public class GuildManager {
             .append(Text.literal(mission.getName()).formatted(Formatting.GOLD)), false);
         
         return true;
+    }
+
+    private static boolean hasRequiredItems(PlayerInventory inventory, List<ItemStack> requiredItems) {
+        for (ItemStack requiredItem : requiredItems) {
+            int collected = 0;
+            for (int slot = 0; slot < inventory.size(); slot++) {
+                ItemStack stack = inventory.getStack(slot);
+                if (ItemStack.canCombine(stack, requiredItem)) {
+                    collected += stack.getCount();
+                }
+            }
+
+            if (collected < requiredItem.getCount()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static void removeRequiredItems(PlayerInventory inventory, List<ItemStack> requiredItems) {
+        for (ItemStack requiredItem : requiredItems) {
+            int remaining = requiredItem.getCount();
+            for (int slot = 0; slot < inventory.size() && remaining > 0; slot++) {
+                ItemStack stack = inventory.getStack(slot);
+                if (!ItemStack.canCombine(stack, requiredItem)) {
+                    continue;
+                }
+
+                int removed = Math.min(stack.getCount(), remaining);
+                stack.decrement(removed);
+                remaining -= removed;
+            }
+        }
     }
 }

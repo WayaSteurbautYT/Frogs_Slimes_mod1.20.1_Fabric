@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public class EconomyManager {
     private static final Map<UUID, Integer> playerBalances = new HashMap<>();
+    private static final Map<UUID, Integer> totalTrades = new HashMap<>();
     private static final int STARTING_BALANCE = 100;
     
     public static int getBalance(ServerPlayerEntity player) {
@@ -35,6 +36,21 @@ public class EconomyManager {
             return false;
         }
         addBalance(to, amount);
+        incrementTrade(from.getUuid());
+        incrementTrade(to.getUuid());
         return true;
+    }
+
+    public static int getTotalTrades(UUID uuid) {
+        return totalTrades.getOrDefault(uuid, 0);
+    }
+
+    public static void recordTrade(ServerPlayerEntity first, ServerPlayerEntity second) {
+        incrementTrade(first.getUuid());
+        incrementTrade(second.getUuid());
+    }
+
+    private static void incrementTrade(UUID uuid) {
+        totalTrades.put(uuid, totalTrades.getOrDefault(uuid, 0) + 1);
     }
 }
